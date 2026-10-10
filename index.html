@@ -157,6 +157,11 @@
     font-family:var(--sans);
     min-width:140px;
   }
+  .campo select option {
+    background: var(--panel-2);
+    color: var(--ink);
+    padding: 6px;
+  }
   .campo input[type="text"]{ min-width:200px; }
   .campo select:focus, .campo input:focus{ outline:2px solid var(--gold); outline-offset:1px; }
   .filtros button{
@@ -733,8 +738,7 @@
     document.getElementById("kpis").innerHTML = cards.map(c => `
       <div class="kpi ${c.classe||""}">
         <div class="rotulo">${c.rotulo}</div>
-        <div class="valor ${c.corValor||""}">${c.valor}</div>
-        ${c.nota ? `<div class="nota">${c.nota}</div>` : ""}
+        <div class="valor ${c.corValor||""}">${c.valor}</div>${c.nota ? `<div class="nota">${c.nota}</div>` : ""}
       </div>
     `).join("");
   }
@@ -789,7 +793,7 @@
         <g>
           <rect x="${x}" y="${y}" width="${larguraBarra}" height="${h}" rx="3" fill="#d9a441" opacity="0.9"></rect>
           <text x="${x + larguraBarra/2}" y="${alturaGrafico-6}" text-anchor="middle" font-size="10.5" fill="#9aa2ae">${d.label.slice(0,2)}/${d.label.slice(3)}</text>
-          <title>${d.label}: ${fmtMoeda(d.value)}</title>
+          <title>${d.label}:${fmtMoeda(d.value)}</title>
         </g>`;
     });
 
@@ -830,7 +834,7 @@
     const x1 = cx + r*Math.cos(rad(anguloIni)), y1 = cy + r*Math.sin(rad(anguloIni));
     const x2 = cx + r*Math.cos(rad(anguloFim)), y2 = cy + r*Math.sin(rad(anguloFim));
     const largeArc = (anguloFim - anguloIni) > 180 ? 1 : 0;
-    return `<path d="M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}"
+    return `<path d="M ${x1} ${y1} A${r} ${r} 0${largeArc} 1 ${x2}${y2}"
               fill="none" stroke="${cor}" stroke-width="${espessura}" stroke-linecap="butt"></path>`;
   }
 
@@ -851,8 +855,8 @@
     el.innerHTML = top.map((r,i) => `
       <li>
         <span class="pos">${i+1}</span>
-        <span class="desc" title="${(r.descricao||"").replace(/"/g,'&quot;')}">${r.descricao || "(sem descrição)"}</span>
-        <span class="meta">${r.pessoaNorm || ""}${r.data ? " · "+formatarDataBR(r.data) : ""}</span>
+        <span class="desc" title="${(r.descricao\vert{}\vert{}"").replace(/"/g,'&quot;')}">${r.descricao || "(sem descrição)"}</span>
+        <span class="meta">${r.pessoaNorm \vert{}\vert{} ""}${r.data ? " · "+formatarDataBR(r.data) : ""}</span>
         <span class="val">${fmtMoeda(r.valor)}</span>
       </li>
     `).join("");
@@ -894,7 +898,7 @@
     }
 
     document.getElementById("infoPagina").textContent =
-      `Página ${paginaAtual} de ${totalPaginas} · ${lista.length} lançamentos`;
+      `Página ${paginaAtual} de ${totalPaginas} ·${lista.length} lançamentos`;
     document.getElementById("btnAnterior").disabled = paginaAtual <= 1;
     document.getElementById("btnProximo").disabled = paginaAtual >= totalPaginas;
 
@@ -929,8 +933,7 @@
 
     corpo.innerHTML = despesasFixas.itens.map(item => `
       <tr>
-        <td>${item.nome}</td>
-        ${item.valores.map((v,i) => `<td class="${(i+1)===mesDestaque ? 'mes-atual' : ''}">${v==null ? "—" : fmtMoeda(v)}</td>`).join("")}
+        <td>${item.nome}</td>${item.valores.map((v,i) => `<td class="${(i+1)===mesDestaque ? 'mes-atual' : ''}">${v==null ? "—" : fmtMoeda(v)}</td>`).join("")}
         <td class="valcel">${fmtMoeda(item.total)}</td>
       </tr>
     `).join("");
@@ -982,176 +985,13 @@
 
     document.getElementById("labelMesReceitas").textContent = mostrarTodas
       ? "todos os meses"
-      : `${MESES_LONGO[mesRef] || ""} de ${anoRef}`;
-    document.getElementById("labelMesCadastro").textContent = `${MESES_LONGO[mesRef] || ""} de ${anoRef}`;
+      : `${MESES_LONGO[mesRef] \vert{}\vert{} ""} de ${anoRef}`;
+    document.getElementById("labelMesCadastro").textContent = `${MESES_LONGO[mesRef] \vert{}\vert{} ""} de ${anoRef}`;
 
     const corpo = document.getElementById("corpoReceitas");
     const base = mostrarTodas ? receitas : receitas.filter(r => r.mes === mesRef && r.ano === anoRef);
     const listaOrdenada = [...base].sort((a,b) => (b.ano-a.ano) || (b.mes-a.mes) || a.descricao.localeCompare(b.descricao,"pt-BR"));
 
     if(!listaOrdenada.length){
-      const msg = mostrarTodas ? "Nenhuma receita cadastrada ainda" : `Nenhuma receita cadastrada para ${MESES_LONGO[mesRef] || ""} de ${anoRef}.`;
-      corpo.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--ink-faint); padding:18px;">${msg}</td></tr>`;
-    } else {
-      corpo.innerHTML = listaOrdenada.map(r => `
-        <tr>
-          <td>${r.descricao}</td>
-          <td>${MESES_LONGO[r.mes] || r.mes}</td>
-          <td>${r.ano}</td>
-          <td class="valcel">${fmtMoeda(r.valor)}</td>
-          <td><button data-id="${r.id}" title="Remover" class="btn-remover-receita">×</button></td>
-        </tr>
-      `).join("");
-      corpo.querySelectorAll(".btn-remover-receita").forEach(btn => {
-        btn.addEventListener("click", () => {
-          receitas = receitas.filter(r => r.id !== btn.dataset.id);
-          salvarReceitas();
-          renderizarReceitas();
-          renderizarSaldo();
-        });
-      });
-    }
-  }
-
-  function renderizarSaldo(){
-    const mesRef = parseInt(document.getElementById("refMes").value, 10);
-    const anoRef = parseInt(document.getElementById("refAno").value, 10);
-
-    document.getElementById("labelReferencia").textContent = `Referência: ${MESES_LONGO[mesRef] || ""} de ${anoRef}`;
-
-    const totalReceitas = receitas
-      .filter(r => r.mes === mesRef && r.ano === anoRef)
-      .reduce((s,r) => s + (r.valor||0), 0);
-
-    const totalFixo = totalFixoDoMes(mesRef);
-
-    const totalVariavel = dadosBrutos
-      .filter(r => r.mes === mesRef && r.ano === anoRef)
-      .reduce((s,r) => s + (r.valor||0), 0);
-
-    const saldo = totalReceitas - totalFixo - totalVariavel;
-
-    const cards = [
-      { rotulo: "Receitas no mês", valor: fmtMoeda(totalReceitas), classe: "green" },
-      { rotulo: "Despesas fixas no mês", valor: fmtMoeda(totalFixo), classe: "" },
-      { rotulo: "Despesas variáveis no mês", valor: fmtMoeda(totalVariavel), classe: "" },
-      { rotulo: "Saldo estimado", valor: fmtMoeda(saldo), classe: saldo >= 0 ? "green" : "rust" }
-    ];
-
-    document.getElementById("kpisSaldo").innerHTML = cards.map(c => `
-      <div class="kpi">
-        <div class="rotulo">${c.rotulo}</div>
-        <div class="valor pequeno ${c.classe}">${c.valor}</div>
-      </div>
-    `).join("");
-
-    renderizarReceitas();
-  }
-
-  function parseValorBR(texto){
-    if(texto == null) return NaN;
-    let s = String(texto).trim();
-    if(!s) return NaN;
-    s = s.replace(/[^\d.,-]/g, "");
-    if(s.includes(",")){ s = s.replace(/\./g, "").replace(",", "."); }
-    return parseFloat(s);
-  }
-
-  function adicionarReceita(){
-    const descricao = document.getElementById("novaReceitaDescricao").value.trim();
-    const valor = parseValorBR(document.getElementById("novaReceitaValor").value);
-    const mes = parseInt(document.getElementById("refMes").value, 10);
-    const ano = parseInt(document.getElementById("refAno").value, 10);
-
-    if(!descricao){ alert("Digite uma descrição para a receita."); return; }
-    if(isNaN(valor) || valor <= 0){ alert("Digite um valor válido para a receita."); return; }
-
-    receitas.push({ id: "r" + Date.now() + "_" + Math.random().toString(36).slice(2,8), descricao, valor, mes, ano });
-    salvarReceitas();
-
-    document.getElementById("novaReceitaDescricao").value = "";
-    document.getElementById("novaReceitaValor").value = "";
-    renderizarSaldo();
-  }
-
-  function exportarDespesas(){
-    const lista = aplicarFiltros();
-    if(!lista.length){ alert("Não há lançamentos para exportar."); return; }
-    if(typeof XLSX === "undefined"){ alert("Biblioteca Excel indisponível."); return; }
-
-    const colunas = ["Data","Descrição","Pessoa","Valor","Parcela","Cartão","Mês","Ano","Situação","Observações"];
-    const linhas = lista.map(r => ([
-      formatarDataBR(r.data) || "",
-      r.descricao || "",
-      r.pessoaNorm || "",
-      r.valor != null ? r.valor : null,
-      r.parcela || "",
-      r.cartaoNorm || "",
-      r.mes != null ? (MESES_LONGO[r.mes] || r.mes) : "",
-      r.ano != null ? r.ano : "",
-      r.situacaoNorm || "",
-      r.observacoes || ""
-    ]));
-
-    const ws = XLSX.utils.aoa_to_sheet([colunas, ...linhas]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Despesas");
-    XLSX.writeFile(wb, `despesas-${new Date().toISOString().slice(0,10)}.xlsx`);
-  }
-
-  ["fAno","fMes","fPessoa","fCartao","fSituacao"].forEach(id => {
-    document.getElementById(id).addEventListener("change", renderizarTudo);
-  });
-  let debounceBusca;
-  document.getElementById("fBusca").addEventListener("input", () => {
-    clearTimeout(debounceBusca);
-    debounceBusca = setTimeout(renderizarTudo, 250);
-  });
-  document.getElementById("btnLimpar").addEventListener("click", () => {
-    ["fAno","fMes","fPessoa","fCartao","fSituacao"].forEach(id => document.getElementById(id).value = "");
-    document.getElementById("fBusca").value = "";
-    renderizarTudo();
-  });
-  document.getElementById("btnAtualizar").addEventListener("click", buscarDados);
-
-  document.querySelectorAll("table.dados thead th[data-col]").forEach(th => {
-    th.addEventListener("click", () => {
-      const col = th.dataset.col;
-      if(ordenacao.coluna === col) ordenacao.asc = !ordenacao.asc;
-      else { ordenacao.coluna = col; ordenacao.asc = false; }
-      renderizarTabela(aplicarFiltros());
-    });
-  });
-
-  document.querySelectorAll("#tabelaTotalPessoa thead th[data-tp-col]").forEach(th => {
-    th.addEventListener("click", () => {
-      const col = th.dataset.tpCol;
-      if(ordenacaoTotalPessoa.coluna === col) ordenacaoTotalPessoa.asc = !ordenacaoTotalPessoa.asc;
-      else { ordenacaoTotalPessoa.coluna = col; ordenacaoTotalPessoa.asc = false; }
-      renderizarTotalPorPessoa();
-    });
-  });
-
-  document.getElementById("btnAnterior").addEventListener("click", () => {
-    if(paginaAtual > 1){ paginaAtual--; renderizarTabela(aplicarFiltros()); }
-  });
-  document.getElementById("btnProximo").addEventListener("click", () => {
-    paginaAtual++; renderizarTabela(aplicarFiltros());
-  });
-
-  document.getElementById("refMes").addEventListener("change", () => { renderizarFixas(); renderizarSaldo(); });
-  document.getElementById("refAno").addEventListener("change", () => { renderizarFixas(); renderizarSaldo(); });
-  document.getElementById("chkTodasReceitas").addEventListener("change", renderizarReceitas);
-  document.getElementById("btnAdicionarReceita").addEventListener("click", adicionarReceita);
-  document.getElementById("btnExportarDespesas").addEventListener("click", exportarDespesas);
-
-  inicializarFormReceitas();
-  carregarReceitas();
-  renderizarSaldo();
-  buscarDados();
-  setInterval(buscarDados, 10000);
-
-})();
-</script>
-</body>
-</html>
+      const msg = mostrarTodas ? "Nenhuma receita cadastrada ainda" : `Nenhuma receita cadastrada para ${MESES_LONGO[mesRef] \vert{}\vert{} ""} de ${anoRef}.`;
+      corpo.innerHTML = `<tr><td colspan="5" style="text-align:center;
