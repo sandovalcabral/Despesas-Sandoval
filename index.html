@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard de Despesas — Dojival</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --bg:            #10141a;
+    --panel:         #1a2029;
+    --panel-2:       #212836;
+    --line:          #2b3241;
+    --ink:           #e9e6de;
+    --ink-dim:       #9aa2ae;
+    --ink-faint:     #616b79;
+    --gold:          #d9a441;
+    --gold-soft:     rgba(217,164,65,.15);
+    --green:         #4c9a6a;
+    --green-soft:    rgba(76,154,106,.18);
+    --rust:          #c1584b;
+    --rust-soft:     rgba(193,88,75,.18);
+    --blue:          #5b8ec4;
+    --serif: Georgia, "Times New Roman", Cambria, serif;
+    --sans: "Segoe UI", "Segoe UI Variable", Tahoma, Verdana, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    padding-bottom:60px;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--gold);}
+
+  /* ---------- header ---------- */
+  header.top{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+    padding:28px clamp(16px,4vw,48px) 20px;
+    border-bottom:1px solid var(--line);
+  }
+  header.top h1{
+    font-family:var(--serif);
+    font-weight:400;
+    font-size:clamp(24px,3vw,34px);
+    margin:0 0 4px;
+    letter-spacing:.2px;
+  }
+  header.top .sub{
+    color:var(--ink-dim);
+    font-size:13.5px;
+  }
+  .status{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:13px;
+    color:var(--ink-dim);
+  }
+  .status .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 0 3px var(--green-soft);
+  }
+  .status.offline .dot{ background:var(--rust); box-shadow:0 0 0 3px var(--rust-soft); }
+  .status button{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--ink);
+    padding:6px 12px;
+    border-radius:6px;
+    font-size:13px;
+    cursor:pointer;
+    font-family:var(--sans);
+  }
+  .status button:hover{ border-color:var(--gold); color:var(--gold); }
+
+  main{ padding:24px clamp(16px,4vw,48px) 0; max-width:1400px; margin:0 auto; }
+
+  #erroBanner{
+    display:none;
+    background:var(--rust-soft);
+    border:1px solid var(--rust);
+    color:#f3d9d5;
+    padding:14px 18px;
+    border-radius:8px;
+    margin-bottom:20px;
+    font-size:14px;
+    line-height:1.5;
+  }
+  #diagnosticoBanner{
+    display:none;
+    background:var(--gold-soft);
+    border:1px solid var(--gold);
+    color:var(--ink);
+    padding:14px 18px;
+    border-radius:8px;
+    margin-bottom:20px;
+    font-size:13px;
+    line-height:1.6;
+  }
+  #diagnosticoBanner strong{ color:var(--gold); }
+  #diagnosticoBanner table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:12.5px; }
+  #diagnosticoBanner td, #diagnosticoBanner th{ text-align:left; padding:4px 10px 4px 0; }
+  #diagnosticoBanner th{ color:var(--ink-dim); font-weight:600; }
+  #diagnosticoBanner .fallback{ color:var(--rust); font-weight:600; }
+  #diagnosticoBanner .ok-map{ color:var(--green); }
+  #diagnosticoBanner .cabecalhos{
+    font-family: Consolas, "Courier New", monospace;
+    font-size:11.5px;
+    color:var(--ink-dim);
+    background:var(--panel-2);
+    border-radius:6px;
+    padding:8px 10px;
+    margin-top:8px;
+    word-break:break-all;
+  }
+  #diagnosticoBanner button{
+    background:transparent;
+    border:1px solid var(--gold);
+    color:var(--gold);
+    padding:5px 12px;
+    border-radius:6px;
+    font-size:12px;
+    cursor:pointer;
+    margin-top:10px;
+  }
+
+  /* ---------- KPIs ---------- */
+  .kpis{
+    display:grid;
+    grid-template-columns: 1.6fr repeat(5, 1fr);
+    gap:14px;
+    margin-bottom:28px;
+  }
+  .kpi{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px 20px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    min-height:96px;
+  }
+  .kpi.hero{
+    background:linear-gradient(160deg, var(--panel-2), var(--panel));
+    border-color:#3a3020;
+  }
+  .kpi .rotulo{
+    font-size:12.5px;
+    color:var(--ink-dim);
+    margin-bottom:8px;
+  }
+  .kpi .valor{
+    font-family:var(--serif);
+    font-size:clamp(20px,2vw,28px);
+    line-height:1.1;
+  }
+  .kpi.hero .valor{ font-size:clamp(28px,3vw,38px); color:var(--gold); }
+  .kpi .valor.green{ color:var(--green); }
+  .kpi .valor.rust{ color:var(--rust); }
+  .kpi .nota{ font-size:11.5px; color:var(--ink-faint); margin-top:6px; }
+
+  @media (max-width: 980px){
+    .kpis{ grid-template-columns: repeat(2,1fr); }
+    .kpi.hero{ grid-column: 1 / -1; }
+  }
+
+  /* ---------- filtros ---------- */
+  .filtros{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px 18px;
+    margin-bottom:28px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    align-items:flex-end;
+  }
+  .campo{ display:flex; flex-direction:column; gap:6px; }
+  .campo label{ font-size:11.5px; color:var(--ink-dim); }
+  .campo select, .campo input{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--ink);
+    padding:8px 10px;
+    border-radius:6px;
+    font-size:13.5px;
+    font-family:var(--sans);
+    min-width:140px;
+  }
+  .campo input[type="text"]{ min-width:200px; }
+  .campo select:focus, .campo input:focus{ outline:2px solid var(--gold); outline-offset:1px; }
+  .filtros button{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--ink-dim);
+    padding:8px 14px;
+    border-radius:6px;
+    font-size:13px;
+    cursor:pointer;
+    height:37px;
+    font-family:var(--sans);
+  }
+  .filtros button:hover{ border-color:var(--gold); color:var(--gold); }
+  .filtros .contagem{ margin-left:auto; font-size:12.5px; color:var(--ink-faint); align-self:center; }
+
+  /* ---------- gráficos ---------- */
+  .secao-titulo{
+    font-family:var(--serif);
+    font-size:18px;
+    font-weight:400;
+    margin: 6px 0 14px;
+    color:var(--ink);
+  }
+  .grid-graficos{
+    display:grid;
+    grid-template-columns: 2fr 1fr;
+    gap:16px;
+    margin-bottom:16px;
+  }
+  .grid-graficos.tres{
+    grid-template-columns: repeat(3, 1fr);
+  }
+  @media (max-width: 980px){
+    .grid-graficos, .grid-graficos.tres{ grid-template-columns: 1fr; }
+  }
+  .painel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px 20px 14px;
+  }
+  .painel h3{
+    font-family:var(--serif);
+    font-weight:400;
+    font-size:15.5px;
+    margin:0 0 14px;
+    color:var(--ink);
+  }
+  .painel .vazio{ color:var(--ink-faint); font-size:13px; padding:20px 0; text-align:center; }
+
+  .barra-h-item{ margin-bottom:10px; }
+  .barra-h-item .topo{ display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:4px; }
+  .barra-h-item .topo .nome{ color:var(--ink); }
+  .barra-h-item .topo .num{ color:var(--ink-dim); }
+  .barra-h-trilho{ background:var(--panel-2); border-radius:4px; height:9px; overflow:hidden; }
+  .barra-h-fill{ height:100%; background:var(--gold); border-radius:4px; }
+
+  .legenda-donut{ display:flex; flex-direction:column; gap:8px; margin-top:14px; }
+  .legenda-item{ display:flex; align-items:center; gap:8px; font-size:12.5px; }
+  .legenda-item .quad{ width:10px; height:10px; border-radius:3px; flex:none; }
+  .legenda-item .lbl{ color:var(--ink-dim); flex:1; }
+  .legenda-item .val{ color:var(--ink); }
+
+  .top10 li{ display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px dashed var(--line); font-size:13px; }
+  .top10 li:last-child{ border-bottom:none; }
+  .top10 .pos{ color:var(--ink-faint); width:18px; font-family:var(--serif); }
+  .top10 .desc{ flex:1; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .top10 .meta{ color:var(--ink-faint); font-size:11px; }
+  .top10 .val{ color:var(--gold); font-weight:600; white-space:nowrap; }
+  ul.top10{ list-style:none; margin:0; padding:0; }
+
+  /* ---------- tabela ---------- */
+  .tabela-wrap{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    margin-bottom:24px;
+  }
+  table.dados{ width:100%; border-collapse:collapse; font-size:13px; }
+  table.dados thead th{
+    text-align:left;
+    padding:12px 14px;
+    background:var(--panel-2);
+    color:var(--ink-dim);
+    font-weight:600;
+    font-size:11.5px;
+    cursor:pointer;
+    user-select:none;
+    white-space:nowrap;
+    border-bottom:1px solid var(--line);
+  }
+  table.dados thead th:hover{ color:var(--gold); }
+  table.dados tbody td{
+    padding:10px 14px;
+    border-bottom:1px solid var(--line);
+    color:var(--ink);
+    white-space:nowrap;
+  }
+  table.dados tbody td.descricao{ white-space:normal; max-width:320px; }
+  table.dados tbody tr:last-child td{ border-bottom:none; }
+  table.dados tfoot td{
+    font-weight:700;
+    background:var(--panel-2);
+    color:var(--gold);
+    border-top:1px solid var(--line);
+    border-bottom:none;
+  }
+  table.dados td.mes-atual, table.dados th.mes-atual{
+    background:var(--gold-soft);
+  }
+  #tabelaReceitas td button{
+    background:transparent;
+    border:1px solid var(--rust);
+    color:var(--rust);
+    border-radius:5px;
+    width:24px; height:24px;
+    cursor:pointer;
+    font-size:13px;
+    line-height:1;
+  }
+  #tabelaReceitas td button:hover{ background:var(--rust-soft); }
+  .kpi .valor.pequeno{ font-size:clamp(16px,1.6vw,22px); }
+  table.dados tbody tr:hover{ background:rgba(255,255,255,.02); }
+  .badge{
+    display:inline-block;
+    padding:2px 9px;
+    border-radius:20px;
+    font-size:11px;
+  }
+  .badge.ok{ background:var(--green-soft); color:#8fd6ab; }
+  .badge.avencer{ background:var(--rust-soft); color:#eab3ab; }
+  .valcel{ color:var(--gold); font-variant-numeric: tabular-nums; }
+
+  .paginacao{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 16px;
+    font-size:12.5px;
+    color:var(--ink-dim);
+  }
+  .paginacao button{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--ink);
+    padding:6px 12px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:12.5px;
+    font-family:var(--sans);
+  }
+  .paginacao button:disabled{ opacity:.4; cursor:default; }
+  .paginacao button:hover:not(:disabled){ border-color:var(--gold); color:var(--gold); }
+
+  footer{
+    text-align:center;
+    color:var(--ink-faint);
+    font-size:11.5px;
+    padding:20px;
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <h1>Dashboard de Despesas — Dojival</h1>
+    <div class="sub" id="subtitulo">Lendo dados da planilha…</div>
+  </div>
+  <div class="status" id="statusBox">
+    <span class="dot"></span>
+    <span id="statusTexto">conectando…</span>
+    <button id="btnAtualizar">Atualizar agora</button>
+  </div>
+</header>
+
+<main>
+
+  <div id="erroBanner"></div>
+  <div id="diagnosticoBanner"></div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="filtros">
+    <div class="campo">
+      <label for="fAno">Ano</label>
+      <select id="fAno"><option value="">Todos</option></select>
+    </div>
+    <div class="campo">
+      <label for="fMes">Mês</label>
+      <select id="fMes"><option value="">Todos</option></select>
+    </div>
+    <div class="campo">
+      <label for="fPessoa">Pessoa</label>
+      <select id="fPessoa"><option value="">Todas</option></select>
+    </div>
+    <div class="campo">
+      <label for="fCartao">Cartão / Forma</label>
+      <select id="fCartao"><option value="">Todos</option></select>
+    </div>
+    <div class="campo">
+      <label for="fSituacao">Situação</label>
+      <select id="fSituacao"><option value="">Todas</option></select>
+    </div>
+    <div class="campo">
+      <label for="fBusca">Buscar</label>
+      <input type="text" id="fBusca" placeholder="Descrição ou observação…">
+    </div>
+    <button id="btnLimpar">Limpar filtros</button>
+    <div class="contagem" id="contagemFiltro"></div>
+  </div>
+
+  <div class="secao-titulo">Visão geral</div>
+  <div class="grid-graficos">
+    <div class="painel">
+      <h3>Evolução por mês (competência)</h3>
+      <div id="graficoMes"></div>
+    </div>
+    <div class="painel">
+      <h3>Maiores lançamentos</h3>
+      <ul class="top10" id="listaTop10"></ul>
+    </div>
+  </div>
+
+  <div class="grid-graficos tres">
+    <div class="painel">
+      <h3>Gasto por pessoa</h3>
+      <div id="graficoPessoa"></div>
+    </div>
+    <div class="painel">
+      <h3>Por forma de pagamento</h3>
+      <div id="graficoCartao"></div>
+    </div>
+    <div class="painel">
+      <h3>Situação dos lançamentos</h3>
+      <div id="graficoSituacao"></div>
+    </div>
+  </div>
+
+  <div class="secao-titulo">Total por pessoa (somando todos os cartões/formas)</div>
+  <div class="painel" style="margin-bottom:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
+      <p style="margin:0; font-size:12.5px; color:var(--ink-dim); max-width:640px;">
+        Esta tabela sempre soma <strong>todos os cartões/formas de pagamento</strong> de cada pessoa,
+        mesmo que você tenha selecionado um cartão específico no filtro acima. Ela respeita os filtros
+        de Ano, Mês, Situação e Busca.
+      </p>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="dados" id="tabelaTotalPessoa">
+        <thead>
+          <tr>
+            <th data-tp-col="pessoa">Pessoa</th>
+            <th data-tp-col="qtd">Qtde. lançamentos</th>
+            <th data-tp-col="total">Total (todos os cartões)</th>
+            <th data-tp-col="pct">% do total geral</th>
+          </tr>
+        </thead>
+        <tbody id="corpoTotalPessoa"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:6px;">
+    <div class="secao-titulo" style="margin:0;">Lançamentos</div>
+    <button id="btnExportarDespesas" style="background:var(--panel-2); border:1px solid var(--line); color:var(--ink); padding:7px 14px; border-radius:6px; font-size:12.5px; cursor:pointer;">
+      Exportar despesas (.xlsx)
+    </button>
+  </div>
+  <div class="tabela-wrap">
+    <div style="overflow-x:auto;">
+      <table class="dados">
+        <thead>
+          <tr>
+            <th data-col="dataFmt">Data</th>
+            <th data-col="descricao">Descrição</th>
+            <th data-col="categoria">Pessoa</th>
+            <th data-col="valor">Valor</th>
+            <th data-col="parcela">Parcela</th>
+            <th data-col="cartao">Cartão</th>
+            <th data-col="competencia">Competência</th>
+            <th data-col="situacao">Situação</th>
+          </tr>
+        </thead>
+        <tbody id="corpoTabela"></tbody>
+      </table>
+    </div>
+    <div class="paginacao">
+      <span id="infoPagina"></span>
+      <div>
+        <button id="btnAnterior">‹ Anterior</button>
+        <button id="btnProximo">Próxima ›</button>
+      </div>
+    </div>
+  </div>
+  <p style="margin:6px 0 24px; font-size:11.5px; color:var(--ink-faint);">
+    A exportação considera os filtros aplicados acima (ano, mês, pessoa, cartão, situação, busca) —
+    não só a página atual da tabela.
+  </p>
+
+  <div class="secao-titulo">Despesas fixas (mensais)</div>
+  <div class="painel" style="margin-bottom:16px;" id="painelFixas">
+    <p style="margin:0 0 14px; font-size:12.5px; color:var(--ink-dim);">
+      Valores lidos direto da aba <strong id="nomeAbaFixaTxt">Total Fixo</strong> da planilha. A coluna destacada
+      é o "Mês de referência" escolhido lá embaixo, na seção Receitas &amp; Saldo.
+    </p>
+    <div style="overflow-x:auto;">
+      <table class="dados" id="tabelaFixas">
+        <thead><tr id="cabecalhoFixas"></tr></thead>
+        <tbody id="corpoFixas"></tbody>
+        <tfoot id="rodapeFixas"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="secao-titulo">Receitas &amp; saldo</div>
+  <div class="painel" style="margin-bottom:24px;">
+    <p style="margin:0 0 14px; font-size:12.5px; color:var(--ink-dim);">
+      As receitas não vêm da planilha — você cadastra aqui. Elas ficam salvas neste navegador, neste
+      computador (não sincronizam com o Excel nem com outros dispositivos). Use os botões de
+      exportar/importar para fazer backup ou levar para outro PC.
+    </p>
+
+    <div class="filtros" style="margin-bottom:18px;">
+      <div class="campo">
+        <label for="refMes">Mês</label>
+        <select id="refMes"></select>
+      </div>
+      <div class="campo">
+        <label for="refAno">Ano</label>
+        <input type="number" id="refAno" style="min-width:100px;">
+      </div>
+      <div class="contagem" id="labelReferencia" style="margin-left:auto; max-width:360px; text-align:right;"></div>
+    </div>
+    <p style="margin:-10px 0 18px; font-size:11.5px; color:var(--ink-faint);">
+      Esse mês/ano vale para tudo abaixo: é o que aparece nos cartões de saldo, na lista de receitas e
+      é também o mês em que uma nova receita cadastrada agora vai entrar.
+    </p>
+
+    <div class="kpis" id="kpisSaldo" style="grid-template-columns: repeat(4, 1fr); margin-bottom:22px;"></div>
+
+    <h3 style="font-family:var(--serif); font-weight:400; font-size:15.5px; margin:0 0 12px;">
+      Cadastrar receita <span style="font-size:12px; color:var(--ink-faint); font-family:var(--sans);">(em <span id="labelMesCadastro">—</span>)</span>
+    </h3>
+    <div class="filtros" style="margin-bottom:18px;">
+      <div class="campo" style="flex:1;">
+        <label for="novaReceitaDescricao">Descrição</label>
+        <input type="text" id="novaReceitaDescricao" placeholder="Ex.: Salário, Freela…" style="min-width:220px;">
+      </div>
+      <div class="campo">
+        <label for="novaReceitaValor">Valor (R$)</label>
+        <input type="text" inputmode="decimal" id="novaReceitaValor" placeholder="Ex.: 350,00" style="min-width:130px;">
+      </div>
+      <button id="btnAdicionarReceita" style="background:var(--gold); border-color:var(--gold); color:#1a1300; font-weight:600;">+ Adicionar</button>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:8px;">
+      <h3 style="font-family:var(--serif); font-weight:400; font-size:15.5px; margin:0;">
+        Receitas de <span id="labelMesReceitas">—</span>
+      </h3>
+      <label style="font-size:12.5px; color:var(--ink-dim); display:flex; align-items:center; gap:6px; cursor:pointer;">
+        <input type="checkbox" id="chkTodasReceitas"> mostrar todas (todos os meses)
+      </label>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table class="dados" id="tabelaReceitas">
+        <thead>
+          <tr>
+            <th data-rc-col="descricao">Descrição</th>
+            <th data-rc-col="mes">Mês</th>
+            <th data-rc-col="ano">Ano</th>
+            <th data-rc-col="valor">Valor</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="corpoReceitas"></tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button id="btnExportarReceitas" style="background:var(--panel-2); border:1px solid var(--line); color:var(--ink); padding:8px 14px; border-radius:6px; font-size:13px; cursor:pointer;">Exportar receitas (.json)</button>
+      <button id="btnImportarReceitas" style="background:var(--panel-2); border:1px solid var(--line); color:var(--ink); padding:8px 14px; border-radius:6px; font-size:13px; cursor:pointer;">Importar receitas (.json)</button>
+      <input type="file" id="inputImportarReceitas" accept="application/json" style="display:none;">
+    </div>
+  </div>
+
+  <footer>
+    Atualização automática a cada 5 segundos · arquivo monitorado pelo servidor local em <code>servidor.ps1</code>
+  </footer>
+
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  const MESES = ["","Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+  const MESES_LONGO = ["","Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const CORES_DONUT = ["#d9a441","#5b8ec4","#4c9a6a","#c1584b","#9a7fc7","#4fb0ae","#c98f4a","#7a8ea6","#b56b8f","#6f9e57"];
+  const CHAVE_RECEITAS = "dashboardDespesas_receitas_v1";
+
+  let dadosBrutos = [];
+  let despesasFixas = null;
+  let receitas = [];
+  let ultimaAtualizacaoIso = null;
+  let paginaAtual = 1;
+  const LINHAS_POR_PAGINA = 25;
+  let ordenacao = { coluna: "data", asc: false };
+
+  const fmtMoeda = v => (v==null ? "—" : v.toLocaleString("pt-BR", {style:"currency", currency:"BRL"}));
+  const fmtNum   = v => (v==null ? "—" : v.toLocaleString("pt-BR"));
+
+  function normalizarChave(s){
+    return (s||"").trim().toLowerCase();
+  }
+  function tituloBonito(s){
+    if(!s) return "Não informado";
+    return s.trim().replace(/\s+/g," ").replace(/\p{L}+/gu, w => w.charAt(0).toUpperCase()+w.slice(1).toLowerCase());
+  }
+  function normalizarSituacao(s){
+    if(!s) return "Indefinido";
+    const t = s.trim().toLowerCase();
+    if(t === "ok") return "OK";
+    if(t === "a vencer") return "A Vencer";
+    return s.trim();
+  }
+
+  // -------------------- busca / atualização de dados --------------------
+  async function buscarDados(){
+    try{
+      const resp = await fetch("data.json?_=" + Date.now(), {cache:"no-store"});
+      if(!resp.ok) throw new Error("HTTP " + resp.status);
+      const json = await resp.json();
+
+      const statusBox = document.getElementById("statusBox");
+      statusBox.classList.remove("offline");
+
+      if(json.erro){
+        mostrarErro(json.erro);
+        document.getElementById("statusTexto").textContent = "erro na leitura";
+        statusBox.classList.add("offline");
+        return;
+      }
+      esconderErro();
+
+      const registros = json.registros || [];
+      dadosBrutos = registros.map(r => Object.assign({}, r, {
+        competencia: (r.mes ? String(r.mes).padStart(2,"0") : "??") + "/" + (r.ano || "????"),
+        situacaoNorm: normalizarSituacao(r.situacao),
+        pessoaNorm: tituloBonito(r.categoria),
+        cartaoNorm: tituloBonito(r.cartao)
+      }));
+
+      renderizarDiagnostico(json.diagnostico, dadosBrutos);
+      despesasFixas = json.despesasFixas || null;
+      renderizarFixas();
+      renderizarSaldo();
+
+      if(json.atualizadoEm !== ultimaAtualizacaoIso){
+        ultimaAtualizacaoIso = json.atualizadoEm;
+        popularFiltros();
+        renderizarTudo();
+      } else {
+        // mesmos dados; só garante que a UI de status esteja correta
+      }
+
+      const dt = json.atualizadoEm ? new Date(json.atualizadoEm) : null;
+      document.getElementById("subtitulo").textContent = dt
+        ? ("Planilha: " + json.aba + " · " + (json.arquivo || "").split("\\").pop())
+        : "";
+      document.getElementById("statusTexto").textContent = dt
+        ? ("atualizado às " + dt.toLocaleTimeString("pt-BR"))
+        : "aguardando dados";
+
+    } catch(e){
+      const statusBox = document.getElementById("statusBox");
+      statusBox.classList.add("offline");
+      document.getElementById("statusTexto").textContent = "servidor local indisponível";
+    }
+  }
+
+  let diagnosticoFechadoManualmente = false;
+
+  function renderizarDiagnostico(diagnostico, registros){
+    const el = document.getElementById("diagnosticoBanner");
+    if(!diagnostico || diagnosticoFechadoManualmente){ el.style.display = "none"; return; }
+
+    const totalRegistros = registros.length;
+    const camposParaChecar = [
+      {chave:"descricao", rotulo:"Descrição"},
+      {chave:"cartao",    rotulo:"Cartão"},
+      {chave:"mes",       rotulo:"Mês"},
+      {chave:"situacao",  rotulo:"Situação"}
+    ];
+    const vazios = camposParaChecar.map(c => {
+      const qtdVazio = registros.filter(r => r[c.chave] == null || r[c.chave] === "").length;
+      return { rotulo: c.rotulo, pct: totalRegistros ? qtdVazio/totalRegistros : 0, qtdVazio };
+    });
+
+    const temFallback = diagnostico.camposComFallback && diagnostico.camposComFallback.length > 0;
+    const temCampoMuitoVazio = vazios.some(v => v.pct > 0.4);
+
+    if(!temFallback && !temCampoMuitoVazio){
+      el.style.display = "none";
+      return;
+    }
+
+    const linhasMapa = Object.entries(diagnostico.mapeamentoUsado || {}).map(([campo, letra]) => {
+      const usouFallback = (diagnostico.camposComFallback || []).includes(campo);
+      const vazioInfo = vazios.find(v => v.rotulo === campo);
+      const avisoVazio = vazioInfo && vazioInfo.pct > 0.4
+        ? ` — ${(vazioInfo.pct*100).toFixed(0)}% dos registros vazios nesse campo`
+        : "";
+      return `<tr>
+        <td>${campo}</td>
+        <td class="${usouFallback ? 'fallback' : 'ok-map'}">Coluna ${letra}${usouFallback ? " (posição padrão, não achei pelo nome)" : ""}</td>
+        <td style="color:var(--rust)">${avisoVazio}</td>
+      </tr>`;
+    }).join("");
+
+    el.style.display = "block";
+    el.innerHTML = `
+      <strong>Diagnóstico automático:</strong> alguns campos parecem não estar vindo corretamente da planilha.
+      Confira abaixo quais colunas foram usadas para cada campo e ajuste os nomes dos cabeçalhos na sua
+      planilha (ou me avise quais são os nomes reais das colunas) se algo estiver errado.
+      <table>
+        <thead><tr><th>Campo do dashboard</th><th>Coluna usada</th><th>Observação</th></tr></thead>
+        <tbody>${linhasMapa}</tbody>
+      </table>
+      <div class="cabecalhos">Cabeçalhos encontrados na planilha: ${(diagnostico.cabecalhosNaPlanilha || []).join("  ·  ")}</div>
+      <button id="btnFecharDiagnostico">Ocultar este aviso</button>
+    `;
+    document.getElementById("btnFecharDiagnostico").addEventListener("click", () => {
+      diagnosticoFechadoManualmente = true;
+      el.style.display = "none";
+    });
+  }
+
+  function mostrarErro(msg){
+    const el = document.getElementById("erroBanner");
+    el.style.display = "block";
+    el.innerHTML = "<strong>Não foi possível ler a planilha.</strong><br>" + msg +
+      "<br><br>Confira se o caminho do arquivo em <code>servidor.ps1</code> está correto e se o Microsoft Excel está instalado nesta máquina.";
+  }
+  function esconderErro(){
+    document.getElementById("erroBanner").style.display = "none";
+  }
+
+  // -------------------- filtros --------------------
+  function valoresUnicos(campo, normFn){
+    const set = new Map();
+    dadosBrutos.forEach(r => {
+      const bruto = r[campo];
+      if(bruto == null || bruto === "") return;
+      const label = normFn ? normFn(r) : bruto;
+      const chave = normalizarChave(String(label));
+      if(!set.has(chave)) set.set(chave, label);
+    });
+    return Array.from(set.values()).sort((a,b) => String(a).localeCompare(String(b), "pt-BR"));
+  }
+
+  function popularFiltros(){
+    preencherSelect("fAno", Array.from(new Set(dadosBrutos.map(r=>r.ano).filter(v=>v!=null))).sort((a,b)=>a-b));
+    preencherSelect("fMes", Array.from(new Set(dadosBrutos.map(r=>r.mes).filter(v=>v!=null))).sort((a,b)=>a-b), m => MESES[m] || m);
+    preencherSelect("fPessoa", valoresUnicos("categoria", r=>r.pessoaNorm));
+    preencherSelect("fCartao", valoresUnicos("cartao", r=>r.cartaoNorm));
+    preencherSelect("fSituacao", Array.from(new Set(dadosBrutos.map(r=>r.situacaoNorm))).sort());
+  }
+
+  function preencherSelect(id, valores, labelFn){
+    const sel = document.getElementById(id);
+    const valorAtual = sel.value;
+    sel.innerHTML = '<option value="">' + sel.options[0].textContent + "</option>";
+    valores.forEach(v => {
+      const opt = document.createElement("option");
+      opt.value = v;
+      opt.textContent = labelFn ? labelFn(v) : v;
+      sel.appendChild(opt);
+    });
+    if(Array.from(sel.options).some(o=>o.value===valorAtual)) sel.value = valorAtual;
+  }
+
+  function aplicarFiltros(opcoes){
+    opcoes = opcoes || {};
+    const ano = document.getElementById("fAno").value;
+    const mes = document.getElementById("fMes").value;
+    const pessoa = document.getElementById("fPessoa").value;
+    const cartao = opcoes.ignorarCartao ? "" : document.getElementById("fCartao").value;
+    const situ = document.getElementById("fSituacao").value;
+    const busca = document.getElementById("fBusca").value.trim().toLowerCase();
+
+    return dadosBrutos.filter(r => {
+      if(ano && String(r.ano) !== ano) return false;
+      if(mes && String(r.mes) !== mes) return false;
+      if(pessoa && r.pessoaNorm !== pessoa) return false;
+      if(cartao && r.cartaoNorm !== cartao) return false;
+      if(situ && r.situacaoNorm !== situ) return false;
+      if(busca){
+        const alvo = ((r.descricao||"") + " " + (r.observacoes||"")).toLowerCase();
+        if(!alvo.includes(busca)) return false;
+      }
+      return true;
+    });
+  }
+
+  // -------------------- render geral --------------------
+  function renderizarTudo(){
+    const filtrados = aplicarFiltros();
+    document.getElementById("contagemFiltro").textContent = filtrados.length + " de " + dadosBrutos.length + " lançamentos";
+
+    renderizarKpis(filtrados);
+    renderizarGraficoMes(filtrados);
+    renderizarTop10(filtrados);
+    renderizarGraficoPessoa(filtrados);
+    renderizarGraficoCartao(filtrados);
+    renderizarGraficoSituacao(filtrados);
+    renderizarTotalPorPessoa();
+    paginaAtual = 1;
+    renderizarTabela(filtrados);
+  }
+
+  let ordenacaoTotalPessoa = { coluna: "total", asc: false };
+
+  function renderizarTotalPorPessoa(){
+    const lista = aplicarFiltros({ ignorarCartao: true });
+    const totalGeral = lista.reduce((s,r)=> s + (r.valor||0), 0);
+
+    const mapa = new Map();
+    lista.forEach(r => {
+      const chave = normalizarChave(r.pessoaNorm);
+      if(!mapa.has(chave)) mapa.set(chave, { pessoa: r.pessoaNorm, total: 0, qtd: 0 });
+      const item = mapa.get(chave);
+      item.total += (r.valor || 0);
+      item.qtd += 1;
+    });
+
+    let linhas = Array.from(mapa.values());
+    linhas.sort((a,b) => {
+      let va = a[ordenacaoTotalPessoa.coluna === "pct" ? "total" : ordenacaoTotalPessoa.coluna];
+      let vb = b[ordenacaoTotalPessoa.coluna === "pct" ? "total" : ordenacaoTotalPessoa.coluna];
+      if(ordenacaoTotalPessoa.coluna === "pessoa"){ va = String(va); vb = String(vb); }
+      if(va < vb) return ordenacaoTotalPessoa.asc ? -1 : 1;
+      if(va > vb) return ordenacaoTotalPessoa.asc ? 1 : -1;
+      return 0;
+    });
+
+    const corpo = document.getElementById("corpoTotalPessoa");
+    if(!linhas.length){
+      corpo.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--ink-faint); padding:20px;">Nenhum lançamento encontrado</td></tr>`;
+      return;
+    }
+
+    corpo.innerHTML = linhas.map(l => `
+      <tr>
+        <td>${l.pessoa}</td>
+        <td>${fmtNum(l.qtd)}</td>
+        <td class="valcel">${fmtMoeda(l.total)}</td>
+        <td>${totalGeral ? ((l.total/totalGeral)*100).toFixed(1) : "0,0"}%</td>
+      </tr>
+    `).join("");
+  }
+
+  function renderizarKpis(lista){
+    const total = lista.reduce((s,r)=> s + (r.valor||0), 0);
+    const pago = lista.filter(r=>r.situacaoNorm==="OK").reduce((s,r)=> s + (r.valor||0), 0);
+    const aVencer = lista.filter(r=>r.situacaoNorm==="A Vencer").reduce((s,r)=> s + (r.valor||0), 0);
+    const qtd = lista.length;
+    const media = qtd ? total/qtd : 0;
+    const maior = lista.reduce((m,r)=> (r.valor||0) > m ? (r.valor||0) : m, 0);
+
+    const cards = [
+      {classe:"hero", rotulo:"Total no filtro atual", valor: fmtMoeda(total), nota: qtd + " lançamentos"},
+      {rotulo:"Pago / OK", valor: fmtMoeda(pago), corValor:"green"},
+      {rotulo:"A vencer", valor: fmtMoeda(aVencer), corValor:"rust"},
+      {rotulo:"Qtde. lançamentos", valor: fmtNum(qtd)},
+      {rotulo:"Ticket médio", valor: fmtMoeda(media)},
+      {rotulo:"Maior lançamento", valor: fmtMoeda(maior)}
+    ];
+
+    document.getElementById("kpis").innerHTML = cards.map(c => `
+      <div class="kpi ${c.classe||""}">
+        <div class="rotulo">${c.rotulo}</div>
+        <div class="valor ${c.corValor||""}">${c.valor}</div>
+        ${c.nota ? `<div class="nota">${c.nota}</div>` : ""}
+      </div>
+    `).join("");
+  }
+
+  function agregarPor(lista, chaveFn, rotuloFn){
+    const mapa = new Map();
+    lista.forEach(r => {
+      const chave = chaveFn(r);
+      const rotulo = rotuloFn ? rotuloFn(r) : chave;
+      if(!mapa.has(chave)) mapa.set(chave, {label: rotulo, value: 0});
+      mapa.get(chave).value += (r.valor || 0);
+    });
+    return Array.from(mapa.values()).sort((a,b)=> b.value - a.value);
+  }
+
+  function renderizarGraficoPessoa(lista){
+    const dados = agregarPor(lista, r => normalizarChave(r.pessoaNorm), r => r.pessoaNorm);
+    const el = document.getElementById("graficoPessoa");
+    if(!dados.length){ el.innerHTML = '<div class="vazio">Sem dados no filtro atual</div>'; return; }
+    const max = dados[0].value;
+    el.innerHTML = dados.map(d => `
+      <div class="barra-h-item">
+        <div class="topo"><span class="nome">${d.label}</span><span class="num">${fmtMoeda(d.value)}</span></div>
+        <div class="barra-h-trilho"><div class="barra-h-fill" style="width:${max? (d.value/max*100):0}%"></div></div>
+      </div>
+    `).join("");
+  }
+
+  function renderizarGraficoMes(lista){
+    const mapa = new Map();
+    lista.forEach(r => {
+      if(r.ano == null || r.mes == null) return;
+      const chave = String(r.ano) + "-" + String(r.mes).padStart(2,"0");
+      if(!mapa.has(chave)) mapa.set(chave, {label: r.competencia, value: 0, ano:r.ano, mes:r.mes});
+      mapa.get(chave).value += (r.valor || 0);
+    });
+    const dados = Array.from(mapa.values()).sort((a,b)=> (a.ano-b.ano) || (a.mes-b.mes));
+    const el = document.getElementById("graficoMes");
+    if(!dados.length){ el.innerHTML = '<div class="vazio">Sem dados no filtro atual</div>'; return; }
+
+    const max = Math.max(...dados.map(d=>d.value), 1);
+    const larguraTotal = Math.max(560, dados.length * 56);
+    const alturaGrafico = 190;
+    const larguraBarra = Math.min(38, (larguraTotal / dados.length) - 14);
+
+    let barrasSvg = "";
+    dados.forEach((d,i) => {
+      const x = i * (larguraTotal/dados.length) + ((larguraTotal/dados.length - larguraBarra)/2);
+      const h = Math.max(2, (d.value/max) * (alturaGrafico-30));
+      const y = alturaGrafico - h - 24;
+      barrasSvg += `
+        <g>
+          <rect x="${x}" y="${y}" width="${larguraBarra}" height="${h}" rx="3" fill="#d9a441" opacity="0.9"></rect>
+          <text x="${x + larguraBarra/2}" y="${alturaGrafico-6}" text-anchor="middle" font-size="10.5" fill="#9aa2ae">${d.label.slice(0,2)}/${d.label.slice(3)}</text>
+          <title>${d.label}: ${fmtMoeda(d.value)}</title>
+        </g>`;
+    });
+
+    el.innerHTML = `<div style="overflow-x:auto;"><svg width="${larguraTotal}" height="${alturaGrafico}" viewBox="0 0 ${larguraTotal} ${alturaGrafico}" style="font-family:inherit;">${barrasSvg}</svg></div>`;
+  }
+
+  function renderizarDonut(elId, dados, formatarValor){
+    const el = document.getElementById(elId);
+    if(!dados.length){ el.innerHTML = '<div class="vazio">Sem dados no filtro atual</div>'; return; }
+    const total = dados.reduce((s,d)=>s+d.value,0);
+    const raio = 60, cx=75, cy=75, espessura=22;
+    let anguloAcumulado = -90;
+    let arcosSvg = "";
+    dados.forEach((d,i) => {
+      const fatia = total ? (d.value/total)*360 : 0;
+      const inicio = anguloAcumulado;
+      const fim = anguloAcumulado + fatia;
+      arcosSvg += arcoDonut(cx, cy, raio, espessura, inicio, fim, CORES_DONUT[i % CORES_DONUT.length]);
+      anguloAcumulado = fim;
+    });
+    const legenda = dados.map((d,i) => `
+      <div class="legenda-item">
+        <span class="quad" style="background:${CORES_DONUT[i % CORES_DONUT.length]}"></span>
+        <span class="lbl">${d.label}</span>
+        <span class="val">${formatarValor ? formatarValor(d.value) : fmtMoeda(d.value)}</span>
+      </div>
+    `).join("");
+    el.innerHTML = `
+      <div style="display:flex; align-items:center; gap:18px; flex-wrap:wrap;">
+        <svg width="150" height="150" viewBox="0 0 150 150">${arcosSvg}</svg>
+        <div class="legenda-donut" style="flex:1; min-width:120px;">${legenda}</div>
+      </div>`;
+  }
+
+  function arcoDonut(cx, cy, r, espessura, anguloIni, anguloFim, cor){
+    if(anguloFim - anguloIni >= 359.999) anguloFim = anguloIni + 359.999;
+    const rad = a => (a * Math.PI) / 180;
+    const x1 = cx + r*Math.cos(rad(anguloIni)), y1 = cy + r*Math.sin(rad(anguloIni));
+    const x2 = cx + r*Math.cos(rad(anguloFim)), y2 = cy + r*Math.sin(rad(anguloFim));
+    const largeArc = (anguloFim - anguloIni) > 180 ? 1 : 0;
+    return `<path d="M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}"
+              fill="none" stroke="${cor}" stroke-width="${espessura}" stroke-linecap="butt"></path>`;
+  }
+
+  function renderizarGraficoCartao(lista){
+    const dados = agregarPor(lista, r => normalizarChave(r.cartaoNorm), r => r.cartaoNorm).slice(0,8);
+    renderizarDonut("graficoCartao", dados);
+  }
+
+  function renderizarGraficoSituacao(lista){
+    const dados = agregarPor(lista, r => r.situacaoNorm, r => r.situacaoNorm);
+    renderizarDonut("graficoSituacao", dados);
+  }
+
+  function renderizarTop10(lista){
+    const top = [...lista].sort((a,b)=> (b.valor||0)-(a.valor||0)).slice(0,10);
+    const el = document.getElementById("listaTop10");
+    if(!top.length){ el.innerHTML = '<div class="vazio">Sem dados no filtro atual</div>'; return; }
+    el.innerHTML = top.map((r,i) => `
+      <li>
+        <span class="pos">${i+1}</span>
+        <span class="desc" title="${(r.descricao||"").replace(/"/g,'&quot;')}">${r.descricao || "(sem descrição)"}</span>
+        <span class="meta">${r.pessoaNorm || ""}${r.dataFmt ? " · "+r.dataFmt : ""}</span>
+        <span class="val">${fmtMoeda(r.valor)}</span>
+      </li>
+    `).join("");
+  }
+
+  // -------------------- tabela --------------------
+  function renderizarTabela(listaFiltrada){
+    let lista = [...listaFiltrada];
+    lista.sort((a,b) => {
+      let va = a[ordenacao.coluna], vb = b[ordenacao.coluna];
+      if(ordenacao.coluna === "valor"){ va = va||0; vb = vb||0; }
+      else { va = (va==null?"":String(va)); vb = (vb==null?"":String(vb)); }
+      if(va < vb) return ordenacao.asc ? -1 : 1;
+      if(va > vb) return ordenacao.asc ? 1 : -1;
+      return 0;
+    });
+
+    const totalPaginas = Math.max(1, Math.ceil(lista.length / LINHAS_POR_PAGINA));
+    if(paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+    const inicio = (paginaAtual-1) * LINHAS_POR_PAGINA;
+    const pagina = lista.slice(inicio, inicio + LINHAS_POR_PAGINA);
+
+    const corpo = document.getElementById("corpoTabela");
+    if(!pagina.length){
+      corpo.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--ink-faint); padding:24px;">Nenhum lançamento encontrado</td></tr>`;
+    } else {
+      corpo.innerHTML = pagina.map(r => `
+        <tr>
+          <td>${r.dataFmt || "—"}</td>
+          <td class="descricao">${r.descricao || ""}</td>
+          <td>${r.pessoaNorm || ""}</td>
+          <td class="valcel">${fmtMoeda(r.valor)}</td>
+          <td>${r.parcela || "—"}</td>
+          <td>${r.cartaoNorm || "—"}</td>
+          <td>${r.competencia}</td>
+          <td>${badgeSituacao(r.situacaoNorm)}</td>
+        </tr>
+      `).join("");
+    }
+
+    document.getElementById("infoPagina").textContent =
+      `Página ${paginaAtual} de ${totalPaginas} · ${lista.length} lançamentos`;
+    document.getElementById("btnAnterior").disabled = paginaAtual <= 1;
+    document.getElementById("btnProximo").disabled = paginaAtual >= totalPaginas;
+
+    corpo.dataset.totalPaginas = totalPaginas;
+  }
+
+  function badgeSituacao(s){
+    if(s === "OK") return `<span class="badge ok">OK</span>`;
+    if(s === "A Vencer") return `<span class="badge avencer">A vencer</span>`;
+    return `<span class="badge">${s||"—"}</span>`;
+  }
+
+  // -------------------- despesas fixas --------------------
+  function renderizarFixas(){
+    const painel = document.getElementById("painelFixas");
+    const cabecalho = document.getElementById("cabecalhoFixas");
+    const corpo = document.getElementById("corpoFixas");
+    const rodape = document.getElementById("rodapeFixas");
+
+    if(!despesasFixas || !despesasFixas.itens || !despesasFixas.itens.length){
+      cabecalho.innerHTML = "";
+      corpo.innerHTML = `<tr><td style="text-align:center; color:var(--ink-faint); padding:20px;">
+        Não encontrei despesas fixas na planilha (verifique se a aba "Total Fixo" existe e tem o formato esperado).
+      </td></tr>`;
+      rodape.innerHTML = "";
+      return;
+    }
+
+    document.getElementById("nomeAbaFixaTxt").textContent = despesasFixas.aba || "Total Fixo";
+
+    const elRefMes = document.getElementById("refMes");
+    const mesDestaque = (elRefMes && elRefMes.value) ? parseInt(elRefMes.value, 10) : (new Date().getMonth() + 1);
+    const meses = despesasFixas.meses || MESES_LONGO.slice(1);
+
+    cabecalho.innerHTML = `<th>Item</th>` +
+      meses.map((m,i) => `<th class="${(i+1)===mesDestaque ? 'mes-atual' : ''}">${m.slice(0,3)}</th>`).join("") +
+      `<th>Total</th>`;
+
+    corpo.innerHTML = despesasFixas.itens.map(item => `
+      <tr>
+        <td>${item.nome}</td>
+        ${item.valores.map((v,i) => `<td class="${(i+1)===mesDestaque ? 'mes-atual' : ''}">${v==null ? "—" : fmtMoeda(v)}</td>`).join("")}
+        <td class="valcel">${fmtMoeda(item.total)}</td>
+      </tr>
+    `).join("");
+
+    const totalPorMes = despesasFixas.totalPorMes || [];
+    rodape.innerHTML = `<tr>
+        <td>Total</td>
+        ${totalPorMes.map((v,i) => `<td class="${(i+1)===mesDestaque ? 'mes-atual' : ''}">${v==null ? "—" : fmtMoeda(v)}</td>`).join("")}
+        <td>${fmtMoeda(despesasFixas.totalGeral)}</td>
+      </tr>`;
+  }
+
+  function totalFixoDoMes(mes, ano){
+    // A aba "Total Fixo" não tem coluna de ano (é sempre o ano corrente da planilha);
+    // por isso, usamos o valor do mês independentemente do ano de referência escolhido.
+    if(!despesasFixas || !despesasFixas.totalPorMes || !mes) return 0;
+    const v = despesasFixas.totalPorMes[mes-1];
+    return v || 0;
+  }
+
+  // -------------------- receitas (cadastradas no navegador) --------------------
+  function carregarReceitas(){
+    try{
+      const bruto = localStorage.getItem(CHAVE_RECEITAS);
+      receitas = bruto ? JSON.parse(bruto) : [];
+    } catch(e){
+      receitas = [];
+    }
+  }
+
+  function salvarReceitas(){
+    try{
+      localStorage.setItem(CHAVE_RECEITAS, JSON.stringify(receitas));
+    } catch(e){
+      alert("Não consegui salvar as receitas neste navegador. O armazenamento local pode estar cheio ou bloqueado.");
+    }
+  }
+
+  function inicializarFormReceitas(){
+    const hoje = new Date();
+    const anoAtual = hoje.getFullYear();
+    const mesAtual = hoje.getMonth() + 1;
+
+    const sel = document.getElementById("refMes");
+    sel.innerHTML = MESES_LONGO.slice(1).map((m,i) => `<option value="${i+1}">${m}</option>`).join("");
+    document.getElementById("refMes").value = mesAtual;
+    document.getElementById("refAno").value = anoAtual;
+  }
+
+  function renderizarReceitas(){
+    const mesRef = parseInt(document.getElementById("refMes").value, 10);
+    const anoRef = parseInt(document.getElementById("refAno").value, 10);
+    const mostrarTodas = document.getElementById("chkTodasReceitas").checked;
+
+    document.getElementById("labelMesReceitas").textContent = mostrarTodas
+      ? "todos os meses"
+      : `${MESES_LONGO[mesRef] || ""} de ${anoRef}`;
+    document.getElementById("labelMesCadastro").textContent = `${MESES_LONGO[mesRef] || ""} de ${anoRef}`;
+
+    const corpo = document.getElementById("corpoReceitas");
+    const base = mostrarTodas ? receitas : receitas.filter(r => r.mes === mesRef && r.ano === anoRef);
+    const listaOrdenada = [...base].sort((a,b) => (b.ano-a.ano) || (b.mes-a.mes) || a.descricao.localeCompare(b.descricao,"pt-BR"));
+
+    if(!listaOrdenada.length){
+      const msg = mostrarTodas
+        ? "Nenhuma receita cadastrada ainda"
+        : `Nenhuma receita cadastrada para ${MESES_LONGO[mesRef] || ""} de ${anoRef}. Marque "mostrar todas" para ver outros meses.`;
+      corpo.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--ink-faint); padding:18px;">${msg}</td></tr>`;
+    } else {
+      corpo.innerHTML = listaOrdenada.map(r => `
+        <tr>
+          <td>${r.descricao}</td>
+          <td>${MESES_LONGO[r.mes] || r.mes}</td>
+          <td>${r.ano}</td>
+          <td class="valcel">${fmtMoeda(r.valor)}</td>
+          <td><button data-id="${r.id}" title="Remover" class="btn-remover-receita">×</button></td>
+        </tr>
+      `).join("");
+      corpo.querySelectorAll(".btn-remover-receita").forEach(btn => {
+        btn.addEventListener("click", () => {
+          receitas = receitas.filter(r => r.id !== btn.dataset.id);
+          salvarReceitas();
+          renderizarReceitas();
+          renderizarSaldo();
+        });
+      });
+    }
+  }
+
+  function renderizarSaldo(){
+    const mesRef = parseInt(document.getElementById("refMes").value, 10);
+    const anoRef = parseInt(document.getElementById("refAno").value, 10);
+
+    document.getElementById("labelReferencia").textContent =
+      `Referência: ${MESES_LONGO[mesRef] || ""} de ${anoRef}`;
+
+    const totalReceitas = receitas
+      .filter(r => r.mes === mesRef && r.ano === anoRef)
+      .reduce((s,r) => s + (r.valor||0), 0);
+
+    const totalFixo = totalFixoDoMes(mesRef, anoRef);
+
+    const totalVariavel = dadosBrutos
+      .filter(r => r.mes === mesRef && r.ano === anoRef)
+      .reduce((s,r) => s + (r.valor||0), 0);
+
+    const saldo = totalReceitas - totalFixo - totalVariavel;
+
+    const cards = [
+      { rotulo: "Receitas no mês", valor: fmtMoeda(totalReceitas), classe: "green" },
+      { rotulo: "Despesas fixas no mês", valor: fmtMoeda(totalFixo), classe: "" },
+      { rotulo: "Despesas variáveis no mês", valor: fmtMoeda(totalVariavel), classe: "" },
+      { rotulo: "Saldo estimado", valor: fmtMoeda(saldo), classe: saldo >= 0 ? "green" : "rust" }
+    ];
+
+    document.getElementById("kpisSaldo").innerHTML = cards.map(c => `
+      <div class="kpi">
+        <div class="rotulo">${c.rotulo}</div>
+        <div class="valor pequeno ${c.classe}">${c.valor}</div>
+      </div>
+    `).join("");
+
+    renderizarReceitas();
+  }
+
+  function parseValorBR(texto){
+    if(texto == null) return NaN;
+    let s = String(texto).trim();
+    if(!s) return NaN;
+    s = s.replace(/[^\d.,-]/g, "");          // tira "R$", espaços etc.
+    if(s.includes(",")){
+      // formato BR: ponto é separador de milhar, vírgula é decimal
+      s = s.replace(/\./g, "").replace(",", ".");
+    }
+    // se não tem vírgula, deixa como está (já pode ser "350" ou "350.00")
+    return parseFloat(s);
+  }
+
+  function adicionarReceita(){
+    const descricao = document.getElementById("novaReceitaDescricao").value.trim();
+    const valor = parseValorBR(document.getElementById("novaReceitaValor").value);
+    const mes = parseInt(document.getElementById("refMes").value, 10);
+    const ano = parseInt(document.getElementById("refAno").value, 10);
+
+    if(!descricao){ alert("Digite uma descrição para a receita."); return; }
+    if(isNaN(valor) || valor <= 0){ alert("Digite um valor válido para a receita (ex.: 350,00)."); return; }
+    if(!mes || !ano){ alert("Selecione mês e ano."); return; }
+
+    receitas.push({
+      id: "r" + Date.now() + "_" + Math.random().toString(36).slice(2,8),
+      descricao, valor, mes, ano
+    });
+    salvarReceitas();
+
+    document.getElementById("novaReceitaDescricao").value = "";
+    document.getElementById("novaReceitaValor").value = "";
+
+    renderizarSaldo();
+  }
+
+  function baixarArquivo(conteudo, nomeArquivo, tipoMime){
+    const blob = new Blob([conteudo], {type: tipoMime});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = nomeArquivo;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportarDespesas(){
+    const lista = aplicarFiltros();
+    if(!lista.length){
+      alert("Não há lançamentos para exportar com os filtros atuais.");
+      return;
+    }
+    if(typeof XLSX === "undefined"){
+      alert("Não consegui carregar o componente de exportação Excel (sem conexão com a internet?). Tente novamente com internet disponível.");
+      return;
+    }
+
+    const colunas = ["Data","Descrição","Pessoa","Valor","Parcela","Cartão","Mês","Ano","Situação","Observações"];
+
+    // Monta linha por linha como array de valores "crus" (não texto formatado),
+    // para depois marcar explicitamente o tipo de cada célula — é isso que
+    // impede o Excel de tentar "adivinhar" (e errar) o tipo de Parcela, por exemplo.
+    const linhas = lista.map(r => ([
+      r.dataFmt || "",
+      r.descricao || "",
+      r.pessoaNorm || "",
+      r.valor != null ? r.valor : null,
+      r.parcela || "",
+      r.cartaoNorm || "",
+      r.mes != null ? (MESES_LONGO[r.mes] || r.mes) : "",
+      r.ano != null ? r.ano : "",
+      r.situacaoNorm || "",
+      r.observacoes || ""
+    ]));
+
+    const ws = XLSX.utils.aoa_to_sheet([colunas, ...linhas]);
+
+    // Índices das colunas que devem ser SEMPRE texto, mesmo que pareçam
+    // data/número (Data e Parcela são os casos clássicos: "4/5" vira data
+    // se o Excel tiver liberdade para adivinhar).
+    const colunasTexto = new Set([0, 4]); // Data, Parcela
+    const colunaValor = 3;                 // Valor -> número com 2 casas
+
+    const total = linhas.length;
+    for (let l = 0; l < total; l++){
+      const linhaPlanilha = l + 1; // +1 porque a linha 0 é o cabeçalho
+      for (let c = 0; c < colunas.length; c++){
+        const endereco = XLSX.utils.encode_cell({ r: linhaPlanilha, c });
+        const celula = ws[endereco];
+        if (!celula) continue;
+        if (colunasTexto.has(c)) {
+          celula.t = "s";                 // força texto
+          celula.z = "@";
+        } else if (c === colunaValor && typeof celula.v === "number") {
+          celula.t = "n";
+          celula.z = "#,##0.00";          // número com 2 casas, sem forçar "R$" (fica mais fácil de somar/filtrar)
+        }
+      }
+    }
+
+    // Larguras de coluna aproximadas, só pra já abrir legível
+    ws["!cols"] = [
+      {wch:12},{wch:38},{wch:14},{wch:12},{wch:10},{wch:16},{wch:10},{wch:8},{wch:12},{wch:30}
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Despesas");
+
+    const agora = new Date();
+    const carimbo = agora.toISOString().slice(0,10);
+    XLSX.writeFile(wb, `despesas-${carimbo}.xlsx`);
+  }
+
+  function exportarReceitas(){
+    baixarArquivo(JSON.stringify(receitas, null, 2), "receitas-dashboard-despesas.json", "application/json");
+  }
+
+  function importarReceitas(arquivo){
+    const leitor = new FileReader();
+    leitor.onload = () => {
+      try{
+        const importadas = JSON.parse(leitor.result);
+        if(!Array.isArray(importadas)) throw new Error("Formato inválido");
+        const validas = importadas.filter(r => r && r.descricao && typeof r.valor === "number" && r.mes && r.ano);
+        if(!validas.length){ alert("O arquivo não tem receitas em um formato reconhecível."); return; }
+        validas.forEach(r => { if(!r.id) r.id = "r" + Date.now() + "_" + Math.random().toString(36).slice(2,8); });
+        receitas = receitas.concat(validas);
+        salvarReceitas();
+        renderizarSaldo();
+        alert(validas.length + " receita(s) importada(s) com sucesso.");
+      } catch(e){
+        alert("Não consegui ler esse arquivo como receitas exportadas daqui.");
+      }
+    };
+    leitor.readAsText(arquivo);
+  }
+
+  // -------------------- eventos --------------------
+  ["fAno","fMes","fPessoa","fCartao","fSituacao"].forEach(id => {
+    document.getElementById(id).addEventListener("change", renderizarTudo);
+  });
+  let debounceBusca;
+  document.getElementById("fBusca").addEventListener("input", () => {
+    clearTimeout(debounceBusca);
+    debounceBusca = setTimeout(renderizarTudo, 250);
+  });
+  document.getElementById("btnLimpar").addEventListener("click", () => {
+    ["fAno","fMes","fPessoa","fCartao","fSituacao"].forEach(id => document.getElementById(id).value = "");
+    document.getElementById("fBusca").value = "";
+    renderizarTudo();
+  });
+  document.getElementById("btnAtualizar").addEventListener("click", buscarDados);
+
+  document.querySelectorAll("table.dados thead th[data-col]").forEach(th => {
+    th.addEventListener("click", () => {
+      const col = th.dataset.col;
+      if(ordenacao.coluna === col) ordenacao.asc = !ordenacao.asc;
+      else { ordenacao.coluna = col; ordenacao.asc = false; }
+      renderizarTabela(aplicarFiltros());
+    });
+  });
+
+  document.querySelectorAll("#tabelaTotalPessoa thead th[data-tp-col]").forEach(th => {
+    th.addEventListener("click", () => {
+      const col = th.dataset.tpCol;
+      if(ordenacaoTotalPessoa.coluna === col) ordenacaoTotalPessoa.asc = !ordenacaoTotalPessoa.asc;
+      else { ordenacaoTotalPessoa.coluna = col; ordenacaoTotalPessoa.asc = false; }
+      renderizarTotalPorPessoa();
+    });
+  });
+
+  document.getElementById("btnAnterior").addEventListener("click", () => {
+    if(paginaAtual > 1){ paginaAtual--; renderizarTabela(aplicarFiltros()); }
+  });
+  document.getElementById("btnProximo").addEventListener("click", () => {
+    paginaAtual++; renderizarTabela(aplicarFiltros());
+  });
+
+  document.getElementById("refMes").addEventListener("change", () => { renderizarFixas(); renderizarSaldo(); });
+  document.getElementById("refAno").addEventListener("change", () => { renderizarFixas(); renderizarSaldo(); });
+  document.getElementById("chkTodasReceitas").addEventListener("change", renderizarReceitas);
+  document.getElementById("btnAdicionarReceita").addEventListener("click", adicionarReceita);
+  document.getElementById("btnExportarDespesas").addEventListener("click", exportarDespesas);
+  document.getElementById("btnExportarReceitas").addEventListener("click", exportarReceitas);
+  document.getElementById("btnImportarReceitas").addEventListener("click", () => {
+    document.getElementById("inputImportarReceitas").click();
+  });
+  document.getElementById("inputImportarReceitas").addEventListener("change", (ev) => {
+    const arquivo = ev.target.files[0];
+    if(arquivo) importarReceitas(arquivo);
+    ev.target.value = "";
+  });
+
+  // -------------------- início --------------------
+  inicializarFormReceitas();
+  carregarReceitas();
+  renderizarSaldo();
+  buscarDados();
+  setInterval(buscarDados, 5000);
+
+})();
+</script>
+</body>
+</html>
