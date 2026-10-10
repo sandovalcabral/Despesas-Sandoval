@@ -330,23 +330,23 @@
   <div class="filtros">
     <div class="campo">
       <label for="fAno">Ano</label>
-      <select id="fAno"><option value="">Todos</option></select>
+      <select id="fAno"></select>
     </div>
     <div class="campo">
       <label for="fMes">Mês</label>
-      <select id="fMes"><option value="">Todos</option></select>
+      <select id="fMes"></select>
     </div>
     <div class="campo">
       <label for="fPessoa">Pessoa</label>
-      <select id="fPessoa"><option value="">Todas</option></select>
+      <select id="fPessoa"></select>
     </div>
     <div class="campo">
       <label for="fCartao">Cartão / Forma</label>
-      <select id="fCartao"><option value="">Todos</option></select>
+      <select id="fCartao"></select>
     </div>
     <div class="campo">
       <label for="fSituacao">Situação</label>
-      <select id="fSituacao"><option value="">Todas</option></select>
+      <select id="fSituacao"></select>
     </div>
     <div class="campo">
       <label for="fBusca">Buscar</label>
@@ -599,7 +599,7 @@
     el.style.display = "block";
     el.innerHTML = "<strong>Não foi possível ler a planilha.</strong><br>" + msg;
   }
-  function esconderErro{ document.getElementById("erroBanner").style.display = "none"; }
+  function esconderErro(){ document.getElementById("erroBanner").style.display = "none"; }
 
   function valoresUnicos(campo, normFn){
     const set = new Map();
@@ -614,24 +614,41 @@
   }
 
   function popularFiltros(){
-    preencherSelect("fAno", Array.from(new Set(dadosBrutos.map(r=>r.ano).filter(v=>v!=null))).sort((a,b)=>a-b), null, "Todos");
-    preencherSelect("fMes", Array.from(new Set(dadosBrutos.map(r=>r.mes).filter(v=>v!=null))).sort((a,b)=>a-b), m => MESES[m] || m, "Todos");
-    preencherSelect("fPessoa", valoresUnicos("categoria", r=>r.pessoaNorm), null, "Todas");
-    preencherSelect("fCartao", valoresUnicos("cartao", r=>r.cartaoNorm), null, "Todos");
-    preencherSelect("fSituacao", Array.from(new Set(dadosBrutos.map(r=>r.situacaoNorm))).sort(), null, "Todas");
+    const anos = Array.from(new Set(dadosBrutos.map(r=>r.ano).filter(v=>v!=null))).sort((a,b)=>a-b);
+    const meses = Array.from(new Set(dadosBrutos.map(r=>r.mes).filter(v=>v!=null))).sort((a,b)=>a-b);
+    const pessoas = valoresUnicos("categoria", r=>r.pessoaNorm);
+    const cartoes = valoresUnicos("cartao", r=>r.cartaoNorm);
+    const situacoes = Array.from(new Set(dadosBrutos.map(r=>r.situacaoNorm))).sort();
+
+    preencherSelect("fAno", anos);
+    preencherSelect("fMes", meses, m => MESES[m] || m);
+    preencherSelect("fPessoa", pessoas);
+    preencherSelect("fCartao", cartoes);
+    preencherSelect("fSituacao", situacoes);
+
+    // Seleciona automaticamente o primeiro ano e mês disponíveis se os campos estiverem vazios
+    const elAno = document.getElementById("fAno");
+    if(!elAno.value && anos.length > 0) { elAno.value = anos[0]; }
+
+    const elMes = document.getElementById("fMes");
+    if(!elMes.value && meses.length > 0) { elMes.value = meses[0]; }
   }
 
-  function preencherSelect(id, valores, labelFn, textoPadrao){
+  function preencherSelect(id, valores, labelFn){
     const sel = document.getElementById(id);
     const valorAtual = sel.value;
-    sel.innerHTML = `<option value="">${textoPadrao || "Todos"}</option>`;
+    sel.innerHTML = "";
     valores.forEach(v => {
       const opt = document.createElement("option");
       opt.value = v;
       opt.textContent = labelFn ? labelFn(v) : v;
       sel.appendChild(opt);
     });
-    if(Array.from(sel.options).some(o=>o.value===valorAtual)) sel.value = valorAtual;
+    if(Array.from(sel.options).some(o=>o.value===valorAtual)) {
+      sel.value = valorAtual;
+    } else if(sel.options.length > 0) {
+      sel.selectedIndex = 0;
+    }
   }
 
   function aplicarFiltros(opcoes){
@@ -1108,7 +1125,15 @@
     debounceBusca = setTimeout(renderizarTudo, 250);
   });
   document.getElementById("btnLimpar").addEventListener("click", () => {
-    ["fAno","fMes","fPessoa","fCartao","fSituacao"].forEach(id => document.getElementById(id).value = "");
+    // Reseta para o primeiro ano/mês disponíveis em vez de vazio
+    const elAno = document.getElementById("fAno");
+    if(elAno.options.length > 0) elAno.selectedIndex = 0;
+    const elMes = document.getElementById("fMes");
+    if(elMes.options.length > 0) elMes.selectedIndex = 0;
+    ["fPessoa","fCartao","fSituacao"].forEach(id => {
+      const el = document.getElementById(id);
+      if(el.options.length > 0) el.selectedIndex = 0;
+    });
     document.getElementById("fBusca").value = "";
     renderizarTudo();
   });
