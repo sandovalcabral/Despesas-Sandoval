@@ -473,7 +473,7 @@
       <table class="dados">
         <thead>
           <tr>
-            <th data-col="dataFmt">Data</th>
+            <th data-col="data">Data</th>
             <th data-col="descricao">Descrição</th>
             <th data-col="categoria">Pessoa</th>
             <th data-col="valor">Valor</th>
@@ -587,7 +587,7 @@
   </div>
 
   <footer>
-    Atualização automática a cada 5 segundos · arquivo monitorado pelo servidor local em <code>servidor.ps1</code>
+    Dashboard conectado diretamente ao Google Planilhas · Atualização em tempo real via nuvem
   </footer>
 
 </main>
@@ -627,6 +627,15 @@
     return s.trim();
   }
 
+  function formatarDataBR(isoStr) {
+    if (!isoStr) return "—";
+    const partes = String(isoStr).split("T")[0].split("-");
+    if (partes.length === 3) {
+      return `${partes[2]}/${partes[1]}/${partes[0]}`; // DD/MM/AAAA
+    }
+    return isoStr;
+  }
+
   // -------------------- busca / atualização de dados --------------------
   async function buscarDados(){
     try{
@@ -653,7 +662,6 @@
         cartaoNorm: tituloBonito(r.cartao)
       }));
 
-      renderizarDiagnostico(json.diagnostico, dadosBrutos);
       despesasFixas = json.despesasFixas || null;
       renderizarFixas();
       renderizarSaldo();
@@ -662,13 +670,11 @@
         ultimaAtualizacaoIso = json.atualizadoEm;
         popularFiltros();
         renderizarTudo();
-      } else {
-        // mesmos dados; só garante que a UI de status esteja correta
       }
 
       const dt = json.atualizadoEm ? new Date(json.atualizadoEm) : null;
       document.getElementById("subtitulo").textContent = dt
-        ? ("Planilha: " + json.aba + " · " + (json.arquivo || "").split("\\").pop())
+        ? ("Planilha: " + json.aba)
         : "";
       document.getElementById("statusTexto").textContent = dt
         ? ("atualizado às " + dt.toLocaleTimeString("pt-BR"))
@@ -677,72 +683,14 @@
     } catch(e){
       const statusBox = document.getElementById("statusBox");
       statusBox.classList.add("offline");
-      document.getElementById("statusTexto").textContent = "servidor local indisponível";
+      document.getElementById("statusTexto").textContent = "servidor online indisponível";
     }
-  }
-
-  let diagnosticoFechadoManualmente = false;
-
-  function renderizarDiagnostico(diagnostico, registros){
-    const el = document.getElementById("diagnosticoBanner");
-    if(!diagnostico || diagnosticoFechadoManualmente){ el.style.display = "none"; return; }
-
-    const totalRegistros = registros.length;
-    const camposParaChecar = [
-      {chave:"descricao", rotulo:"Descrição"},
-      {chave:"cartao",    rotulo:"Cartão"},
-      {chave:"mes",       rotulo:"Mês"},
-      {chave:"situacao",  rotulo:"Situação"}
-    ];
-    const vazios = camposParaChecar.map(c => {
-      const qtdVazio = registros.filter(r => r[c.chave] == null || r[c.chave] === "").length;
-      return { rotulo: c.rotulo, pct: totalRegistros ? qtdVazio/totalRegistros : 0, qtdVazio };
-    });
-
-    const temFallback = diagnostico.camposComFallback && diagnostico.camposComFallback.length > 0;
-    const temCampoMuitoVazio = vazios.some(v => v.pct > 0.4);
-
-    if(!temFallback && !temCampoMuitoVazio){
-      el.style.display = "none";
-      return;
-    }
-
-    const linhasMapa = Object.entries(diagnostico.mapeamentoUsado || {}).map(([campo, letra]) => {
-      const usouFallback = (diagnostico.camposComFallback || []).includes(campo);
-      const vazioInfo = vazios.find(v => v.rotulo === campo);
-      const avisoVazio = vazioInfo && vazioInfo.pct > 0.4
-        ? ` — ${(vazioInfo.pct*100).toFixed(0)}% dos registros vazios nesse campo`
-        : "";
-      return `<tr>
-        <td>${campo}</td>
-        <td class="${usouFallback ? 'fallback' : 'ok-map'}">Coluna ${letra}${usouFallback ? " (posição padrão, não achei pelo nome)" : ""}</td>
-        <td style="color:var(--rust)">${avisoVazio}</td>
-      </tr>`;
-    }).join("");
-
-    el.style.display = "block";
-    el.innerHTML = `
-      <strong>Diagnóstico automático:</strong> alguns campos parecem não estar vindo corretamente da planilha.
-      Confira abaixo quais colunas foram usadas para cada campo e ajuste os nomes dos cabeçalhos na sua
-      planilha (ou me avise quais são os nomes reais das colunas) se algo estiver errado.
-      <table>
-        <thead><tr><th>Campo do dashboard</th><th>Coluna usada</th><th>Observação</th></tr></thead>
-        <tbody>${linhasMapa}</tbody>
-      </table>
-      <div class="cabecalhos">Cabeçalhos encontrados na planilha: ${(diagnostico.cabecalhosNaPlanilha || []).join("  ·  ")}</div>
-      <button id="btnFecharDiagnostico">Ocultar este aviso</button>
-    `;
-    document.getElementById("btnFecharDiagnostico").addEventListener("click", () => {
-      diagnosticoFechadoManualmente = true;
-      el.style.display = "none";
-    });
   }
 
   function mostrarErro(msg){
     const el = document.getElementById("erroBanner");
     el.style.display = "block";
-    el.innerHTML = "<strong>Não foi possível ler a planilha.</strong><br>" + msg +
-      "<br><br>Confira se o caminho do arquivo em <code>servidor.ps1</code> está correto e se o Microsoft Excel está instalado nesta máquina.";
+    el.innerHTML = "<strong>Não foi possível ler a planilha.</strong><br>" + msg;
   }
   function esconderErro(){
     document.getElementById("erroBanner").style.display = "none";
@@ -1001,7 +949,7 @@
       <li>
         <span class="pos">${i+1}</span>
         <span class="desc" title="${(r.descricao||"").replace(/"/g,'&quot;')}">${r.descricao || "(sem descrição)"}</span>
-        <span class="meta">${r.pessoaNorm || ""}${r.dataFmt ? " · "+r.dataFmt : ""}</span>
+        <span class="meta">${r.pessoaNorm || ""}${r.data ? " · "+formatarDataBR(r.data) : ""}</span>
         <span class="val">${fmtMoeda(r.valor)}</span>
       </li>
     `).join("");
@@ -1013,6 +961,7 @@
     lista.sort((a,b) => {
       let va = a[ordenacao.coluna], vb = b[ordenacao.coluna];
       if(ordenacao.coluna === "valor"){ va = va||0; vb = vb||0; }
+      else if(ordenacao.coluna === "data"){ va = va||""; vb = vb||""; }
       else { va = (va==null?"":String(va)); vb = (vb==null?"":String(vb)); }
       if(va < vb) return ordenacao.asc ? -1 : 1;
       if(va > vb) return ordenacao.asc ? 1 : -1;
@@ -1030,7 +979,7 @@
     } else {
       corpo.innerHTML = pagina.map(r => `
         <tr>
-          <td>${r.dataFmt || "—"}</td>
+          <td>${formatarDataBR(r.data)}</td>
           <td class="descricao">${r.descricao || ""}</td>
           <td>${r.pessoaNorm || ""}</td>
           <td class="valcel">${fmtMoeda(r.valor)}</td>
@@ -1058,7 +1007,6 @@
 
   // -------------------- despesas fixas --------------------
   function renderizarFixas(){
-    const painel = document.getElementById("painelFixas");
     const cabecalho = document.getElementById("cabecalhoFixas");
     const corpo = document.getElementById("corpoFixas");
     const rodape = document.getElementById("rodapeFixas");
@@ -1066,7 +1014,7 @@
     if(!despesasFixas || !despesasFixas.itens || !despesasFixas.itens.length){
       cabecalho.innerHTML = "";
       corpo.innerHTML = `<tr><td style="text-align:center; color:var(--ink-faint); padding:20px;">
-        Não encontrei despesas fixas na planilha (verifique se a aba "Total Fixo" existe e tem o formato esperado).
+        Não encontrei despesas fixas na planilha.
       </td></tr>`;
       rodape.innerHTML = "";
       return;
@@ -1098,15 +1046,13 @@
       </tr>`;
   }
 
-  function totalFixoDoMes(mes, ano){
-    // A aba "Total Fixo" não tem coluna de ano (é sempre o ano corrente da planilha);
-    // por isso, usamos o valor do mês independentemente do ano de referência escolhido.
+  function totalFixoDoMes(mes){
     if(!despesasFixas || !despesasFixas.totalPorMes || !mes) return 0;
     const v = despesasFixas.totalPorMes[mes-1];
     return v || 0;
   }
 
-  // -------------------- receitas (cadastradas no navegador) --------------------
+  // -------------------- receitas (localStorage) --------------------
   function carregarReceitas(){
     try{
       const bruto = localStorage.getItem(CHAVE_RECEITAS);
@@ -1120,7 +1066,7 @@
     try{
       localStorage.setItem(CHAVE_RECEITAS, JSON.stringify(receitas));
     } catch(e){
-      alert("Não consegui salvar as receitas neste navegador. O armazenamento local pode estar cheio ou bloqueado.");
+      alert("Não consegui salvar as receitas neste navegador.");
     }
   }
 
@@ -1152,7 +1098,7 @@
     if(!listaOrdenada.length){
       const msg = mostrarTodas
         ? "Nenhuma receita cadastrada ainda"
-        : `Nenhuma receita cadastrada para ${MESES_LONGO[mesRef] || ""} de ${anoRef}. Marque "mostrar todas" para ver outros meses.`;
+        : `Nenhuma receita cadastrada para ${MESES_LONGO[mesRef] || ""} de ${anoRef}.`;
       corpo.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--ink-faint); padding:18px;">${msg}</td></tr>`;
     } else {
       corpo.innerHTML = listaOrdenada.map(r => `
@@ -1186,7 +1132,7 @@
       .filter(r => r.mes === mesRef && r.ano === anoRef)
       .reduce((s,r) => s + (r.valor||0), 0);
 
-    const totalFixo = totalFixoDoMes(mesRef, anoRef);
+    const totalFixo = totalFixoDoMes(mesRef);
 
     const totalVariavel = dadosBrutos
       .filter(r => r.mes === mesRef && r.ano === anoRef)
@@ -1215,12 +1161,10 @@
     if(texto == null) return NaN;
     let s = String(texto).trim();
     if(!s) return NaN;
-    s = s.replace(/[^\d.,-]/g, "");          // tira "R$", espaços etc.
+    s = s.replace(/[^\d.,-]/g, "");
     if(s.includes(",")){
-      // formato BR: ponto é separador de milhar, vírgula é decimal
       s = s.replace(/\./g, "").replace(",", ".");
     }
-    // se não tem vírgula, deixa como está (já pode ser "350" ou "350.00")
     return parseFloat(s);
   }
 
@@ -1231,8 +1175,7 @@
     const ano = parseInt(document.getElementById("refAno").value, 10);
 
     if(!descricao){ alert("Digite uma descrição para a receita."); return; }
-    if(isNaN(valor) || valor <= 0){ alert("Digite um valor válido para a receita (ex.: 350,00)."); return; }
-    if(!mes || !ano){ alert("Selecione mês e ano."); return; }
+    if(isNaN(valor) || valor <= 0){ alert("Digite um valor válido para a receita."); return; }
 
     receitas.push({
       id: "r" + Date.now() + "_" + Math.random().toString(36).slice(2,8),
@@ -1246,36 +1189,14 @@
     renderizarSaldo();
   }
 
-  function baixarArquivo(conteudo, nomeArquivo, tipoMime){
-    const blob = new Blob([conteudo], {type: tipoMime});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = nomeArquivo;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
   function exportarDespesas(){
     const lista = aplicarFiltros();
-    if(!lista.length){
-      alert("Não há lançamentos para exportar com os filtros atuais.");
-      return;
-    }
-    if(typeof XLSX === "undefined"){
-      alert("Não consegui carregar o componente de exportação Excel (sem conexão com a internet?). Tente novamente com internet disponível.");
-      return;
-    }
+    if(!lista.length){ alert("Não há lançamentos para exportar."); return; }
+    if(typeof XLSX === "undefined"){ alert("Biblioteca Excel indisponível."); return; }
 
     const colunas = ["Data","Descrição","Pessoa","Valor","Parcela","Cartão","Mês","Ano","Situação","Observações"];
-
-    // Monta linha por linha como array de valores "crus" (não texto formatado),
-    // para depois marcar explicitamente o tipo de cada célula — é isso que
-    // impede o Excel de tentar "adivinhar" (e errar) o tipo de Parcela, por exemplo.
     const linhas = lista.map(r => ([
-      r.dataFmt || "",
+      formatarDataBR(r.data) || "",
       r.descricao || "",
       r.pessoaNorm || "",
       r.valor != null ? r.valor : null,
@@ -1288,45 +1209,19 @@
     ]));
 
     const ws = XLSX.utils.aoa_to_sheet([colunas, ...linhas]);
-
-    // Índices das colunas que devem ser SEMPRE texto, mesmo que pareçam
-    // data/número (Data e Parcela são os casos clássicos: "4/5" vira data
-    // se o Excel tiver liberdade para adivinhar).
-    const colunasTexto = new Set([0, 4]); // Data, Parcela
-    const colunaValor = 3;                 // Valor -> número com 2 casas
-
-    const total = linhas.length;
-    for (let l = 0; l < total; l++){
-      const linhaPlanilha = l + 1; // +1 porque a linha 0 é o cabeçalho
-      for (let c = 0; c < colunas.length; c++){
-        const endereco = XLSX.utils.encode_cell({ r: linhaPlanilha, c });
-        const celula = ws[endereco];
-        if (!celula) continue;
-        if (colunasTexto.has(c)) {
-          celula.t = "s";                 // força texto
-          celula.z = "@";
-        } else if (c === colunaValor && typeof celula.v === "number") {
-          celula.t = "n";
-          celula.z = "#,##0.00";          // número com 2 casas, sem forçar "R$" (fica mais fácil de somar/filtrar)
-        }
-      }
-    }
-
-    // Larguras de coluna aproximadas, só pra já abrir legível
-    ws["!cols"] = [
-      {wch:12},{wch:38},{wch:14},{wch:12},{wch:10},{wch:16},{wch:10},{wch:8},{wch:12},{wch:30}
-    ];
-
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Despesas");
-
-    const agora = new Date();
-    const carimbo = agora.toISOString().slice(0,10);
-    XLSX.writeFile(wb, `despesas-${carimbo}.xlsx`);
+    XLSX.writeFile(wb, `despesas-${new Date().toISOString().slice(0,10)}.xlsx`);
   }
 
   function exportarReceitas(){
-    baixarArquivo(JSON.stringify(receitas, null, 2), "receitas-dashboard-despesas.json", "application/json");
+    const blob = new Blob([JSON.stringify(receitas, null, 2)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "receitas-dashboard-despesas.json";
+    a.click();
+    a.remove();
   }
 
   function importarReceitas(arquivo){
@@ -1334,16 +1229,13 @@
     leitor.onload = () => {
       try{
         const importadas = JSON.parse(leitor.result);
-        if(!Array.isArray(importadas)) throw new Error("Formato inválido");
-        const validas = importadas.filter(r => r && r.descricao && typeof r.valor === "number" && r.mes && r.ano);
-        if(!validas.length){ alert("O arquivo não tem receitas em um formato reconhecível."); return; }
-        validas.forEach(r => { if(!r.id) r.id = "r" + Date.now() + "_" + Math.random().toString(36).slice(2,8); });
-        receitas = receitas.concat(validas);
+        if(!Array.isArray(importadas)) throw new Error();
+        receitas = receitas.concat(importadas);
         salvarReceitas();
         renderizarSaldo();
-        alert(validas.length + " receita(s) importada(s) com sucesso.");
+        alert("Receitas importadas com sucesso!");
       } catch(e){
-        alert("Não consegui ler esse arquivo como receitas exportadas daqui.");
+        alert("Erro ao ler o arquivo de receitas.");
       }
     };
     leitor.readAsText(arquivo);
@@ -1410,7 +1302,7 @@
   carregarReceitas();
   renderizarSaldo();
   buscarDados();
-  setInterval(buscarDados, 5000);
+  setInterval(buscarDados, 10000);
 
 })();
 </script>
