@@ -35,7 +35,6 @@
   }
   a{color:var(--gold);}
 
-  /* ---------- header ---------- */
   header.top{
     display:flex;
     align-items:flex-end;
@@ -94,45 +93,7 @@
     font-size:14px;
     line-height:1.5;
   }
-  #diagnosticoBanner{
-    display:none;
-    background:var(--gold-soft);
-    border:1px solid var(--gold);
-    color:var(--ink);
-    padding:14px 18px;
-    border-radius:8px;
-    margin-bottom:20px;
-    font-size:13px;
-    line-height:1.6;
-  }
-  #diagnosticoBanner strong{ color:var(--gold); }
-  #diagnosticoBanner table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:12.5px; }
-  #diagnosticoBanner td, #diagnosticoBanner th{ text-align:left; padding:4px 10px 4px 0; }
-  #diagnosticoBanner th{ color:var(--ink-dim); font-weight:600; }
-  #diagnosticoBanner .fallback{ color:var(--rust); font-weight:600; }
-  #diagnosticoBanner .ok-map{ color:var(--green); }
-  #diagnosticoBanner .cabecalhos{
-    font-family: Consolas, "Courier New", monospace;
-    font-size:11.5px;
-    color:var(--ink-dim);
-    background:var(--panel-2);
-    border-radius:6px;
-    padding:8px 10px;
-    margin-top:8px;
-    word-break:break-all;
-  }
-  #diagnosticoBanner button{
-    background:transparent;
-    border:1px solid var(--gold);
-    color:var(--gold);
-    padding:5px 12px;
-    border-radius:6px;
-    font-size:12px;
-    cursor:pointer;
-    margin-top:10px;
-  }
 
-  /* ---------- KPIs ---------- */
   .kpis{
     display:grid;
     grid-template-columns: 1.6fr repeat(5, 1fr);
@@ -173,7 +134,6 @@
     .kpi.hero{ grid-column: 1 / -1; }
   }
 
-  /* ---------- filtros ---------- */
   .filtros{
     background:var(--panel);
     border:1px solid var(--line);
@@ -213,7 +173,6 @@
   .filtros button:hover{ border-color:var(--gold); color:var(--gold); }
   .filtros .contagem{ margin-left:auto; font-size:12.5px; color:var(--ink-faint); align-self:center; }
 
-  /* ---------- gráficos ---------- */
   .secao-titulo{
     font-family:var(--serif);
     font-size:18px;
@@ -269,7 +228,6 @@
   .top10 .val{ color:var(--gold); font-weight:600; white-space:nowrap; }
   ul.top10{ list-style:none; margin:0; padding:0; }
 
-  /* ---------- tabela ---------- */
   .tabela-wrap{
     background:var(--panel);
     border:1px solid var(--line);
@@ -309,18 +267,6 @@
   table.dados td.mes-atual, table.dados th.mes-atual{
     background:var(--gold-soft);
   }
-  #tabelaReceitas td button{
-    background:transparent;
-    border:1px solid var(--rust);
-    color:var(--rust);
-    border-radius:5px;
-    width:24px; height:24px;
-    cursor:pointer;
-    font-size:13px;
-    line-height:1;
-  }
-  #tabelaReceitas td button:hover{ background:var(--rust-soft); }
-  .kpi .valor.pequeno{ font-size:clamp(16px,1.6vw,22px); }
   table.dados tbody tr:hover{ background:rgba(255,255,255,.02); }
   .badge{
     display:inline-block;
@@ -378,7 +324,6 @@
 <main>
 
   <div id="erroBanner"></div>
-  <div id="diagnosticoBanner"></div>
 
   <div class="kpis" id="kpis"></div>
 
@@ -440,13 +385,6 @@
 
   <div class="secao-titulo">Total por pessoa (somando todos os cartões/formas)</div>
   <div class="painel" style="margin-bottom:16px;">
-    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
-      <p style="margin:0; font-size:12.5px; color:var(--ink-dim); max-width:640px;">
-        Esta tabela sempre soma <strong>todos os cartões/formas de pagamento</strong> de cada pessoa,
-        mesmo que você tenha selecionado um cartão específico no filtro acima. Ela respeita os filtros
-        de Ano, Mês, Situação e Busca.
-      </p>
-    </div>
     <div style="overflow-x:auto;">
       <table class="dados" id="tabelaTotalPessoa">
         <thead>
@@ -494,17 +432,9 @@
       </div>
     </div>
   </div>
-  <p style="margin:6px 0 24px; font-size:11.5px; color:var(--ink-faint);">
-    A exportação considera os filtros aplicados acima (ano, mês, pessoa, cartão, situação, busca) —
-    não só a página atual da tabela.
-  </p>
 
   <div class="secao-titulo">Despesas fixas (mensais)</div>
   <div class="painel" style="margin-bottom:16px;" id="painelFixas">
-    <p style="margin:0 0 14px; font-size:12.5px; color:var(--ink-dim);">
-      Valores lidos direto da aba <strong id="nomeAbaFixaTxt">Total Fixo</strong> da planilha. A coluna destacada
-      é o "Mês de referência" escolhido lá embaixo, na seção Receitas &amp; Saldo.
-    </p>
     <div style="overflow-x:auto;">
       <table class="dados" id="tabelaFixas">
         <thead><tr id="cabecalhoFixas"></tr></thead>
@@ -516,12 +446,6 @@
 
   <div class="secao-titulo">Receitas &amp; saldo</div>
   <div class="painel" style="margin-bottom:24px;">
-    <p style="margin:0 0 14px; font-size:12.5px; color:var(--ink-dim);">
-      As receitas não vêm da planilha — você cadastra aqui. Elas ficam salvas neste navegador, neste
-      computador (não sincronizam com o Excel nem com outros dispositivos). Use os botões de
-      exportar/importar para fazer backup ou levar para outro PC.
-    </p>
-
     <div class="filtros" style="margin-bottom:18px;">
       <div class="campo">
         <label for="refMes">Mês</label>
@@ -533,10 +457,6 @@
       </div>
       <div class="contagem" id="labelReferencia" style="margin-left:auto; max-width:360px; text-align:right;"></div>
     </div>
-    <p style="margin:-10px 0 18px; font-size:11.5px; color:var(--ink-faint);">
-      Esse mês/ano vale para tudo abaixo: é o que aparece nos cartões de saldo, na lista de receitas e
-      é também o mês em que uma nova receita cadastrada agora vai entrar.
-    </p>
 
     <div class="kpis" id="kpisSaldo" style="grid-template-columns: repeat(4, 1fr); margin-bottom:22px;"></div>
 
@@ -578,12 +498,6 @@
         <tbody id="corpoReceitas"></tbody>
       </table>
     </div>
-
-    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
-      <button id="btnExportarReceitas" style="background:var(--panel-2); border:1px solid var(--line); color:var(--ink); padding:8px 14px; border-radius:6px; font-size:13px; cursor:pointer;">Exportar receitas (.json)</button>
-      <button id="btnImportarReceitas" style="background:var(--panel-2); border:1px solid var(--line); color:var(--ink); padding:8px 14px; border-radius:6px; font-size:13px; cursor:pointer;">Importar receitas (.json)</button>
-      <input type="file" id="inputImportarReceitas" accept="application/json" style="display:none;">
-    </div>
   </div>
 
   <footer>
@@ -612,9 +526,7 @@
   const fmtMoeda = v => (v==null ? "—" : v.toLocaleString("pt-BR", {style:"currency", currency:"BRL"}));
   const fmtNum   = v => (v==null ? "—" : v.toLocaleString("pt-BR"));
 
-  function normalizarChave(s){
-    return (s||"").trim().toLowerCase();
-  }
+  function normalizarChave(s){ return (s||"").trim().toLowerCase(); }
   function tituloBonito(s){
     if(!s) return "Não informado";
     return s.trim().replace(/\s+/g," ").replace(/\p{L}+/gu, w => w.charAt(0).toUpperCase()+w.slice(1).toLowerCase());
@@ -631,12 +543,11 @@
     if (!isoStr) return "—";
     const partes = String(isoStr).split("T")[0].split("-");
     if (partes.length === 3) {
-      return `${partes[2]}/${partes[1]}/${partes[0]}`; // DD/MM/AAAA
+      return `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
     return isoStr;
   }
 
-  // -------------------- busca / atualização de dados --------------------
   async function buscarDados(){
     try{
       const resp = await fetch("https://script.google.com/macros/s/AKfycbyJ53bARvrkS9lqLtnVDGJMTskvKyet7W424ofaZlL2PspM0fripFQXa56MRygoOYGm/exec?_=" + Date.now(), {cache:"no-store"});
@@ -673,12 +584,8 @@
       }
 
       const dt = json.atualizadoEm ? new Date(json.atualizadoEm) : null;
-      document.getElementById("subtitulo").textContent = dt
-        ? ("Planilha: " + json.aba)
-        : "";
-      document.getElementById("statusTexto").textContent = dt
-        ? ("atualizado às " + dt.toLocaleTimeString("pt-BR"))
-        : "aguardando dados";
+      document.getElementById("subtitulo").textContent = dt ? ("Planilha: " + json.aba) : "";
+      document.getElementById("statusTexto").textContent = dt ? ("atualizado às " + dt.toLocaleTimeString("pt-BR")) : "aguardando dados";
 
     } catch(e){
       const statusBox = document.getElementById("statusBox");
@@ -692,11 +599,8 @@
     el.style.display = "block";
     el.innerHTML = "<strong>Não foi possível ler a planilha.</strong><br>" + msg;
   }
-  function esconderErro(){
-    document.getElementById("erroBanner").style.display = "none";
-  }
+  function esconderErro{ document.getElementById("erroBanner").style.display = "none"; }
 
-  // -------------------- filtros --------------------
   function valoresUnicos(campo, normFn){
     const set = new Map();
     dadosBrutos.forEach(r => {
@@ -710,17 +614,17 @@
   }
 
   function popularFiltros(){
-    preencherSelect("fAno", Array.from(new Set(dadosBrutos.map(r=>r.ano).filter(v=>v!=null))).sort((a,b)=>a-b));
-    preencherSelect("fMes", Array.from(new Set(dadosBrutos.map(r=>r.mes).filter(v=>v!=null))).sort((a,b)=>a-b), m => MESES[m] || m);
-    preencherSelect("fPessoa", valoresUnicos("categoria", r=>r.pessoaNorm));
-    preencherSelect("fCartao", valoresUnicos("cartao", r=>r.cartaoNorm));
-    preencherSelect("fSituacao", Array.from(new Set(dadosBrutos.map(r=>r.situacaoNorm))).sort());
+    preencherSelect("fAno", Array.from(new Set(dadosBrutos.map(r=>r.ano).filter(v=>v!=null))).sort((a,b)=>a-b), null, "Todos");
+    preencherSelect("fMes", Array.from(new Set(dadosBrutos.map(r=>r.mes).filter(v=>v!=null))).sort((a,b)=>a-b), m => MESES[m] || m, "Todos");
+    preencherSelect("fPessoa", valoresUnicos("categoria", r=>r.pessoaNorm), null, "Todas");
+    preencherSelect("fCartao", valoresUnicos("cartao", r=>r.cartaoNorm), null, "Todos");
+    preencherSelect("fSituacao", Array.from(new Set(dadosBrutos.map(r=>r.situacaoNorm))).sort(), null, "Todas");
   }
 
-  function preencherSelect(id, valores, labelFn){
+  function preencherSelect(id, valores, labelFn, textoPadrao){
     const sel = document.getElementById(id);
     const valorAtual = sel.value;
-    sel.innerHTML = '<option value="">' + sel.options[0].textContent + "</option>";
+    sel.innerHTML = `<option value="">${textoPadrao || "Todos"}</option>`;
     valores.forEach(v => {
       const opt = document.createElement("option");
       opt.value = v;
@@ -753,7 +657,6 @@
     });
   }
 
-  // -------------------- render geral --------------------
   function renderizarTudo(){
     const filtrados = aplicarFiltros();
     document.getElementById("contagemFiltro").textContent = filtrados.length + " de " + dadosBrutos.length + " lançamentos";
@@ -955,7 +858,6 @@
     `).join("");
   }
 
-  // -------------------- tabela --------------------
   function renderizarTabela(listaFiltrada){
     let lista = [...listaFiltrada];
     lista.sort((a,b) => {
@@ -1005,7 +907,6 @@
     return `<span class="badge">${s||"—"}</span>`;
   }
 
-  // -------------------- despesas fixas --------------------
   function renderizarFixas(){
     const cabecalho = document.getElementById("cabecalhoFixas");
     const corpo = document.getElementById("corpoFixas");
@@ -1013,14 +914,10 @@
 
     if(!despesasFixas || !despesasFixas.itens || !despesasFixas.itens.length){
       cabecalho.innerHTML = "";
-      corpo.innerHTML = `<tr><td style="text-align:center; color:var(--ink-faint); padding:20px;">
-        Não encontrei despesas fixas na planilha.
-      </td></tr>`;
+      corpo.innerHTML = `<tr><td style="text-align:center; color:var(--ink-faint); padding:20px;">Não encontrei despesas fixas na planilha.</td></tr>`;
       rodape.innerHTML = "";
       return;
     }
-
-    document.getElementById("nomeAbaFixaTxt").textContent = despesasFixas.aba || "Total Fixo";
 
     const elRefMes = document.getElementById("refMes");
     const mesDestaque = (elRefMes && elRefMes.value) ? parseInt(elRefMes.value, 10) : (new Date().getMonth() + 1);
@@ -1052,7 +949,6 @@
     return v || 0;
   }
 
-  // -------------------- receitas (localStorage) --------------------
   function carregarReceitas(){
     try{
       const bruto = localStorage.getItem(CHAVE_RECEITAS);
@@ -1065,9 +961,7 @@
   function salvarReceitas(){
     try{
       localStorage.setItem(CHAVE_RECEITAS, JSON.stringify(receitas));
-    } catch(e){
-      alert("Não consegui salvar as receitas neste navegador.");
-    }
+    } catch(e){}
   }
 
   function inicializarFormReceitas(){
@@ -1096,9 +990,7 @@
     const listaOrdenada = [...base].sort((a,b) => (b.ano-a.ano) || (b.mes-a.mes) || a.descricao.localeCompare(b.descricao,"pt-BR"));
 
     if(!listaOrdenada.length){
-      const msg = mostrarTodas
-        ? "Nenhuma receita cadastrada ainda"
-        : `Nenhuma receita cadastrada para ${MESES_LONGO[mesRef] || ""} de ${anoRef}.`;
+      const msg = mostrarTodas ? "Nenhuma receita cadastrada ainda" : `Nenhuma receita cadastrada para ${MESES_LONGO[mesRef] || ""} de ${anoRef}.`;
       corpo.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--ink-faint); padding:18px;">${msg}</td></tr>`;
     } else {
       corpo.innerHTML = listaOrdenada.map(r => `
@@ -1125,8 +1017,7 @@
     const mesRef = parseInt(document.getElementById("refMes").value, 10);
     const anoRef = parseInt(document.getElementById("refAno").value, 10);
 
-    document.getElementById("labelReferencia").textContent =
-      `Referência: ${MESES_LONGO[mesRef] || ""} de ${anoRef}`;
+    document.getElementById("labelReferencia").textContent = `Referência: ${MESES_LONGO[mesRef] || ""} de ${anoRef}`;
 
     const totalReceitas = receitas
       .filter(r => r.mes === mesRef && r.ano === anoRef)
@@ -1162,9 +1053,7 @@
     let s = String(texto).trim();
     if(!s) return NaN;
     s = s.replace(/[^\d.,-]/g, "");
-    if(s.includes(",")){
-      s = s.replace(/\./g, "").replace(",", ".");
-    }
+    if(s.includes(",")){ s = s.replace(/\./g, "").replace(",", "."); }
     return parseFloat(s);
   }
 
@@ -1177,15 +1066,11 @@
     if(!descricao){ alert("Digite uma descrição para a receita."); return; }
     if(isNaN(valor) || valor <= 0){ alert("Digite um valor válido para a receita."); return; }
 
-    receitas.push({
-      id: "r" + Date.now() + "_" + Math.random().toString(36).slice(2,8),
-      descricao, valor, mes, ano
-    });
+    receitas.push({ id: "r" + Date.now() + "_" + Math.random().toString(36).slice(2,8), descricao, valor, mes, ano });
     salvarReceitas();
 
     document.getElementById("novaReceitaDescricao").value = "";
     document.getElementById("novaReceitaValor").value = "";
-
     renderizarSaldo();
   }
 
@@ -1214,34 +1099,6 @@
     XLSX.writeFile(wb, `despesas-${new Date().toISOString().slice(0,10)}.xlsx`);
   }
 
-  function exportarReceitas(){
-    const blob = new Blob([JSON.stringify(receitas, null, 2)], {type: "application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "receitas-dashboard-despesas.json";
-    a.click();
-    a.remove();
-  }
-
-  function importarReceitas(arquivo){
-    const leitor = new FileReader();
-    leitor.onload = () => {
-      try{
-        const importadas = JSON.parse(leitor.result);
-        if(!Array.isArray(importadas)) throw new Error();
-        receitas = receitas.concat(importadas);
-        salvarReceitas();
-        renderizarSaldo();
-        alert("Receitas importadas com sucesso!");
-      } catch(e){
-        alert("Erro ao ler o arquivo de receitas.");
-      }
-    };
-    leitor.readAsText(arquivo);
-  }
-
-  // -------------------- eventos --------------------
   ["fAno","fMes","fPessoa","fCartao","fSituacao"].forEach(id => {
     document.getElementById(id).addEventListener("change", renderizarTudo);
   });
@@ -1287,17 +1144,7 @@
   document.getElementById("chkTodasReceitas").addEventListener("change", renderizarReceitas);
   document.getElementById("btnAdicionarReceita").addEventListener("click", adicionarReceita);
   document.getElementById("btnExportarDespesas").addEventListener("click", exportarDespesas);
-  document.getElementById("btnExportarReceitas").addEventListener("click", exportarReceitas);
-  document.getElementById("btnImportarReceitas").addEventListener("click", () => {
-    document.getElementById("inputImportarReceitas").click();
-  });
-  document.getElementById("inputImportarReceitas").addEventListener("change", (ev) => {
-    const arquivo = ev.target.files[0];
-    if(arquivo) importarReceitas(arquivo);
-    ev.target.value = "";
-  });
 
-  // -------------------- início --------------------
   inicializarFormReceitas();
   carregarReceitas();
   renderizarSaldo();
