@@ -630,7 +630,7 @@
   // -------------------- busca / atualização de dados --------------------
   async function buscarDados(){
     try{
-      const resp = await fetch("data.json?_=" + Date.now(), {cache:"no-store"});
+      const resp = await fetch("https://script.google.com/macros/s/AKfycbyJ53bARvrkS9lqLtnVDGJMTskvKyet7W424ofaZlL2PspM0fripFQXa56MRygoOYGm/exec?_=" + Date.now(), {cache:"no-store"});
       if(!resp.ok) throw new Error("HTTP " + resp.status);
       const json = await resp.json();
 
