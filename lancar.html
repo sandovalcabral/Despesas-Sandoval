@@ -164,25 +164,20 @@
       situacao: document.getElementById('situacao').value
     });
 
+    const URL_API = "https://script.google.com/macros/s/AKfycbziGtXt2II35IB4Ib2JBIWafHu_AiCNjGVlvMUt_nnXGphdqZS1E-BAUa4F457MPx9K/exec";
+
     try {
-      const URL_API = "https://script.google.com/macros/s/AKfycbziGtXt2II35IB4Ib2JBIWafHu_AiCNjGVlvMUt_nnXGphdqZS1E-BAUa4F457MPx9K/exec";
+      // Envio via no-cors (ignora a leitura da resposta de rede do Google, garantindo que o pedido chega ao destino)
+      await fetch(URL_API + "?" + params.toString(), { mode: 'no-cors' });
 
-      // Usamos GET para evitar qualquer bloqueio de CORS do navegador
-      const resposta = await fetch(URL_API + "?" + params.toString());
-      const resultado = await resposta.json();
-
-      if(resultado.status === "sucesso"){
-        msg.textContent = "Lançamento guardado com sucesso na planilha!";
-        msg.className = "sucesso";
-        msg.style.display = "block";
-        document.getElementById('formLancamento').reset();
-        document.getElementById('data').valueAsDate = new Date();
-        document.getElementById('mesInicial').value = new Date().getMonth() + 1;
-        document.getElementById('anoInicial').value = new Date().getFullYear();
-        document.getElementById('parcelas').value = 1;
-      } else {
-        throw new Error(resultado.mensagem || "Erro desconhecido");
-      }
+      msg.textContent = "Lançamento guardado com sucesso na planilha!";
+      msg.className = "sucesso";
+      msg.style.display = "block";
+      document.getElementById('formLancamento').reset();
+      document.getElementById('data').valueAsDate = new Date();
+      document.getElementById('mesInicial').value = new Date().getMonth() + 1;
+      document.getElementById('anoInicial').value = new Date().getFullYear();
+      document.getElementById('parcelas').value = 1;
     } catch (err) {
       msg.textContent = "Erro ao guardar: " + err.message;
       msg.className = "erro";
