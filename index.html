@@ -335,23 +335,23 @@
   <div class="filtros">
     <div class="campo">
       <label for="fAno">Ano</label>
-      <select id="fAno"><option value="">Todos</option></select>
+      <select id="fAno" autocomplete="off"><option value="">Todos</option></select>
     </div>
     <div class="campo">
       <label for="fMes">Mês</label>
-      <select id="fMes"><option value="">Todos</option></select>
+      <select id="fMes" autocomplete="off"><option value="">Todos</option></select>
     </div>
     <div class="campo">
       <label for="fPessoa">Pessoa</label>
-      <select id="fPessoa"><option value="">Todas</option></select>
+      <select id="fPessoa" autocomplete="off"><option value="">Todas</option></select>
     </div>
     <div class="campo">
       <label for="fCartao">Cartão / Forma</label>
-      <select id="fCartao"><option value="">Todos</option></select>
+      <select id="fCartao" autocomplete="off"><option value="">Todos</option></select>
     </div>
     <div class="campo">
       <label for="fSituacao">Situação</label>
-      <select id="fSituacao"><option value="">Todas</option></select>
+      <select id="fSituacao" autocomplete="off"><option value="">Todas</option></select>
     </div>
     <div class="campo">
       <label for="fBusca">Buscar</label>
@@ -610,7 +610,7 @@
     const set = new Map();
     dadosBrutos.forEach(r => {
       const bruto = r[campo];
-      if(bruto == null || bruto === "") return;
+      if(bruto == null || bruto === "" || String(bruto).trim() === "") return;
       const label = normFn ? normFn(r) : bruto;
       const chave = normalizarChave(String(label));
       if(!set.has(chave)) set.set(chave, label);
@@ -619,24 +619,33 @@
   }
 
   function popularFiltros(){
-    preencherSelect("fAno", Array.from(new Set(dadosBrutos.map(r=>r.ano).filter(v=>v!=null))).sort((a,b)=>a-b), null, "Todos");
-    preencherSelect("fMes", Array.from(new Set(dadosBrutos.map(r=>r.mes).filter(v=>v!=null))).sort((a,b)=>a-b), m => MESES[m] || m, "Todos");
+    const anosUnicos = Array.from(new Set(dadosBrutos.map(r=>r.ano).filter(v => v != null && String(v).trim() !== ""))).sort((a,b)=>a-b);
+    const mesesUnicos = Array.from(new Set(dadosBrutos.map(r=>r.mes).filter(v => v != null && String(v).trim() !== ""))).sort((a,b)=>a-b);
+    
+    preencherSelect("fAno", anosUnicos, null, "Todos");
+    preencherSelect("fMes", mesesUnicos, m => MESES[m] || m, "Todos");
     preencherSelect("fPessoa", valoresUnicos("categoria", r=>r.pessoaNorm), null, "Todas");
     preencherSelect("fCartao", valoresUnicos("cartao", r=>r.cartaoNorm), null, "Todos");
-    preencherSelect("fSituacao", Array.from(new Set(dadosBrutos.map(r=>r.situacaoNorm))).sort(), null, "Todas");
+    preencherSelect("fSituacao", Array.from(new Set(dadosBrutos.map(r=>r.situacaoNorm))).filter(v => v != null && String(v).trim() !== "").sort(), null, "Todas");
   }
 
   function preencherSelect(id, valores, labelFn, textoPadrao){
     const sel = document.getElementById(id);
     const valorAtual = sel.value;
-    sel.innerHTML = `<option value="">${textoPadrao}</option>`;
+    const rotuloFinal = textoPadrao || (id === "fPessoa" || id === "fSituacao" ? "Todas" : "Todos");
+    
+    sel.innerHTML = `<option value="">${rotuloFinal}</option>`;
     valores.forEach(v => {
       const opt = document.createElement("option");
       opt.value = v;
       opt.textContent = labelFn ? labelFn(v) : v;
       sel.appendChild(opt);
     });
-    if(Array.from(sel.options).some(o=>o.value===valorAtual)) sel.value = valorAtual;
+    if(valorAtual && Array.from(sel.options).some(o=>o.value===valorAtual)){
+      sel.value = valorAtual;
+    } else {
+      sel.value = "";
+    }
   }
 
   function aplicarFiltros(opcoes){
@@ -1113,7 +1122,10 @@
     debounceBusca = setTimeout(renderizarTudo, 250);
   });
   document.getElementById("btnLimpar").addEventListener("click", () => {
-    ["fAno","fMes","fPessoa","fCartao","fSituacao"].forEach(id => document.getElementById(id).value = "");
+    ["fAno","fMes","fPessoa","fCartao","fSituacao"].forEach(id => {
+      const el = document.getElementById(id);
+      el.value = "";
+    });
     document.getElementById("fBusca").value = "";
     renderizarTudo();
   });
@@ -1153,6 +1165,11 @@
   inicializarFormReceitas();
   carregarReceitas();
   renderizarSaldo();
+  
+  ["fAno","fMes","fPessoa","fCartao","fSituacao"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+
   buscarDados();
   setInterval(buscarDados, 10000);
 
