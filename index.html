@@ -555,8 +555,8 @@
 
   async function buscarDados(){
     try{
-      // NOVO LINK ADICIONADO AQUI:
-      const resp = await fetch("https://script.google.com/macros/s/AKfycbwUtQDIZktAW5Sz13tC-9HhV1MyKaNORjnbuZMRjte98QwwIMuSy2ls3K4bae5lsiQ7/exec?_=" + Date.now(), {cache:"no-store"});
+      // NOVO LINK ATUALIZADO
+      const resp = await fetch("https://script.google.com/macros/s/AKfycbyUHj4qu8s_YiFJRw0szeSl88Ov79s0ejeh7VbTGb49ODNOWMxOYmayBoaxDpMQoA58/exec?_=" + Date.now(), {cache:"no-store"});
       
       if(!resp.ok) throw new Error("HTTP " + resp.status);
       const json = await resp.json();
