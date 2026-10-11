@@ -545,14 +545,31 @@
     return s.trim();
   }
 
-  function formatarDataBR(isoStr) {
-    if (!isoStr) return "—";
-    const partes = String(isoStr).split("T")[0].split("-");
+function formatarDataBR(isoStr) {
+  if (!isoStr) return "—";
+  const str = String(isoStr).split("T")[0];
+  
+  // 1. Caso o Google envie com traços (ex: 2026-09-28)
+  if (str.includes("-")) {
+    const partes = str.split("-");
     if (partes.length === 3) {
       return `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
-    return isoStr;
   }
+  
+  // 2. Caso o Google envie com barras (ex: 9/28/2026)
+  if (str.includes("/")) {
+    const partes = str.split("/");
+    if (partes.length === 3) {
+      // partes[0] = Mês | partes[1] = Dia | partes[2] = Ano
+      const mes = partes[0].padStart(2, '0');
+      const dia = partes[1].padStart(2, '0');
+      return `${dia}/${mes}/${partes[2]}`;
+    }
+  }
+  
+  return isoStr;
+}
 
   async function buscarDados(){
     try{
