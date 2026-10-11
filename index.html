@@ -555,7 +555,8 @@
 
   async function buscarDados(){
     try{
-      const resp = await fetch("https://script.google.com/macros/s/AKfycbyJ53bARvrkS9lqLtnVDGJMTskvKyet7W424ofaZlL2PspM0fripFQXa56MRygoOYGm/exec" + Date.now(), {cache:"no-store"});
+      // LINK ATUALIZADO CONFORME SOLICITADO
+      const resp = await fetch("https://script.google.com/macros/s/AKfycbyJ53bARvrkS9lqLtnVDGJMTskvKyet7W424ofaZlL2PspM0fripFQXa56MRygoOYGm/exec?_=" + Date.now(), {cache:"no-store"});
       if(!resp.ok) throw new Error("HTTP " + resp.status);
       const json = await resp.json();
 
@@ -619,7 +620,6 @@
   }
 
   function popularFiltros(){
-    // Filtro rigoroso: ignora nulos, vazios, zero e valores inválidos para Ano e Mês
     const anosUnicos = Array.from(new Set(
       dadosBrutos.map(r => Number(r.ano)).filter(v => v && !isNaN(v) && v > 0)
     )).sort((a,b) => a - b);
