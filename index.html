@@ -20,6 +20,7 @@
     --green-soft:    rgba(76,154,106,.18);
     --rust:          #c1584b;
     --rust-soft:     rgba(193,88,75,.18);
+    --rust-glow:     rgba(193,88,75,.05); /* Novo para a linha da tabela */
     --blue:          #5b8ec4;
     --serif: Georgia, "Times New Roman", Cambria, serif;
     --sans: "Segoe UI", "Segoe UI Variable", Tahoma, Verdana, Arial, sans-serif;
@@ -94,12 +95,17 @@
     line-height:1.5;
   }
 
-  .kpis{
+  /* Melhorias Mobile para os KPIs */
+  .kpis, #kpisSaldo {
     display:grid;
     grid-template-columns: 1.6fr repeat(5, 1fr);
     gap:14px;
     margin-bottom:28px;
   }
+  #kpisSaldo {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
   .kpi{
     background:var(--panel);
     border:1px solid var(--line);
@@ -109,10 +115,17 @@
     flex-direction:column;
     justify-content:space-between;
     min-height:96px;
+    transition: transform 0.2s;
   }
+  .kpi:hover { transform: translateY(-2px); }
   .kpi.hero{
     background:linear-gradient(160deg, var(--panel-2), var(--panel));
     border-color:#3a3020;
+  }
+  /* Destaque extra para o card "A Vencer" */
+  .kpi.alerta {
+    border-color: rgba(193,88,75,0.4);
+    background: linear-gradient(to bottom, var(--panel), var(--rust-glow));
   }
   .kpi .rotulo{
     font-size:12.5px;
@@ -121,17 +134,27 @@
   }
   .kpi .valor{
     font-family:var(--serif);
-    font-size:clamp(20px,2vw,28px);
+    font-size:clamp(20px,2.5vw,28px);
     line-height:1.1;
   }
-  .kpi.hero .valor{ font-size:clamp(28px,3vw,38px); color:var(--gold); }
-  .kpi .valor.green{ color:var(--green); }
-  .kpi .valor.rust{ color:var(--rust); }
+  .kpi.hero .valor{ font-size:clamp(28px,3.5vw,38px); color:var(--gold); }
+  .kpi .valor.green{ color:var(--green); font-weight: 600; }
+  .kpi .valor.rust{ color:#eab3ab; font-weight: 600; } /* Vermelho mais brilhante no kpi */
   .kpi .nota{ font-size:11.5px; color:var(--ink-faint); margin-top:6px; }
 
-  @media (max-width: 980px){
-    .kpis{ grid-template-columns: repeat(2,1fr); }
-    .kpi.hero{ grid-column: 1 / -1; }
+  /* Ajustes responsivos para tablets e telemóveis */
+  @media (max-width: 1024px){
+    .kpis { grid-template-columns: repeat(3, 1fr); }
+    #kpisSaldo { grid-template-columns: repeat(2, 1fr); }
+    .kpi.hero { grid-column: 1 / -1; }
+  }
+  @media (max-width: 650px){
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    #kpisSaldo { grid-template-columns: 1fr; }
+    .filtros { flex-direction: column; align-items: stretch; }
+    .campo { flex: 1; width: 100%; }
+    .campo select, .campo input[type="text"], .campo input { min-width: 100%; width: 100%; }
+    .filtros button { width: 100%; margin-top: 8px; }
   }
 
   .filtros{
@@ -157,59 +180,25 @@
     font-family:var(--sans);
     min-width:140px;
   }
-  .campo select option {
-    background: var(--panel-2);
-    color: var(--ink);
-    padding: 6px;
-  }
+  .campo select option { background: var(--panel-2); color: var(--ink); padding: 6px; }
   .campo input[type="text"]{ min-width:200px; }
   .campo select:focus, .campo input:focus{ outline:2px solid var(--gold); outline-offset:1px; }
   .filtros button{
-    background:transparent;
-    border:1px solid var(--line);
-    color:var(--ink-dim);
-    padding:8px 14px;
-    border-radius:6px;
-    font-size:13px;
-    cursor:pointer;
-    height:37px;
-    font-family:var(--sans);
+    background:transparent; border:1px solid var(--line);
+    color:var(--ink-dim); padding:8px 14px; border-radius:6px;
+    font-size:13px; cursor:pointer; height:37px; font-family:var(--sans);
   }
   .filtros button:hover{ border-color:var(--gold); color:var(--gold); }
   .filtros .contagem{ margin-left:auto; font-size:12.5px; color:var(--ink-faint); align-self:center; }
 
-  .secao-titulo{
-    font-family:var(--serif);
-    font-size:18px;
-    font-weight:400;
-    margin: 6px 0 14px;
-    color:var(--ink);
-  }
-  .grid-graficos{
-    display:grid;
-    grid-template-columns: 2fr 1fr;
-    gap:16px;
-    margin-bottom:16px;
-  }
-  .grid-graficos.tres{
-    grid-template-columns: repeat(3, 1fr);
-  }
-  @media (max-width: 980px){
-    .grid-graficos, .grid-graficos.tres{ grid-template-columns: 1fr; }
-  }
-  .painel{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:10px;
-    padding:18px 20px 14px;
-  }
-  .painel h3{
-    font-family:var(--serif);
-    font-weight:400;
-    font-size:15.5px;
-    margin:0 0 14px;
-    color:var(--ink);
-  }
+  .secao-titulo{ font-family:var(--serif); font-size:18px; font-weight:400; margin: 6px 0 14px; color:var(--ink); }
+  
+  .grid-graficos{ display:grid; grid-template-columns: 2fr 1fr; gap:16px; margin-bottom:16px; }
+  .grid-graficos.tres{ grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 980px){ .grid-graficos, .grid-graficos.tres{ grid-template-columns: 1fr; } }
+  
+  .painel{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:18px 20px 14px; }
+  .painel h3{ font-family:var(--serif); font-weight:400; font-size:15.5px; margin:0 0 14px; color:var(--ink); }
   .painel .vazio{ color:var(--ink-faint); font-size:13px; padding:20px 0; text-align:center; }
 
   .barra-h-item{ margin-bottom:10px; }
@@ -233,83 +222,39 @@
   .top10 .val{ color:var(--gold); font-weight:600; white-space:nowrap; }
   ul.top10{ list-style:none; margin:0; padding:0; }
 
-  .tabela-wrap{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:10px;
-    overflow:hidden;
-    margin-bottom:24px;
-  }
+  .tabela-wrap{ background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-bottom:24px; }
+  /* Para telemóvel: garantir scroll fácil na tabela */
+  .tabela-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  
   table.dados{ width:100%; border-collapse:collapse; font-size:13px; }
   table.dados thead th{
-    text-align:left;
-    padding:12px 14px;
-    background:var(--panel-2);
-    color:var(--ink-dim);
-    font-weight:600;
-    font-size:11.5px;
-    cursor:pointer;
-    user-select:none;
-    white-space:nowrap;
-    border-bottom:1px solid var(--line);
+    text-align:left; padding:12px 14px; background:var(--panel-2); color:var(--ink-dim);
+    font-weight:600; font-size:11.5px; cursor:pointer; user-select:none; white-space:nowrap; border-bottom:1px solid var(--line);
   }
   table.dados thead th:hover{ color:var(--gold); }
-  table.dados tbody td{
-    padding:10px 14px;
-    border-bottom:1px solid var(--line);
-    color:var(--ink);
-    white-space:nowrap;
-  }
-  table.dados tbody td.descricao{ white-space:normal; max-width:320px; }
+  table.dados tbody td{ padding:10px 14px; border-bottom:1px solid var(--line); color:var(--ink); white-space:nowrap; }
+  table.dados tbody td.descricao{ white-space:normal; min-width:200px; max-width:320px; }
   table.dados tbody tr:last-child td{ border-bottom:none; }
-  table.dados tfoot td{
-    font-weight:700;
-    background:var(--panel-2);
-    color:var(--gold);
-    border-top:1px solid var(--line);
-    border-bottom:none;
-  }
-  table.dados td.mes-atual, table.dados th.mes-atual{
-    background:var(--gold-soft);
-  }
-  table.dados tbody tr:hover{ background:rgba(255,255,255,.02); }
-  .badge{
-    display:inline-block;
-    padding:2px 9px;
-    border-radius:20px;
-    font-size:11px;
-  }
+  
+  /* Nova classe de linha para destaque visual de "A Vencer" */
+  table.dados tbody tr.linha-alerta { background-color: var(--rust-glow); }
+  table.dados tbody tr.linha-alerta:hover { background-color: rgba(193,88,75,.12); }
+  table.dados tbody tr:hover:not(.linha-alerta){ background:rgba(255,255,255,.02); }
+  
+  table.dados tfoot td{ font-weight:700; background:var(--panel-2); color:var(--gold); border-top:1px solid var(--line); border-bottom:none; }
+  table.dados td.mes-atual, table.dados th.mes-atual{ background:var(--gold-soft); }
+  
+  .badge{ display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:600; }
   .badge.ok{ background:var(--green-soft); color:#8fd6ab; }
-  .badge.avencer{ background:var(--rust-soft); color:#eab3ab; }
+  .badge.avencer{ background:var(--rust); color:#fff; box-shadow: 0 0 8px rgba(193,88,75,0.4); } /* Destaque forte */
   .valcel{ color:var(--gold); font-variant-numeric: tabular-nums; }
 
-  .paginacao{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:12px 16px;
-    font-size:12.5px;
-    color:var(--ink-dim);
-  }
-  .paginacao button{
-    background:var(--panel-2);
-    border:1px solid var(--line);
-    color:var(--ink);
-    padding:6px 12px;
-    border-radius:6px;
-    cursor:pointer;
-    font-size:12.5px;
-    font-family:var(--sans);
-  }
+  .paginacao{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; font-size:12.5px; color:var(--ink-dim); flex-wrap:wrap; gap:10px; }
+  .paginacao button{ background:var(--panel-2); border:1px solid var(--line); color:var(--ink); padding:6px 12px; border-radius:6px; cursor:pointer; font-size:12.5px; font-family:var(--sans); }
   .paginacao button:disabled{ opacity:.4; cursor:default; }
   .paginacao button:hover:not(:disabled){ border-color:var(--gold); color:var(--gold); }
 
-  footer{
-    text-align:center;
-    color:var(--ink-faint);
-    font-size:11.5px;
-    padding:20px;
-  }
+  footer{ text-align:center; color:var(--ink-faint); font-size:11.5px; padding:20px; }
 </style>
 </head>
 <body>
@@ -391,7 +336,7 @@
 
   <div class="secao-titulo">Total por pessoa (somando todos os cartões/formas)</div>
   <div class="painel" style="margin-bottom:16px;">
-    <div style="overflow-x:auto;">
+    <div class="tabela-scroll">
       <table class="dados" id="tabelaTotalPessoa">
         <thead>
           <tr>
@@ -413,11 +358,11 @@
     </button>
   </div>
   <div class="tabela-wrap">
-    <div style="overflow-x:auto;">
+    <div class="tabela-scroll">
       <table class="dados">
         <thead>
           <tr>
-            <th data-col="data">Data</th>
+            <th data-col="data">Data ▾</th>
             <th data-col="descricao">Descrição</th>
             <th data-col="categoria">Pessoa</th>
             <th data-col="valor">Valor</th>
@@ -441,7 +386,7 @@
 
   <div class="secao-titulo">Despesas fixas (mensais)</div>
   <div class="painel" style="margin-bottom:16px;" id="painelFixas">
-    <div style="overflow-x:auto;">
+    <div class="tabela-scroll">
       <table class="dados" id="tabelaFixas">
         <thead><tr id="cabecalhoFixas"></tr></thead>
         <tbody id="corpoFixas"></tbody>
@@ -464,7 +409,7 @@
       <div class="contagem" id="labelReferencia" style="margin-left:auto; max-width:360px; text-align:right;"></div>
     </div>
 
-    <div class="kpis" id="kpisSaldo" style="grid-template-columns: repeat(4, 1fr); margin-bottom:22px;"></div>
+    <div class="kpis" id="kpisSaldo"></div>
 
     <h3 style="font-family:var(--serif); font-weight:400; font-size:15.5px; margin:0 0 12px;">
       Cadastrar receita <span style="font-size:12px; color:var(--ink-faint); font-family:var(--sans);">(em <span id="labelMesCadastro">—</span>)</span>
@@ -490,7 +435,7 @@
       </label>
     </div>
 
-    <div style="overflow-x:auto;">
+    <div class="tabela-scroll">
       <table class="dados" id="tabelaReceitas">
         <thead>
           <tr>
@@ -527,6 +472,7 @@
   let ultimaAtualizacaoIso = null;
   let paginaAtual = 1;
   const LINHAS_POR_PAGINA = 25;
+  // Ordenação inteligente padrão (Data, mais recente primeiro)
   let ordenacao = { coluna: "data", asc: false };
 
   const fmtMoeda = v => (v==null ? "—" : v.toLocaleString("pt-BR", {style:"currency", currency:"BRL"}));
@@ -541,91 +487,72 @@
     if(!s) return "Indefinido";
     const t = s.trim().toLowerCase();
     if(t === "ok") return "OK";
-    if(t === "a vencer") return "A Vencer";
+    if(t === "a vencer") return "A Vencer"; // Crucial para o alerta!
     return s.trim();
   }
 
-function formatarDataBR(isoStr) {
-  if (!isoStr) return "—";
-  const str = String(isoStr).split("T")[0];
-  
-  // 1. Caso o Google envie com traços (ex: 2026-09-28)
-  if (str.includes("-")) {
-    const partes = str.split("-");
-    if (partes.length === 3) {
-      return `${partes[2]}/${partes[1]}/${partes[0]}`;
+  // A função de data corrigida!
+  function formatarDataBR(isoStr) {
+    if (!isoStr) return "—";
+    const str = String(isoStr).split("T")[0];
+    
+    if (str.includes("-")) {
+      const partes = str.split("-");
+      if (partes.length === 3) return `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
+    
+    if (str.includes("/")) {
+      const partes = str.split("/");
+      if (partes.length === 3) {
+        const mes = partes[0].padStart(2, '0');
+        const dia = partes[1].padStart(2, '0');
+        return `${dia}/${mes}/${partes[2]}`;
+      }
+    }
+    return isoStr;
   }
   
-  // 2. Caso o Google envie com barras (ex: 9/28/2026)
-  if (str.includes("/")) {
-    const partes = str.split("/");
-    if (partes.length === 3) {
-      // partes[0] = Mês | partes[1] = Dia | partes[2] = Ano
-      const mes = partes[0].padStart(2, '0');
-      const dia = partes[1].padStart(2, '0');
-      return `${dia}/${mes}/${partes[2]}`;
-    }
+  // Função auxiliar para ordenar datas corretamente (transforma DD/MM/AAAA em YYYYMMDD para matemática pura)
+  function calcDataOrtogonal(strData){
+    if(!strData || strData === "—") return 0;
+    const p = strData.split("/");
+    if(p.length === 3) return parseInt(p[2] + p[1] + p[0], 10);
+    return 0;
   }
-  
-  return isoStr;
-}
 
   async function buscarDados(){
     try{
-      // A NOVA LIGAÇÃO GERADA ESTÁ AQUI
       const resp = await fetch("https://script.google.com/macros/s/AKfycbzX2bqHne2d3zlJjTJa7VT3gt27s1ZZ-ATfijqdqYpuUsTQkgFqYmlvtpKc7XhcviIO/exec?_=" + Date.now(), {cache:"no-store"});
-      
       if(!resp.ok) throw new Error("HTTP " + resp.status);
       const json = await resp.json();
 
       const statusBox = document.getElementById("statusBox");
       statusBox.classList.remove("offline");
-
       const debugBox = document.getElementById("debugBanner");
-      let debugText = "[DIAGNÓSTICO DA API]\n";
       
-      if(json.listaDeNomes) {
-          debugText += "Abas que o Google conseguiu ver: " + json.listaDeNomes.join(", ") + "\n";
-      }
-
-      // CONVERSÃO DOS DADOS BRUTOS PARA O FORMATO CORRETO
-      if(json.dadosFixasBrutos) {
-          debugText += "Aba Fixas encontrada! Linhas lidas do Google: " + json.dadosFixasBrutos.length + "\n";
-          
+      // Se tiver erro real do script, mostra, senão oculta sempre (sucesso silencioso)
+      if(json.dadosFixasBrutos && json.dadosFixasBrutos.length > 0){
+          debugBox.style.display = "none";
           let itensProcessados = [];
           let totalPorMes = new Array(12).fill(0);
           let totalGeralFixas = 0;
-
-          // Processar a matriz recebida do Google
-          json.dadosFixasBrutos.forEach((linha, indice) => {
-              // Pegar o nome (primeira célula que não esteja vazia)
+          json.dadosFixasBrutos.forEach((linha) => {
               let idxNome = -1;
               for(let c = 0; c < linha.length; c++){
                   if(String(linha[c]).trim() !== ""){ idxNome = c; break; }
               }
-              
               if(idxNome !== -1){
                   let nome = String(linha[idxNome]).trim();
                   let upper = nome.toUpperCase();
-                  
-                  // Ignorar títulos
                   if(upper !== "TOTAL" && upper.indexOf("ITEM") === -1 && upper.indexOf("DESPESA") === -1){
-                      let valsItem = [];
-                      let somaItem = 0;
-                      
-                      // Ler 12 meses para a frente
+                      let valsItem = []; let somaItem = 0;
                       for(let m = 1; m <= 12; m++){
                           let celula = linha[idxNome + m] || "0";
                           let txt = String(celula).replace(/[^\d.,-]/g, "");
                           if(txt.includes(",")) txt = txt.replace(/\./g, "").replace(",", ".");
                           let val = parseFloat(txt) || 0;
-                          
-                          valsItem.push(val);
-                          somaItem += val;
-                          totalPorMes[m-1] += val;
+                          valsItem.push(val); somaItem += val; totalPorMes[m-1] += val;
                       }
-                      
                       if(somaItem > 0 || upper.length < 25) {
                           totalGeralFixas += somaItem;
                           itensProcessados.push({nome: nome, valores: valsItem, total: somaItem});
@@ -633,27 +560,14 @@ function formatarDataBR(isoStr) {
                   }
               }
           });
-          
-          debugText += "Linhas processadas e formatadas com sucesso: " + itensProcessados.length + "\n";
-          
           despesasFixas = {
               meses: ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"],
-              itens: itensProcessados,
-              totalPorMes: totalPorMes,
-              totalGeral: totalGeralFixas
+              itens: itensProcessados, totalPorMes: totalPorMes, totalGeral: totalGeralFixas
           };
-          
-          if(itensProcessados.length > 0){
-             debugBox.style.display = "none"; // Oculta o diagnóstico se funcionar!
-          } else {
-             debugBox.style.display = "block";
-          }
-      } else {
-          debugText += "ERRO: O Google não enviou a chave dadosFixasBrutos.\n";
+      } else if (!json.dadosFixasBrutos) {
+          debugBox.textContent = "[DIAGNÓSTICO DA API]\nERRO: O Google não enviou a chave dadosFixasBrutos.";
           debugBox.style.display = "block";
       }
-      
-      debugBox.textContent = debugText;
 
       if(json.erro){
         mostrarErro(json.erro);
@@ -668,7 +582,8 @@ function formatarDataBR(isoStr) {
         competencia: (r.mes ? String(r.mes).padStart(2,"0") : "??") + "/" + (r.ano || "????"),
         situacaoNorm: normalizarSituacao(r.situacao),
         pessoaNorm: tituloBonito(r.categoria),
-        cartaoNorm: tituloBonito(r.cartao)
+        cartaoNorm: tituloBonito(r.cartao),
+        dataBR: formatarDataBR(r.data) // Guardamos já formatada para não recalcular
       }));
 
       renderizarFixas();
@@ -688,14 +603,12 @@ function formatarDataBR(isoStr) {
       const statusBox = document.getElementById("statusBox");
       statusBox.classList.add("offline");
       document.getElementById("statusTexto").textContent = "servidor online indisponível";
-      console.error(e);
     }
   }
 
   function mostrarErro(msg){
     const el = document.getElementById("erroBanner");
-    el.style.display = "block";
-    el.innerHTML = "<strong>Não foi possível ler a planilha.</strong><br>" + msg;
+    el.style.display = "block"; el.innerHTML = "<strong>Não foi possível ler a planilha.</strong><br>" + msg;
   }
   function esconderErro(){ document.getElementById("erroBanner").style.display = "none"; }
 
@@ -712,14 +625,8 @@ function formatarDataBR(isoStr) {
   }
 
   function popularFiltros(){
-    const anosUnicos = Array.from(new Set(
-      dadosBrutos.map(r => Number(r.ano)).filter(v => v && !isNaN(v) && v > 0)
-    )).sort((a,b) => a - b);
-
-    const mesesUnicos = Array.from(new Set(
-      dadosBrutos.map(r => Number(r.mes)).filter(v => v && !isNaN(v) && v >= 1 && v <= 12)
-    )).sort((a,b) => a - b);
-    
+    const anosUnicos = Array.from(new Set(dadosBrutos.map(r => Number(r.ano)).filter(v => v && !isNaN(v) && v > 0))).sort((a,b) => a - b);
+    const mesesUnicos = Array.from(new Set(dadosBrutos.map(r => Number(r.mes)).filter(v => v && !isNaN(v) && v >= 1 && v <= 12))).sort((a,b) => a - b);
     preencherSelect("fAno", anosUnicos, null, "Todos");
     preencherSelect("fMes", mesesUnicos, m => MESES[m] || m, "Todos");
     preencherSelect("fPessoa", valoresUnicos("categoria", r=>r.pessoaNorm), null, "Todas");
@@ -731,19 +638,12 @@ function formatarDataBR(isoStr) {
     const sel = document.getElementById(id);
     const valorAtual = sel.value;
     const rotuloFinal = textoPadrao || (id === "fPessoa" || id === "fSituacao" ? "Todas" : "Todos");
-    
     sel.innerHTML = `<option value="">${rotuloFinal}</option>`;
     valores.forEach(v => {
       const opt = document.createElement("option");
-      opt.value = v;
-      opt.textContent = labelFn ? labelFn(v) : v;
-      sel.appendChild(opt);
+      opt.value = v; opt.textContent = labelFn ? labelFn(v) : v; sel.appendChild(opt);
     });
-    if(valorAtual && Array.from(sel.options).some(o=>o.value===String(valorAtual))){
-      sel.value = valorAtual;
-    } else {
-      sel.value = "";
-    }
+    if(valorAtual && Array.from(sel.options).some(o=>o.value===String(valorAtual))) sel.value = valorAtual; else sel.value = "";
   }
 
   function aplicarFiltros(opcoes){
@@ -789,16 +689,12 @@ function formatarDataBR(isoStr) {
   function renderizarTotalPorPessoa(){
     const lista = aplicarFiltros({ ignorarCartao: true });
     const totalGeral = lista.reduce((s,r)=> s + (r.valor||0), 0);
-
     const mapa = new Map();
     lista.forEach(r => {
       const chave = normalizarChave(r.pessoaNorm);
       if(!mapa.has(chave)) mapa.set(chave, { pessoa: r.pessoaNorm, total: 0, qtd: 0 });
-      const item = mapa.get(chave);
-      item.total += (r.valor || 0);
-      item.qtd += 1;
+      const item = mapa.get(chave); item.total += (r.valor || 0); item.qtd += 1;
     });
-
     let linhas = Array.from(mapa.values());
     linhas.sort((a,b) => {
       let va = a[ordenacaoTotalPessoa.coluna === "pct" ? "total" : ordenacaoTotalPessoa.coluna];
@@ -808,27 +704,19 @@ function formatarDataBR(isoStr) {
       if(va > vb) return ordenacaoTotalPessoa.asc ? 1 : -1;
       return 0;
     });
-
     const corpo = document.getElementById("corpoTotalPessoa");
-    if(!linhas.length){
-      corpo.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--ink-faint); padding:20px;">Nenhum lançamento encontrado</td></tr>`;
-      return;
-    }
-
-    corpo.innerHTML = linhas.map(l => `
-      <tr>
-        <td>${l.pessoa}</td>
-        <td>${fmtNum(l.qtd)}</td>
-        <td class="valcel">${fmtMoeda(l.total)}</td>
-        <td>${totalGeral ? ((l.total/totalGeral)*100).toFixed(1) : "0,0"}%</td>
-      </tr>
-    `).join("");
+    if(!linhas.length){ corpo.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--ink-faint); padding:20px;">Nenhum lançamento encontrado</td></tr>`; return; }
+    corpo.innerHTML = linhas.map(l => `<tr><td>${l.pessoa}</td><td>${fmtNum(l.qtd)}</td><td class="valcel">${fmtMoeda(l.total)}</td><td>${totalGeral ? ((l.total/totalGeral)*100).toFixed(1) : "0,0"}%</td></tr>`).join("");
   }
 
   function renderizarKpis(lista){
     const total = lista.reduce((s,r)=> s + (r.valor||0), 0);
     const pago = lista.filter(r=>r.situacaoNorm==="OK").reduce((s,r)=> s + (r.valor||0), 0);
+    
+    // Novo: Garantir que A Vencer é somado perfeitamente e ganha destaque no card
     const aVencer = lista.filter(r=>r.situacaoNorm==="A Vencer").reduce((s,r)=> s + (r.valor||0), 0);
+    const cardAlertaClass = aVencer > 0 ? "alerta" : "";
+    
     const qtd = lista.length;
     const media = qtd ? total/qtd : 0;
     const maior = lista.reduce((m,r)=> (r.valor||0) > m ? (r.valor||0) : m, 0);
@@ -836,7 +724,7 @@ function formatarDataBR(isoStr) {
     const cards = [
       {classe:"hero", rotulo:"Total no filtro atual", valor: fmtMoeda(total), nota: qtd + " lançamentos"},
       {rotulo:"Pago / OK", valor: fmtMoeda(pago), corValor:"green"},
-      {rotulo:"A vencer", valor: fmtMoeda(aVencer), corValor:"rust"},
+      {classe: cardAlertaClass, rotulo:"A vencer (Atenção)", valor: fmtMoeda(aVencer), corValor:"rust"},
       {rotulo:"Qtde. lançamentos", valor: fmtNum(qtd)},
       {rotulo:"Ticket médio", valor: fmtMoeda(media)},
       {rotulo:"Maior lançamento", valor: fmtMoeda(maior)}
@@ -897,43 +785,46 @@ function formatarDataBR(isoStr) {
       const x = i * (larguraTotal/dados.length) + ((larguraTotal/dados.length - larguraBarra)/2);
       const h = Math.max(2, (d.value/max) * (alturaGrafico-30));
       const y = alturaGrafico - h - 24;
-      barrasSvg += `
-        <g>
-          <rect x="${x}" y="${y}" width="${larguraBarra}" height="${h}" rx="3" fill="#d9a441" opacity="0.9"></rect>
-          <text x="${x + larguraBarra/2}" y="${alturaGrafico-6}" text-anchor="middle" font-size="10.5" fill="#9aa2ae">${d.label.slice(0,2)}/${d.label.slice(3)}</text>
-          <title>${d.label}: ${fmtMoeda(d.value)}</title>
-        </g>`;
+      barrasSvg += `<g><rect x="${x}" y="${y}" width="${larguraBarra}" height="${h}" rx="3" fill="#d9a441" opacity="0.9"></rect><text x="${x + larguraBarra/2}" y="${alturaGrafico-6}" text-anchor="middle" font-size="10.5" fill="#9aa2ae">${d.label.slice(0,2)}/${d.label.slice(3)}</text><title>${d.label}: ${fmtMoeda(d.value)}</title></g>`;
     });
-
     el.innerHTML = `<div style="overflow-x:auto;"><svg width="${larguraTotal}" height="${alturaGrafico}" viewBox="0 0 ${larguraTotal} ${alturaGrafico}" style="font-family:inherit;">${barrasSvg}</svg></div>`;
   }
 
   function renderizarDonut(elId, dados, formatarValor){
     const el = document.getElementById(elId);
     if(!dados.length){ el.innerHTML = '<div class="vazio">Sem dados no filtro atual</div>'; return; }
+    
+    // NOVO: Agrupar fatias muito pequenas em "Outros" para melhorar o visual no telemóvel
     const total = dados.reduce((s,d)=>s+d.value,0);
+    let dadosLimpos = [];
+    let outrosVal = 0;
+    
+    dados.forEach(d => {
+       if (total > 0 && (d.value/total) < 0.02 && dados.length > 6) { // Menos de 2% vira Outros se houver mtos fatias
+           outrosVal += d.value;
+       } else {
+           dadosLimpos.push(d);
+       }
+    });
+    if (outrosVal > 0) dadosLimpos.push({label: "Outros/Menores", value: outrosVal});
+    
     const raio = 60, cx=75, cy=75, espessura=22;
     let anguloAcumulado = -90;
     let arcosSvg = "";
-    dados.forEach((d,i) => {
+    dadosLimpos.forEach((d,i) => {
       const fatia = total ? (d.value/total)*360 : 0;
-      const inicio = anguloAcumulado;
-      const fim = anguloAcumulado + fatia;
+      const inicio = anguloAcumulado; const fim = anguloAcumulado + fatia;
       arcosSvg += arcoDonut(cx, cy, raio, espessura, inicio, fim, CORES_DONUT[i % CORES_DONUT.length]);
       anguloAcumulado = fim;
     });
-    const legenda = dados.map((d,i) => `
+    const legenda = dadosLimpos.map((d,i) => `
       <div class="legenda-item">
         <span class="quad" style="background:${CORES_DONUT[i % CORES_DONUT.length]}"></span>
         <span class="lbl">${d.label}</span>
         <span class="val">${formatarValor ? formatarValor(d.value) : fmtMoeda(d.value)}</span>
       </div>
     `).join("");
-    el.innerHTML = `
-      <div style="display:flex; align-items:center; gap:18px; flex-wrap:wrap;">
-        <svg width="150" height="150" viewBox="0 0 150 150">${arcosSvg}</svg>
-        <div class="legenda-donut" style="flex:1; min-width:120px;">${legenda}</div>
-      </div>`;
+    el.innerHTML = `<div style="display:flex; align-items:center; gap:18px; flex-wrap:wrap;"><svg width="150" height="150" viewBox="0 0 150 150" style="flex:none;">${arcosSvg}</svg><div class="legenda-donut" style="flex:1; min-width:120px;">${legenda}</div></div>`;
   }
 
   function arcoDonut(cx, cy, r, espessura, anguloIni, anguloFim, cor){
@@ -942,12 +833,11 @@ function formatarDataBR(isoStr) {
     const x1 = cx + r*Math.cos(rad(anguloIni)), y1 = cy + r*Math.sin(rad(anguloIni));
     const x2 = cx + r*Math.cos(rad(anguloFim)), y2 = cy + r*Math.sin(rad(anguloFim));
     const largeArc = (anguloFim - anguloIni) > 180 ? 1 : 0;
-    return `<path d="M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}"
-              fill="none" stroke="${cor}" stroke-width="${espessura}" stroke-linecap="butt"></path>`;
+    return `<path d="M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}" fill="none" stroke="${cor}" stroke-width="${espessura}" stroke-linecap="butt"></path>`;
   }
 
   function renderizarGraficoCartao(lista){
-    const dados = agregarPor(lista, r => normalizarChave(r.cartaoNorm), r => r.cartaoNorm).slice(0,8);
+    const dados = agregarPor(lista, r => normalizarChave(r.cartaoNorm), r => r.cartaoNorm);
     renderizarDonut("graficoCartao", dados);
   }
 
@@ -960,23 +850,25 @@ function formatarDataBR(isoStr) {
     const top = [...lista].sort((a,b)=> (b.valor||0)-(a.valor||0)).slice(0,10);
     const el = document.getElementById("listaTop10");
     if(!top.length){ el.innerHTML = '<div class="vazio">Sem dados no filtro atual</div>'; return; }
-    el.innerHTML = top.map((r,i) => `
-      <li>
-        <span class="pos">${i+1}</span>
-        <span class="desc" title="${(r.descricao||"").replace(/"/g,'&quot;')}">${r.descricao || "(sem descrição)"}</span>
-        <span class="meta">${r.pessoaNorm || ""}${r.data ? " · "+formatarDataBR(r.data) : ""}</span>
-        <span class="val">${fmtMoeda(r.valor)}</span>
-      </li>
-    `).join("");
+    el.innerHTML = top.map((r,i) => `<li><span class="pos">${i+1}</span><span class="desc" title="${(r.descricao||"").replace(/"/g,'&quot;')}">${r.descricao || "(sem descrição)"}</span><span class="meta">${r.pessoaNorm || ""}${r.dataBR ? " · "+r.dataBR : ""}</span><span class="val">${fmtMoeda(r.valor)}</span></li>`).join("");
   }
 
   function renderizarTabela(listaFiltrada){
     let lista = [...listaFiltrada];
+    
+    // ORDENAÇÃO INTELIGENTE (Especialmente para datas)
     lista.sort((a,b) => {
       let va = a[ordenacao.coluna], vb = b[ordenacao.coluna];
-      if(ordenacao.coluna === "valor"){ va = va||0; vb = vb||0; }
-      else if(ordenacao.coluna === "data"){ va = va||""; vb = vb||""; }
-      else { va = (va==null?"":String(va)); vb = (vb==null?"":String(vb)); }
+      
+      if (ordenacao.coluna === "data") {
+          va = calcDataOrtogonal(a.dataBR);
+          vb = calcDataOrtogonal(b.dataBR);
+      } else if (ordenacao.coluna === "valor") {
+          va = va||0; vb = vb||0; 
+      } else {
+          va = (va==null?"":String(va)); vb = (vb==null?"":String(vb)); 
+      }
+      
       if(va < vb) return ordenacao.asc ? -1 : 1;
       if(va > vb) return ordenacao.asc ? 1 : -1;
       return 0;
@@ -988,12 +880,28 @@ function formatarDataBR(isoStr) {
     const pagina = lista.slice(inicio, inicio + LINHAS_POR_PAGINA);
 
     const corpo = document.getElementById("corpoTabela");
+    
+    // Atualizar setas do cabeçalho da tabela de forma visual
+    document.querySelectorAll("table.dados thead th[data-col]").forEach(th => {
+       const txt = th.textContent.replace(" ▾", "").replace(" ▴", "");
+       if (th.dataset.col === ordenacao.coluna) {
+           th.textContent = txt + (ordenacao.asc ? " ▴" : " ▾");
+           th.style.color = "var(--gold)";
+       } else {
+           th.textContent = txt;
+           th.style.color = "";
+       }
+    });
+
     if(!pagina.length){
       corpo.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--ink-faint); padding:24px;">Nenhum lançamento encontrado</td></tr>`;
     } else {
-      corpo.innerHTML = pagina.map(r => `
-        <tr>
-          <td>${formatarDataBR(r.data)}</td>
+      corpo.innerHTML = pagina.map(r => {
+        // Destaque visual na tabela para "A Vencer"
+        const classeLinha = r.situacaoNorm === "A Vencer" ? "linha-alerta" : "";
+        return `
+        <tr class="${classeLinha}">
+          <td>${r.dataBR}</td>
           <td class="descricao">${r.descricao || ""}</td>
           <td>${r.pessoaNorm || ""}</td>
           <td class="valcel">${fmtMoeda(r.valor)}</td>
@@ -1001,16 +909,13 @@ function formatarDataBR(isoStr) {
           <td>${r.cartaoNorm || "—"}</td>
           <td>${r.competencia}</td>
           <td>${badgeSituacao(r.situacaoNorm)}</td>
-        </tr>
-      `).join("");
+        </tr>`;
+      }).join("");
     }
 
-    document.getElementById("infoPagina").textContent =
-      `Página ${paginaAtual} de ${totalPaginas} · ${lista.length} lançamentos`;
+    document.getElementById("infoPagina").textContent = `Página ${paginaAtual} de ${totalPaginas} · ${lista.length} lançamentos`;
     document.getElementById("btnAnterior").disabled = paginaAtual <= 1;
     document.getElementById("btnProximo").disabled = paginaAtual >= totalPaginas;
-
-    corpo.dataset.totalPaginas = totalPaginas;
   }
 
   function badgeSituacao(s){
@@ -1025,19 +930,14 @@ function formatarDataBR(isoStr) {
     const rodape = document.getElementById("rodapeFixas");
 
     if(!despesasFixas || !despesasFixas.itens || !despesasFixas.itens.length){
-      cabecalho.innerHTML = "";
-      corpo.innerHTML = `<tr><td style="text-align:center; color:var(--ink-faint); padding:20px;">Não encontrei despesas fixas na planilha.</td></tr>`;
-      rodape.innerHTML = "";
-      return;
+      cabecalho.innerHTML = ""; corpo.innerHTML = `<tr><td style="text-align:center; color:var(--ink-faint); padding:20px;">Não encontrei despesas fixas na planilha.</td></tr>`; rodape.innerHTML = ""; return;
     }
 
     const elRefMes = document.getElementById("refMes");
     const mesDestaque = (elRefMes && elRefMes.value) ? parseInt(elRefMes.value, 10) : (new Date().getMonth() + 1);
     const meses = despesasFixas.meses || MESES_LONGO.slice(1);
 
-    cabecalho.innerHTML = `<th>Item</th>` +
-      meses.map((m,i) => `<th class="${(i+1)===mesDestaque ? 'mes-atual' : ''}">${String(m).slice(0,3)}</th>`).join("") +
-      `<th>Total</th>`;
+    cabecalho.innerHTML = `<th>Item</th>` + meses.map((m,i) => `<th class="${(i+1)===mesDestaque ? 'mes-atual' : ''}">${String(m).slice(0,3)}</th>`).join("") + `<th>Total</th>`;
 
     corpo.innerHTML = despesasFixas.itens.map(item => `
       <tr>
@@ -1048,43 +948,22 @@ function formatarDataBR(isoStr) {
     `).join("");
 
     const totalPorMes = despesasFixas.totalPorMes || [];
-    rodape.innerHTML = `<tr>
-        <td>Total</td>
-        ${totalPorMes.map((v,i) => `<td class="${(i+1)===mesDestaque ? 'mes-atual' : ''}">${v==null ? "—" : fmtMoeda(v)}</td>`).join("")}
-        <td>${fmtMoeda(despesasFixas.totalGeral)}</td>
-      </tr>`;
+    rodape.innerHTML = `<tr><td>Total</td>${totalPorMes.map((v,i) => `<td class="${(i+1)===mesDestaque ? 'mes-atual' : ''}">${v==null ? "—" : fmtMoeda(v)}</td>`).join("")}<td>${fmtMoeda(despesasFixas.totalGeral)}</td></tr>`;
   }
 
   function totalFixoDoMes(mes){
     if(!despesasFixas || !despesasFixas.totalPorMes || !mes) return 0;
-    const v = despesasFixas.totalPorMes[mes-1];
-    return v || 0;
+    return despesasFixas.totalPorMes[mes-1] || 0;
   }
 
-  function carregarReceitas(){
-    try{
-      const bruto = localStorage.getItem(CHAVE_RECEITAS);
-      receitas = bruto ? JSON.parse(bruto) : [];
-    } catch(e){
-      receitas = [];
-    }
-  }
-
-  function salvarReceitas(){
-    try{
-      localStorage.setItem(CHAVE_RECEITAS, JSON.stringify(receitas));
-    } catch(e){}
-  }
+  function carregarReceitas(){ try{ const bruto = localStorage.getItem(CHAVE_RECEITAS); receitas = bruto ? JSON.parse(bruto) : []; } catch(e){ receitas = []; } }
+  function salvarReceitas(){ try{ localStorage.setItem(CHAVE_RECEITAS, JSON.stringify(receitas)); } catch(e){} }
 
   function inicializarFormReceitas(){
-    const hoje = new Date();
-    const anoAtual = hoje.getFullYear();
-    const mesAtual = hoje.getMonth() + 1;
-
+    const hoje = new Date(); const anoAtual = hoje.getFullYear(); const mesAtual = hoje.getMonth() + 1;
     const sel = document.getElementById("refMes");
     sel.innerHTML = MESES_LONGO.slice(1).map((m,i) => `<option value="${i+1}">${m}</option>`).join("");
-    document.getElementById("refMes").value = mesAtual;
-    document.getElementById("refAno").value = anoAtual;
+    document.getElementById("refMes").value = mesAtual; document.getElementById("refAno").value = anoAtual;
   }
 
   function renderizarReceitas(){
@@ -1092,9 +971,7 @@ function formatarDataBR(isoStr) {
     const anoRef = parseInt(document.getElementById("refAno").value, 10);
     const mostrarTodas = document.getElementById("chkTodasReceitas").checked;
 
-    document.getElementById("labelMesReceitas").textContent = mostrarTodas
-      ? "todos os meses"
-      : `${MESES_LONGO[mesRef] || ""} de ${anoRef}`;
+    document.getElementById("labelMesReceitas").textContent = mostrarTodas ? "todos os meses" : `${MESES_LONGO[mesRef] || ""} de ${anoRef}`;
     document.getElementById("labelMesCadastro").textContent = `${MESES_LONGO[mesRef] || ""} de ${anoRef}`;
 
     const corpo = document.getElementById("corpoReceitas");
@@ -1105,22 +982,9 @@ function formatarDataBR(isoStr) {
       const msg = mostrarTodas ? "Nenhuma receita cadastrada ainda" : `Nenhuma receita cadastrada para ${MESES_LONGO[mesRef] || ""} de ${anoRef}.`;
       corpo.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--ink-faint); padding:18px;">${msg}</td></tr>`;
     } else {
-      corpo.innerHTML = listaOrdenada.map(r => `
-        <tr>
-          <td>${r.descricao}</td>
-          <td>${MESES_LONGO[r.mes] || r.mes}</td>
-          <td>${r.ano}</td>
-          <td class="valcel">${fmtMoeda(r.valor)}</td>
-          <td><button data-id="${r.id}" title="Remover" class="btn-remover-receita">×</button></td>
-        </tr>
-      `).join("");
+      corpo.innerHTML = listaOrdenada.map(r => `<tr><td>${r.descricao}</td><td>${MESES_LONGO[r.mes] || r.mes}</td><td>${r.ano}</td><td class="valcel">${fmtMoeda(r.valor)}</td><td><button data-id="${r.id}" title="Remover" class="btn-remover-receita">×</button></td></tr>`).join("");
       corpo.querySelectorAll(".btn-remover-receita").forEach(btn => {
-        btn.addEventListener("click", () => {
-          receitas = receitas.filter(r => r.id !== btn.dataset.id);
-          salvarReceitas();
-          renderizarReceitas();
-          renderizarSaldo();
-        });
+        btn.addEventListener("click", () => { receitas = receitas.filter(r => r.id !== btn.dataset.id); salvarReceitas(); renderizarReceitas(); renderizarSaldo(); });
       });
     }
   }
@@ -1128,19 +992,11 @@ function formatarDataBR(isoStr) {
   function renderizarSaldo(){
     const mesRef = parseInt(document.getElementById("refMes").value, 10);
     const anoRef = parseInt(document.getElementById("refAno").value, 10);
-
     document.getElementById("labelReferencia").textContent = `Referência: ${MESES_LONGO[mesRef] || ""} de ${anoRef}`;
 
-    const totalReceitas = receitas
-      .filter(r => r.mes === mesRef && r.ano === anoRef)
-      .reduce((s,r) => s + (r.valor||0), 0);
-
+    const totalReceitas = receitas.filter(r => r.mes === mesRef && r.ano === anoRef).reduce((s,r) => s + (r.valor||0), 0);
     const totalFixo = totalFixoDoMes(mesRef);
-
-    const totalVariavel = dadosBrutos
-      .filter(r => r.mes === mesRef && r.ano === anoRef)
-      .reduce((s,r) => s + (r.valor||0), 0);
-
+    const totalVariavel = dadosBrutos.filter(r => r.mes === mesRef && r.ano === anoRef).reduce((s,r) => s + (r.valor||0), 0);
     const saldo = totalReceitas - totalFixo - totalVariavel;
 
     const cards = [
@@ -1150,22 +1006,13 @@ function formatarDataBR(isoStr) {
       { rotulo: "Saldo estimado", valor: fmtMoeda(saldo), classe: saldo >= 0 ? "green" : "rust" }
     ];
 
-    document.getElementById("kpisSaldo").innerHTML = cards.map(c => `
-      <div class="kpi">
-        <div class="rotulo">${c.rotulo}</div>
-        <div class="valor pequeno ${c.classe}">${c.valor}</div>
-      </div>
-    `).join("");
-
+    document.getElementById("kpisSaldo").innerHTML = cards.map(c => `<div class="kpi"><div class="rotulo">${c.rotulo}</div><div class="valor pequeno ${c.classe}">${c.valor}</div></div>`).join("");
     renderizarReceitas();
   }
 
   function parseValorBR(texto){
-    if(texto == null) return NaN;
-    let s = String(texto).trim();
-    if(!s) return NaN;
-    s = s.replace(/[^\d.,-]/g, "");
-    if(s.includes(",")){ s = s.replace(/\./g, "").replace(",", "."); }
+    if(texto == null) return NaN; let s = String(texto).trim(); if(!s) return NaN;
+    s = s.replace(/[^\d.,-]/g, ""); if(s.includes(",")){ s = s.replace(/\./g, "").replace(",", "."); }
     return parseFloat(s);
   }
 
@@ -1180,10 +1027,7 @@ function formatarDataBR(isoStr) {
 
     receitas.push({ id: "r" + Date.now() + "_" + Math.random().toString(36).slice(2,8), descricao, valor, mes, ano });
     salvarReceitas();
-
-    document.getElementById("novaReceitaDescricao").value = "";
-    document.getElementById("novaReceitaValor").value = "";
-    renderizarSaldo();
+    document.getElementById("novaReceitaDescricao").value = ""; document.getElementById("novaReceitaValor").value = ""; renderizarSaldo();
   }
 
   function exportarDespesas(){
@@ -1192,48 +1036,19 @@ function formatarDataBR(isoStr) {
     if(typeof XLSX === "undefined"){ alert("Biblioteca Excel indisponível."); return; }
 
     const colunas = ["Data","Descrição","Pessoa","Valor","Parcela","Cartão","Mês","Ano","Situação","Observações"];
-    const linhas = lista.map(r => ([
-      formatarDataBR(r.data) || "",
-      r.descricao || "",
-      r.pessoaNorm || "",
-      r.valor != null ? r.valor : null,
-      r.parcela || "",
-      r.cartaoNorm || "",
-      r.mes != null ? (MESES_LONGO[r.mes] || r.mes) : "",
-      r.ano != null ? r.ano : "",
-      r.situacaoNorm || "",
-      r.observacoes || ""
-    ]));
-
-    const ws = XLSX.utils.aoa_to_sheet([colunas, ...linhas]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Despesas");
-    XLSX.writeFile(wb, `despesas-${new Date().toISOString().slice(0,10)}.xlsx`);
+    const linhas = lista.map(r => ([ r.dataBR || "", r.descricao || "", r.pessoaNorm || "", r.valor != null ? r.valor : null, r.parcela || "", r.cartaoNorm || "", r.mes != null ? (MESES_LONGO[r.mes] || r.mes) : "", r.ano != null ? r.ano : "", r.situacaoNorm || "", r.observacoes || "" ]));
+    const ws = XLSX.utils.aoa_to_sheet([colunas, ...linhas]); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Despesas"); XLSX.writeFile(wb, `despesas-${new Date().toISOString().slice(0,10)}.xlsx`);
   }
 
-  ["fAno","fMes","fPessoa","fCartao","fSituacao"].forEach(id => {
-    document.getElementById(id).addEventListener("change", renderizarTudo);
-  });
-  let debounceBusca;
-  document.getElementById("fBusca").addEventListener("input", () => {
-    clearTimeout(debounceBusca);
-    debounceBusca = setTimeout(renderizarTudo, 250);
-  });
-  document.getElementById("btnLimpar").addEventListener("click", () => {
-    ["fAno","fMes","fPessoa","fCartao","fSituacao"].forEach(id => {
-      const el = document.getElementById(id);
-      el.value = "";
-    });
-    document.getElementById("fBusca").value = "";
-    renderizarTudo();
-  });
+  ["fAno","fMes","fPessoa","fCartao","fSituacao"].forEach(id => { document.getElementById(id).addEventListener("change", renderizarTudo); });
+  let debounceBusca; document.getElementById("fBusca").addEventListener("input", () => { clearTimeout(debounceBusca); debounceBusca = setTimeout(renderizarTudo, 250); });
+  document.getElementById("btnLimpar").addEventListener("click", () => { ["fAno","fMes","fPessoa","fCartao","fSituacao"].forEach(id => { document.getElementById(id).value = ""; }); document.getElementById("fBusca").value = ""; renderizarTudo(); });
   document.getElementById("btnAtualizar").addEventListener("click", buscarDados);
 
   document.querySelectorAll("table.dados thead th[data-col]").forEach(th => {
     th.addEventListener("click", () => {
       const col = th.dataset.col;
-      if(ordenacao.coluna === col) ordenacao.asc = !ordenacao.asc;
-      else { ordenacao.coluna = col; ordenacao.asc = false; }
+      if(ordenacao.coluna === col) ordenacao.asc = !ordenacao.asc; else { ordenacao.coluna = col; ordenacao.asc = false; }
       renderizarTabela(aplicarFiltros());
     });
   });
@@ -1241,18 +1056,13 @@ function formatarDataBR(isoStr) {
   document.querySelectorAll("#tabelaTotalPessoa thead th[data-tp-col]").forEach(th => {
     th.addEventListener("click", () => {
       const col = th.dataset.tpCol;
-      if(ordenacaoTotalPessoa.coluna === col) ordenacaoTotalPessoa.asc = !ordenacaoTotalPessoa.asc;
-      else { ordenacaoTotalPessoa.coluna = col; ordenacaoTotalPessoa.asc = false; }
+      if(ordenacaoTotalPessoa.coluna === col) ordenacaoTotalPessoa.asc = !ordenacaoTotalPessoa.asc; else { ordenacaoTotalPessoa.coluna = col; ordenacaoTotalPessoa.asc = false; }
       renderizarTotalPorPessoa();
     });
   });
 
-  document.getElementById("btnAnterior").addEventListener("click", () => {
-    if(paginaAtual > 1){ paginaAtual--; renderizarTabela(aplicarFiltros()); }
-  });
-  document.getElementById("btnProximo").addEventListener("click", () => {
-    paginaAtual++; renderizarTabela(aplicarFiltros());
-  });
+  document.getElementById("btnAnterior").addEventListener("click", () => { if(paginaAtual > 1){ paginaAtual--; renderizarTabela(aplicarFiltros()); } });
+  document.getElementById("btnProximo").addEventListener("click", () => { paginaAtual++; renderizarTabela(aplicarFiltros()); });
 
   document.getElementById("refMes").addEventListener("change", () => { renderizarFixas(); renderizarSaldo(); });
   document.getElementById("refAno").addEventListener("change", () => { renderizarFixas(); renderizarSaldo(); });
@@ -1260,16 +1070,10 @@ function formatarDataBR(isoStr) {
   document.getElementById("btnAdicionarReceita").addEventListener("click", adicionarReceita);
   document.getElementById("btnExportarDespesas").addEventListener("click", exportarDespesas);
 
-  inicializarFormReceitas();
-  carregarReceitas();
-  renderizarSaldo();
-  
-  ["fAno","fMes","fPessoa","fCartao","fSituacao"].forEach(id => {
-    document.getElementById(id).value = "";
-  });
+  inicializarFormReceitas(); carregarReceitas(); renderizarSaldo();
+  ["fAno","fMes","fPessoa","fCartao","fSituacao"].forEach(id => { document.getElementById(id).value = ""; });
 
-  buscarDados();
-  setInterval(buscarDados, 10000);
+  buscarDados(); setInterval(buscarDados, 10000);
 
 })();
 </script>
