@@ -564,17 +564,74 @@
       const statusBox = document.getElementById("statusBox");
       statusBox.classList.remove("offline");
 
-      // RASTREAMENTO DE ERRO NA TELA (DIAGNÓSTICO)
       const debugBox = document.getElementById("debugBanner");
       let debugText = "[DIAGNÓSTICO DA API]\n";
-      debugText += "Abas Encontradas: " + (json.abasDisponiveis ? json.abasDisponiveis.join(", ") : "Chave 'abasDisponiveis' não retornada") + "\n";
-      if(json.despesasFixas) {
-         debugText += "Despesas Fixas Object: SIM (" + json.despesasFixas.itens.length + " itens encontrados)";
+
+      // CONVERSÃO DOS DADOS BRUTOS PARA O FORMATO CORRETO
+      if(json.dadosFixasBrutos) {
+          debugText += "Aba Fixas encontrada! Linhas lidas do Google: " + json.dadosFixasBrutos.length + "\n";
+          
+          let itensProcessados = [];
+          let totalPorMes = new Array(12).fill(0);
+          let totalGeralFixas = 0;
+
+          // Processar a matriz recebida do Google
+          json.dadosFixasBrutos.forEach((linha, indice) => {
+              // Pegar o nome (primeira célula que não esteja vazia)
+              let idxNome = -1;
+              for(let c = 0; c < linha.length; c++){
+                  if(String(linha[c]).trim() !== ""){ idxNome = c; break; }
+              }
+              
+              if(idxNome !== -1){
+                  let nome = String(linha[idxNome]).trim();
+                  let upper = nome.toUpperCase();
+                  
+                  // Ignorar títulos
+                  if(upper !== "TOTAL" && upper.indexOf("ITEM") === -1 && upper.indexOf("DESPESA") === -1){
+                      let valsItem = [];
+                      let somaItem = 0;
+                      
+                      // Ler 12 meses para a frente
+                      for(let m = 1; m <= 12; m++){
+                          let celula = linha[idxNome + m] || "0";
+                          let txt = String(celula).replace(/[^\d.,-]/g, "");
+                          if(txt.includes(",")) txt = txt.replace(/\./g, "").replace(",", ".");
+                          let val = parseFloat(txt) || 0;
+                          
+                          valsItem.push(val);
+                          somaItem += val;
+                          totalPorMes[m-1] += val;
+                      }
+                      
+                      if(somaItem > 0 || upper.length < 25) {
+                          totalGeralFixas += somaItem;
+                          itensProcessados.push({nome: nome, valores: valsItem, total: somaItem});
+                      }
+                  }
+              }
+          });
+          
+          debugText += "Linhas processadas e formatadas com sucesso: " + itensProcessados.length + "\n";
+          
+          despesasFixas = {
+              meses: ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"],
+              itens: itensProcessados,
+              totalPorMes: totalPorMes,
+              totalGeral: totalGeralFixas
+          };
+          
+          if(itensProcessados.length > 0){
+             debugBox.style.display = "none"; // Oculta o diagnóstico se funcionar!
+          } else {
+             debugBox.style.display = "block";
+          }
       } else {
-         debugText += "Despesas Fixas Object: NULL (O script não encontrou a aba ou ela não tem itens)";
+          debugText += "ERRO: O Google não enviou a chave dadosFixasBrutos.\n";
+          debugBox.style.display = "block";
       }
+      
       debugBox.textContent = debugText;
-      debugBox.style.display = "block";
 
       if(json.erro){
         mostrarErro(json.erro);
@@ -592,7 +649,6 @@
         cartaoNorm: tituloBonito(r.cartao)
       }));
 
-      despesasFixas = json.despesasFixas || null;
       renderizarFixas();
       renderizarSaldo();
 
