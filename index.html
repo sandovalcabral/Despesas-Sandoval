@@ -619,14 +619,20 @@
   }
 
   function popularFiltros(){
-    const anosUnicos = Array.from(new Set(dadosBrutos.map(r=>r.ano).filter(v => v != null && String(v).trim() !== ""))).sort((a,b)=>a-b);
-    const mesesUnicos = Array.from(new Set(dadosBrutos.map(r=>r.mes).filter(v => v != null && String(v).trim() !== ""))).sort((a,b)=>a-b);
+    // Filtro rigoroso: ignora nulos, vazios, zero e valores inválidos para Ano e Mês
+    const anosUnicos = Array.from(new Set(
+      dadosBrutos.map(r => Number(r.ano)).filter(v => v && !isNaN(v) && v > 0)
+    )).sort((a,b) => a - b);
+
+    const mesesUnicos = Array.from(new Set(
+      dadosBrutos.map(r => Number(r.mes)).filter(v => v && !isNaN(v) && v >= 1 && v <= 12)
+    )).sort((a,b) => a - b);
     
     preencherSelect("fAno", anosUnicos, null, "Todos");
     preencherSelect("fMes", mesesUnicos, m => MESES[m] || m, "Todos");
     preencherSelect("fPessoa", valoresUnicos("categoria", r=>r.pessoaNorm), null, "Todas");
     preencherSelect("fCartao", valoresUnicos("cartao", r=>r.cartaoNorm), null, "Todos");
-    preencherSelect("fSituacao", Array.from(new Set(dadosBrutos.map(r=>r.situacaoNorm))).filter(v => v != null && String(v).trim() !== "").sort(), null, "Todas");
+    preencherSelect("fSituacao", Array.from(new Set(dadosBrutos.map(r=>r.situacaoNorm))).filter(v => v != null && String(v).trim() !== "" && v !== "Indefinido").sort(), null, "Todas");
   }
 
   function preencherSelect(id, valores, labelFn, textoPadrao){
@@ -641,7 +647,7 @@
       opt.textContent = labelFn ? labelFn(v) : v;
       sel.appendChild(opt);
     });
-    if(valorAtual && Array.from(sel.options).some(o=>o.value===valorAtual)){
+    if(valorAtual && Array.from(sel.options).some(o=>o.value===String(valorAtual))){
       sel.value = valorAtual;
     } else {
       sel.value = "";
@@ -780,7 +786,7 @@
   function renderizarGraficoMes(lista){
     const mapa = new Map();
     lista.forEach(r => {
-      if(r.ano == null || r.mes == null) return;
+      if(!r.ano || !r.mes) return;
       const chave = String(r.ano) + "-" + String(r.mes).padStart(2,"0");
       if(!mapa.has(chave)) mapa.set(chave, {label: r.competencia, value: 0, ano:r.ano, mes:r.mes});
       mapa.get(chave).value += (r.valor || 0);
@@ -938,7 +944,7 @@
     const meses = despesasFixas.meses || MESES_LONGO.slice(1);
 
     cabecalho.innerHTML = `<th>Item</th>` +
-      meses.map((m,i) => `<th class="${(i+1)===mesDestaque ? 'mes-atual' : ''}">${m.slice(0,3)}</th>`).join("") +
+      meses.map((m,i) => `<th class="${(i+1)===mesDestaque ? 'mes-atual' : ''}">${String(m).slice(0,3)}</th>`).join("") +
       `<th>Total</th>`;
 
     corpo.innerHTML = despesasFixas.itens.map(item => `
