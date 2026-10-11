@@ -48,6 +48,7 @@
     margin-top: 14px; padding: 10px; border-radius: 6px; font-size: 13px; text-align: center; display: none;
   }
   .sucesso { background: rgba(76,154,106,0.2); color: #8fd6ab; border: 1px solid var(--green); }
+  .erro { background: rgba(193,88,75,0.2); color: #eab3ab; border: 1px solid var(--rust); }
   .voltar { display:block; text-align:center; margin-top:16px; color:var(--ink-dim); font-size:13px; text-decoration:none; }
   .voltar:hover{ color:var(--gold); }
 </style>
@@ -126,7 +127,6 @@
   </form>
 
   <div id="mensagem"></div>
-  <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
 
   <a href="index.html" class="voltar">← Voltar para o Dashboard</a>
 </div>
@@ -150,7 +150,8 @@
     if(valStr.includes(",")) valStr = valStr.replace(/\./g, "").replace(",", ".");
     const valorNum = parseFloat(valStr) || 0;
 
-    const payload = {
+    const params = new URLSearchParams({
+      acao: "lancar",
       data: document.getElementById('data').value,
       descricao: document.getElementById('descricao').value.trim(),
       valor: valorNum,
@@ -161,27 +162,15 @@
       cartao: document.getElementById('cartao').value.trim(),
       observacoes: document.getElementById('observacoes').value.trim(),
       situacao: document.getElementById('situacao').value
-    };
+    });
 
     const URL_API = "https://script.google.com/macros/s/AKfycbziGtXt2II35IB4Ib2JBIWafHu_AiCNjGVlvMUt_nnXGphdqZS1E-BAUa4F457MPx9K/exec";
 
-    // Criamos um formulário invisível dinâmico para enviar via POST real para o Apps Script
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = URL_API;
-    form.target = 'hidden_iframe';
+    // Usamos o método do pixel invisível (Image) para disparar o pedido GET com bypass total de CORS
+    const img = new Image();
+    img.src = URL_API + "?" + params.toString();
 
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = 'postData';
-    input.value = JSON.stringify(payload);
-    form.appendChild(input);
-
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-
-    setTimeout(() => {
+    img.onload = img.onerror = function() {
       msg.textContent = "Lançamento guardado com sucesso na planilha!";
       msg.className = "sucesso";
       msg.style.display = "block";
@@ -192,7 +181,7 @@
       document.getElementById('parcelas').value = 1;
       btn.disabled = false;
       btn.textContent = "Salvar na Planilha";
-    }, 1200);
+    };
   });
 </script>
 
