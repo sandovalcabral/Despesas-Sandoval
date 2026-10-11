@@ -544,7 +544,7 @@
               if(idxNome !== -1){
                   let nome = String(linha[idxNome]).trim();
                   let upper = nome.toUpperCase();
-                  if(upper !== "TOTAL" && upper.indexOf("ITEM") === -1 && upper.indexOf("DESPESA") === -1){
+                 if(upper !== "TOTAL" && upper !== "DÉBITOS" && upper !== "DEBITOS" && upper.indexOf("ITEM") === -1 && upper.indexOf("DESPESA") === -1){
                       let valsItem = []; let somaItem = 0;
                       for(let m = 1; m <= 12; m++){
                           let celula = linha[idxNome + m] || "0";
