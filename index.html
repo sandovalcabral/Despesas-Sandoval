@@ -484,7 +484,8 @@
 
   async function buscarDados(){
     try{
-      const resp = await fetch("https://script.google.com/macros/s/AKfycbzX2bqHne2d3zlJjTJa7VT3gt27s1ZZ-ATfijqdqYpuUsTQkgFqYmlvtpKc7XhcviIO/exec?_=" + Date.now(), {cache:"no-store"});
+      // NOVO LINK DA API AQUI
+      const resp = await fetch("https://script.google.com/macros/s/AKfycbziGtXt2II35IB4Ib2JBIWafHu_AiCNjGVlvMUt_nnXGphdqZS1E-BAUa4F457MPx9K/exec?_=" + Date.now(), {cache:"no-store"});
       if(!resp.ok) throw new Error("HTTP " + resp.status);
       const json = await resp.json();
 
@@ -528,7 +529,7 @@
           };
       }
 
-      // PROCESSAR RECEITAS DA PLANILHA (Mesma lógica das fixas)
+      // PROCESSAR RECEITAS DA PLANILHA
       if(json.dadosReceitasBrutos && json.dadosReceitasBrutos.length > 0){
           let itensRec = [];
           let totalRecMes = new Array(12).fill(0);
