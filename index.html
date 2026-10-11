@@ -329,6 +329,7 @@
 <main>
 
   <div id="erroBanner"></div>
+  <div id="debugBanner" style="display:none; background:#212836; border:1px solid #5b8ec4; color:#5b8ec4; padding:10px; border-radius:8px; margin-bottom:20px; font-family:monospace; font-size:12px; white-space:pre-wrap; overflow-x:auto;"></div>
 
   <div class="kpis" id="kpis"></div>
 
@@ -555,14 +556,25 @@
 
   async function buscarDados(){
     try{
-      // NOVO LINK ATUALIZADO
-      const resp = await fetch("https://script.google.com/macros/s/AKfycbyUHj4qu8s_YiFJRw0szeSl88Ov79s0ejeh7VbTGb49ODNOWMxOYmayBoaxDpMQoA58/exec?_=" + Date.now(), {cache:"no-store"});
+      const resp = await fetch("https://script.google.com/macros/s/AKfycbwUtQDIZktAW5Sz13tC-9HhV1MyKaNORjnbuZMRjte98QwwIMuSy2ls3K4bae5lsiQ7/exec?_=" + Date.now(), {cache:"no-store"});
       
       if(!resp.ok) throw new Error("HTTP " + resp.status);
       const json = await resp.json();
 
       const statusBox = document.getElementById("statusBox");
       statusBox.classList.remove("offline");
+
+      // RASTREAMENTO DE ERRO NA TELA (DIAGNÓSTICO)
+      const debugBox = document.getElementById("debugBanner");
+      let debugText = "[DIAGNÓSTICO DA API]\n";
+      debugText += "Abas Encontradas: " + (json.abasDisponiveis ? json.abasDisponiveis.join(", ") : "Chave 'abasDisponiveis' não retornada") + "\n";
+      if(json.despesasFixas) {
+         debugText += "Despesas Fixas Object: SIM (" + json.despesasFixas.itens.length + " itens encontrados)";
+      } else {
+         debugText += "Despesas Fixas Object: NULL (O script não encontrou a aba ou ela não tem itens)";
+      }
+      debugBox.textContent = debugText;
+      debugBox.style.display = "block";
 
       if(json.erro){
         mostrarErro(json.erro);
