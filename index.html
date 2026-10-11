@@ -555,8 +555,9 @@
 
   async function buscarDados(){
     try{
-      // LINK ATUALIZADO CONFORME SOLICITADO
+      // AQUI ESTÁ O SEU LINK ATUALIZADO NO FETCH
       const resp = await fetch("https://script.google.com/macros/s/AKfycbyJ53bARvrkS9lqLtnVDGJMTskvKyet7W424ofaZlL2PspM0fripFQXa56MRygoOYGm/exec?_=" + Date.now(), {cache:"no-store"});
+      
       if(!resp.ok) throw new Error("HTTP " + resp.status);
       const json = await resp.json();
 
@@ -597,6 +598,7 @@
       const statusBox = document.getElementById("statusBox");
       statusBox.classList.add("offline");
       document.getElementById("statusTexto").textContent = "servidor online indisponível";
+      console.error(e);
     }
   }
 
