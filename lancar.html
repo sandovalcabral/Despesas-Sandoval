@@ -48,7 +48,6 @@
     margin-top: 14px; padding: 10px; border-radius: 6px; font-size: 13px; text-align: center; display: none;
   }
   .sucesso { background: rgba(76,154,106,0.2); color: #8fd6ab; border: 1px solid var(--green); }
-  .erro { background: rgba(193,88,75,0.2); color: #eab3ab; border: 1px solid var(--rust); }
   .voltar { display:block; text-align:center; margin-top:16px; color:var(--ink-dim); font-size:13px; text-decoration:none; }
   .voltar:hover{ color:var(--gold); }
 </style>
@@ -58,32 +57,33 @@
 <div class="card">
   <h2>Novo Lançamento</h2>
   
-  <form id="formLancamento">
+  <!-- Formulário apontando diretamente para o Apps Script via POST com iframe oculto -->
+  <form id="formReal" method="POST" action="https://script.google.com/macros/s/AKfycbziGtXt2II35IB4Ib2JBIWafHu_AiCNjGVlvMUt_nnXGphdqZS1E-BAUa4F457MPx9K/exec" target="hidden_iframe">
     <div class="campo">
       <label for="data">Data do Lançamento</label>
-      <input type="date" id="data" required>
+      <input type="date" id="data" name="data" required>
     </div>
 
     <div class="campo">
       <label for="descricao">Descrição</label>
-      <input type="text" id="descricao" placeholder="Ex: Compra" required>
+      <input type="text" id="descricao" name="descricao" placeholder="Ex: Compra" required>
     </div>
 
     <div class="linha-dupla">
       <div class="campo">
         <label for="valor">Valor Total (R$)</label>
-        <input type="text" inputmode="decimal" id="valor" placeholder="Ex: 500,00" required>
+        <input type="text" inputmode="decimal" id="valor" name="valor" placeholder="Ex: 500,00" required>
       </div>
       <div class="campo">
         <label for="parcelas">Qtd de Parcelas</label>
-        <input type="number" id="parcelas" value="1" min="1" max="48" required>
+        <input type="number" id="parcelas" name="parcelas" value="1" min="1" max="48" required>
       </div>
     </div>
 
     <div class="linha-dupla">
       <div class="campo">
         <label for="mesInicial">Mês da 1ª Parcela</label>
-        <select id="mesInicial">
+        <select id="mesInicial" name="mesInicial">
           <option value="1">Janeiro</option><option value="2">Fevereiro</option>
           <option value="3">Março</option><option value="4">Abril</option>
           <option value="5">Maio</option><option value="6">Junho</option>
@@ -94,32 +94,32 @@
       </div>
       <div class="campo">
         <label for="anoInicial">Ano da 1ª Parcela</label>
-        <input type="number" id="anoInicial" required>
+        <input type="number" id="anoInicial" name="anoInicial" required>
       </div>
     </div>
 
     <div class="linha-dupla">
       <div class="campo">
         <label for="categoria">Pessoa</label>
-        <input type="text" id="categoria" placeholder="Ex: Sandoval">
+        <input type="text" id="categoria" name="categoria" placeholder="Ex: Sandoval">
       </div>
       <div class="campo">
         <label for="cartao">Cartão / Forma</label>
-        <input type="text" id="cartao" placeholder="Ex: Nubank">
+        <input type="text" id="cartao" name="cartao" placeholder="Ex: Nubank">
       </div>
     </div>
 
     <div class="linha-dupla">
       <div class="campo">
         <label for="situacao">Situação</label>
-        <select id="situacao">
+        <select id="situacao" name="situacao">
           <option value="OK">OK (Pago)</option>
           <option value="A Vencer">A Vencer</option>
         </select>
       </div>
       <div class="campo">
         <label for="observacoes">Observações</label>
-        <input type="text" id="observacoes" placeholder="Opcional">
+        <input type="text" id="observacoes" name="observacoes" placeholder="Opcional">
       </div>
     </div>
 
@@ -127,6 +127,7 @@
   </form>
 
   <div id="mensagem"></div>
+  <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
 
   <a href="index.html" class="voltar">← Voltar para o Dashboard</a>
 </div>
@@ -137,8 +138,7 @@
   document.getElementById('mesInicial').value = hoje.getMonth() + 1;
   document.getElementById('anoInicial').value = hoje.getFullYear();
 
-  document.getElementById('formLancamento').addEventListener('submit', (e) => {
-    e.preventDefault();
+  document.getElementById('formReal').addEventListener('submit', (e) => {
     const btn = document.getElementById('btnEnviar');
     const msg = document.getElementById('mensagem');
     
@@ -146,42 +146,25 @@
     btn.textContent = "A gravar na planilha...";
     msg.style.display = "none";
 
-    let valStr = document.getElementById('valor').value.trim().replace(/[^\d.,-]/g, "");
+    // Formatar o valor para garantir ponto decimal correto
+    let valInput = document.getElementById('valor');
+    let valStr = valInput.value.trim().replace(/[^\d.,-]/g, "");
     if(valStr.includes(",")) valStr = valStr.replace(/\./g, "").replace(",", ".");
-    const valorNum = parseFloat(valStr) || 0;
+    valInput.value = parseFloat(valStr) || 0;
 
-    const params = new URLSearchParams({
-      acao: "lancar",
-      data: document.getElementById('data').value,
-      descricao: document.getElementById('descricao').value.trim(),
-      valor: valorNum,
-      parcelas: parseInt(document.getElementById('parcelas').value) || 1,
-      mesInicial: parseInt(document.getElementById('mesInicial').value),
-      anoInicial: parseInt(document.getElementById('anoInicial').value),
-      categoria: document.getElementById('categoria').value.trim(),
-      cartao: document.getElementById('cartao').value.trim(),
-      observacoes: document.getElementById('observacoes').value.trim(),
-      situacao: document.getElementById('situacao').value
-    });
-
-    const URL_API = "https://script.google.com/macros/s/AKfycbziGtXt2II35IB4Ib2JBIWafHu_AiCNjGVlvMUt_nnXGphdqZS1E-BAUa4F457MPx9K/exec";
-
-    // Usamos o método do pixel invisível (Image) para disparar o pedido GET com bypass total de CORS
-    const img = new Image();
-    img.src = URL_API + "?" + params.toString();
-
-    img.onload = img.onerror = function() {
+    // Aguarda o envio pelo iframe e exibe a mensagem de sucesso
+    setTimeout(() => {
       msg.textContent = "Lançamento guardado com sucesso na planilha!";
       msg.className = "sucesso";
       msg.style.display = "block";
-      document.getElementById('formLancamento').reset();
+      document.getElementById('formReal').reset();
       document.getElementById('data').valueAsDate = new Date();
       document.getElementById('mesInicial').value = new Date().getMonth() + 1;
       document.getElementById('anoInicial').value = new Date().getFullYear();
       document.getElementById('parcelas').value = 1;
       btn.disabled = false;
       btn.textContent = "Salvar na Planilha";
-    };
+    }, 1500);
   });
 </script>
 
