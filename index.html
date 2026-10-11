@@ -20,7 +20,7 @@
     --green-soft:    rgba(76,154,106,.18);
     --rust:          #c1584b;
     --rust-soft:     rgba(193,88,75,.18);
-    --rust-glow:     rgba(193,88,75,.05); /* Novo para a linha da tabela */
+    --rust-glow:     rgba(193,88,75,.05);
     --blue:          #5b8ec4;
     --serif: Georgia, "Times New Roman", Cambria, serif;
     --sans: "Segoe UI", "Segoe UI Variable", Tahoma, Verdana, Arial, sans-serif;
@@ -95,7 +95,6 @@
     line-height:1.5;
   }
 
-  /* Melhorias Mobile para os KPIs */
   .kpis, #kpisSaldo {
     display:grid;
     grid-template-columns: 1.6fr repeat(5, 1fr);
@@ -122,7 +121,6 @@
     background:linear-gradient(160deg, var(--panel-2), var(--panel));
     border-color:#3a3020;
   }
-  /* Destaque extra para o card "A Vencer" */
   .kpi.alerta {
     border-color: rgba(193,88,75,0.4);
     background: linear-gradient(to bottom, var(--panel), var(--rust-glow));
@@ -139,10 +137,9 @@
   }
   .kpi.hero .valor{ font-size:clamp(28px,3.5vw,38px); color:var(--gold); }
   .kpi .valor.green{ color:var(--green); font-weight: 600; }
-  .kpi .valor.rust{ color:#eab3ab; font-weight: 600; } /* Vermelho mais brilhante no kpi */
+  .kpi .valor.rust{ color:#eab3ab; font-weight: 600; }
   .kpi .nota{ font-size:11.5px; color:var(--ink-faint); margin-top:6px; }
 
-  /* Ajustes responsivos para tablets e telemóveis */
   @media (max-width: 1024px){
     .kpis { grid-template-columns: repeat(3, 1fr); }
     #kpisSaldo { grid-template-columns: repeat(2, 1fr); }
@@ -223,7 +220,6 @@
   ul.top10{ list-style:none; margin:0; padding:0; }
 
   .tabela-wrap{ background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-bottom:24px; }
-  /* Para telemóvel: garantir scroll fácil na tabela */
   .tabela-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   
   table.dados{ width:100%; border-collapse:collapse; font-size:13px; }
@@ -236,7 +232,6 @@
   table.dados tbody td.descricao{ white-space:normal; min-width:200px; max-width:320px; }
   table.dados tbody tr:last-child td{ border-bottom:none; }
   
-  /* Nova classe de linha para destaque visual de "A Vencer" */
   table.dados tbody tr.linha-alerta { background-color: var(--rust-glow); }
   table.dados tbody tr.linha-alerta:hover { background-color: rgba(193,88,75,.12); }
   table.dados tbody tr:hover:not(.linha-alerta){ background:rgba(255,255,255,.02); }
@@ -246,7 +241,7 @@
   
   .badge{ display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:600; }
   .badge.ok{ background:var(--green-soft); color:#8fd6ab; }
-  .badge.avencer{ background:var(--rust); color:#fff; box-shadow: 0 0 8px rgba(193,88,75,0.4); } /* Destaque forte */
+  .badge.avencer{ background:var(--rust); color:#fff; box-shadow: 0 0 8px rgba(193,88,75,0.4); }
   .valcel{ color:var(--gold); font-variant-numeric: tabular-nums; }
 
   .paginacao{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; font-size:12.5px; color:var(--ink-dim); flex-wrap:wrap; gap:10px; }
@@ -395,6 +390,18 @@
     </div>
   </div>
 
+  <!-- SEÇÃO DE RECEITAS (Lida da Planilha) -->
+  <div class="secao-titulo">Receitas (mensais)</div>
+  <div class="painel" style="margin-bottom:16px;" id="painelReceitas">
+    <div class="tabela-scroll">
+      <table class="dados" id="tabelaReceitasPlanilha">
+        <thead><tr id="cabecalhoReceitas"></tr></thead>
+        <tbody id="corpoReceitasPlanilha"></tbody>
+        <tfoot id="rodapeReceitas"></tfoot>
+      </table>
+    </div>
+  </div>
+
   <div class="secao-titulo">Receitas &amp; saldo</div>
   <div class="painel" style="margin-bottom:24px;">
     <div class="filtros" style="margin-bottom:18px;">
@@ -410,45 +417,6 @@
     </div>
 
     <div class="kpis" id="kpisSaldo"></div>
-
-    <h3 style="font-family:var(--serif); font-weight:400; font-size:15.5px; margin:0 0 12px;">
-      Cadastrar receita <span style="font-size:12px; color:var(--ink-faint); font-family:var(--sans);">(em <span id="labelMesCadastro">—</span>)</span>
-    </h3>
-    <div class="filtros" style="margin-bottom:18px;">
-      <div class="campo" style="flex:1;">
-        <label for="novaReceitaDescricao">Descrição</label>
-        <input type="text" id="novaReceitaDescricao" placeholder="Ex.: Salário, Freela…" style="min-width:220px;">
-      </div>
-      <div class="campo">
-        <label for="novaReceitaValor">Valor (R$)</label>
-        <input type="text" inputmode="decimal" id="novaReceitaValor" placeholder="Ex.: 350,00" style="min-width:130px;">
-      </div>
-      <button id="btnAdicionarReceita" style="background:var(--gold); border-color:var(--gold); color:#1a1300; font-weight:600;">+ Adicionar</button>
-    </div>
-
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:8px;">
-      <h3 style="font-family:var(--serif); font-weight:400; font-size:15.5px; margin:0;">
-        Receitas de <span id="labelMesReceitas">—</span>
-      </h3>
-      <label style="font-size:12.5px; color:var(--ink-dim); display:flex; align-items:center; gap:6px; cursor:pointer;">
-        <input type="checkbox" id="chkTodasReceitas"> mostrar todas (todos os meses)
-      </label>
-    </div>
-
-    <div class="tabela-scroll">
-      <table class="dados" id="tabelaReceitas">
-        <thead>
-          <tr>
-            <th data-rc-col="descricao">Descrição</th>
-            <th data-rc-col="mes">Mês</th>
-            <th data-rc-col="ano">Ano</th>
-            <th data-rc-col="valor">Valor</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="corpoReceitas"></tbody>
-      </table>
-    </div>
   </div>
 
   <footer>
@@ -464,15 +432,13 @@
   const MESES = ["","Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
   const MESES_LONGO = ["","Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
   const CORES_DONUT = ["#d9a441","#5b8ec4","#4c9a6a","#c1584b","#9a7fc7","#4fb0ae","#c98f4a","#7a8ea6","#b56b8f","#6f9e57"];
-  const CHAVE_RECEITAS = "dashboardDespesas_receitas_v1";
 
   let dadosBrutos = [];
   let despesasFixas = null;
-  let receitas = [];
+  let receitasPlanilha = null;
   let ultimaAtualizacaoIso = null;
   let paginaAtual = 1;
   const LINHAS_POR_PAGINA = 25;
-  // Ordenação inteligente padrão (Data, mais recente primeiro)
   let ordenacao = { coluna: "data", asc: false };
 
   const fmtMoeda = v => (v==null ? "—" : v.toLocaleString("pt-BR", {style:"currency", currency:"BRL"}));
@@ -487,20 +453,17 @@
     if(!s) return "Indefinido";
     const t = s.trim().toLowerCase();
     if(t === "ok") return "OK";
-    if(t === "a vencer") return "A Vencer"; // Crucial para o alerta!
+    if(t === "a vencer") return "A Vencer";
     return s.trim();
   }
 
-  // A função de data corrigida!
   function formatarDataBR(isoStr) {
     if (!isoStr) return "—";
     const str = String(isoStr).split("T")[0];
-    
     if (str.includes("-")) {
       const partes = str.split("-");
       if (partes.length === 3) return `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
-    
     if (str.includes("/")) {
       const partes = str.split("/");
       if (partes.length === 3) {
@@ -512,7 +475,6 @@
     return isoStr;
   }
   
-  // Função auxiliar para ordenar datas corretamente (transforma DD/MM/AAAA em YYYYMMDD para matemática pura)
   function calcDataOrtogonal(strData){
     if(!strData || strData === "—") return 0;
     const p = strData.split("/");
@@ -529,8 +491,8 @@
       const statusBox = document.getElementById("statusBox");
       statusBox.classList.remove("offline");
       const debugBox = document.getElementById("debugBanner");
-      
-      // Se tiver erro real do script, mostra, senão oculta sempre (sucesso silencioso)
+
+      // PROCESSAR DESPESAS FIXAS
       if(json.dadosFixasBrutos && json.dadosFixasBrutos.length > 0){
           debugBox.style.display = "none";
           let itensProcessados = [];
@@ -544,7 +506,7 @@
               if(idxNome !== -1){
                   let nome = String(linha[idxNome]).trim();
                   let upper = nome.toUpperCase();
-                 if(upper !== "TOTAL" && upper !== "DÉBITOS" && upper !== "DEBITOS" && upper.indexOf("ITEM") === -1 && upper.indexOf("DESPESA") === -1){
+                  if(upper !== "TOTAL" && upper !== "DÉBITOS" && upper !== "DEBITOS" && upper.indexOf("ITEM") === -1 && upper.indexOf("DESPESA") === -1){
                       let valsItem = []; let somaItem = 0;
                       for(let m = 1; m <= 12; m++){
                           let celula = linha[idxNome + m] || "0";
@@ -564,9 +526,41 @@
               meses: ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"],
               itens: itensProcessados, totalPorMes: totalPorMes, totalGeral: totalGeralFixas
           };
-      } else if (!json.dadosFixasBrutos) {
-          debugBox.textContent = "[DIAGNÓSTICO DA API]\nERRO: O Google não enviou a chave dadosFixasBrutos.";
-          debugBox.style.display = "block";
+      }
+
+      // PROCESSAR RECEITAS DA PLANILHA (Mesma lógica das fixas)
+      if(json.dadosReceitasBrutos && json.dadosReceitasBrutos.length > 0){
+          let itensRec = [];
+          let totalRecMes = new Array(12).fill(0);
+          let totalGeralRec = 0;
+          json.dadosReceitasBrutos.forEach((linha) => {
+              let idxNome = -1;
+              for(let c = 0; c < linha.length; c++){
+                  if(String(linha[c]).trim() !== ""){ idxNome = c; break; }
+              }
+              if(idxNome !== -1){
+                  let nome = String(linha[idxNome]).trim();
+                  let upper = nome.toUpperCase();
+                  if(upper !== "TOTAL" && upper.indexOf("RECEITA") === -1 && upper.indexOf("ITEM") === -1){
+                      let valsItem = []; let somaItem = 0;
+                      for(let m = 1; m <= 12; m++){
+                          let celula = linha[idxNome + m] || "0";
+                          let txt = String(celula).replace(/[^\d.,-]/g, "");
+                          if(txt.includes(",")) txt = txt.replace(/\./g, "").replace(",", ".");
+                          let val = parseFloat(txt) || 0;
+                          valsItem.push(val); somaItem += val; totalRecMes[m-1] += val;
+                      }
+                      if(somaItem > 0 || upper.length < 25) {
+                          totalGeralRec += somaItem;
+                          itensRec.push({nome: nome, valores: valsItem, total: somaItem});
+                      }
+                  }
+              }
+          });
+          receitasPlanilha = {
+              meses: ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"],
+              itens: itensRec, totalPorMes: totalRecMes, totalGeral: totalGeralRec
+          };
       }
 
       if(json.erro){
@@ -583,10 +577,11 @@
         situacaoNorm: normalizarSituacao(r.situacao),
         pessoaNorm: tituloBonito(r.categoria),
         cartaoNorm: tituloBonito(r.cartao),
-        dataBR: formatarDataBR(r.data) // Guardamos já formatada para não recalcular
+        dataBR: formatarDataBR(r.data)
       }));
 
       renderizarFixas();
+      renderizarReceitasPlanilha();
       renderizarSaldo();
 
       if(json.atualizadoEm !== ultimaAtualizacaoIso){
@@ -712,11 +707,8 @@
   function renderizarKpis(lista){
     const total = lista.reduce((s,r)=> s + (r.valor||0), 0);
     const pago = lista.filter(r=>r.situacaoNorm==="OK").reduce((s,r)=> s + (r.valor||0), 0);
-    
-    // Novo: Garantir que A Vencer é somado perfeitamente e ganha destaque no card
     const aVencer = lista.filter(r=>r.situacaoNorm==="A Vencer").reduce((s,r)=> s + (r.valor||0), 0);
     const cardAlertaClass = aVencer > 0 ? "alerta" : "";
-    
     const qtd = lista.length;
     const media = qtd ? total/qtd : 0;
     const maior = lista.reduce((m,r)=> (r.valor||0) > m ? (r.valor||0) : m, 0);
@@ -793,24 +785,16 @@
   function renderizarDonut(elId, dados, formatarValor){
     const el = document.getElementById(elId);
     if(!dados.length){ el.innerHTML = '<div class="vazio">Sem dados no filtro atual</div>'; return; }
-    
-    // NOVO: Agrupar fatias muito pequenas em "Outros" para melhorar o visual no telemóvel
     const total = dados.reduce((s,d)=>s+d.value,0);
-    let dadosLimpos = [];
-    let outrosVal = 0;
-    
+    let dadosLimpos = []; let outrosVal = 0;
     dados.forEach(d => {
-       if (total > 0 && (d.value/total) < 0.02 && dados.length > 6) { // Menos de 2% vira Outros se houver mtos fatias
-           outrosVal += d.value;
-       } else {
-           dadosLimpos.push(d);
-       }
+       if (total > 0 && (d.value/total) < 0.02 && dados.length > 6) outrosVal += d.value;
+       else dadosLimpos.push(d);
     });
     if (outrosVal > 0) dadosLimpos.push({label: "Outros/Menores", value: outrosVal});
     
     const raio = 60, cx=75, cy=75, espessura=22;
-    let anguloAcumulado = -90;
-    let arcosSvg = "";
+    let anguloAcumulado = -90; let arcosSvg = "";
     dadosLimpos.forEach((d,i) => {
       const fatia = total ? (d.value/total)*360 : 0;
       const inicio = anguloAcumulado; const fim = anguloAcumulado + fatia;
@@ -855,20 +839,11 @@
 
   function renderizarTabela(listaFiltrada){
     let lista = [...listaFiltrada];
-    
-    // ORDENAÇÃO INTELIGENTE (Especialmente para datas)
     lista.sort((a,b) => {
       let va = a[ordenacao.coluna], vb = b[ordenacao.coluna];
-      
-      if (ordenacao.coluna === "data") {
-          va = calcDataOrtogonal(a.dataBR);
-          vb = calcDataOrtogonal(b.dataBR);
-      } else if (ordenacao.coluna === "valor") {
-          va = va||0; vb = vb||0; 
-      } else {
-          va = (va==null?"":String(va)); vb = (vb==null?"":String(vb)); 
-      }
-      
+      if (ordenacao.coluna === "data") { va = calcDataOrtogonal(a.dataBR); vb = calcDataOrtogonal(b.dataBR); }
+      else if (ordenacao.coluna === "valor") { va = va||0; vb = vb||0; }
+      else { va = (va==null?"":String(va)); vb = (vb==null?"":String(vb)); }
       if(va < vb) return ordenacao.asc ? -1 : 1;
       if(va > vb) return ordenacao.asc ? 1 : -1;
       return 0;
@@ -878,41 +853,24 @@
     if(paginaAtual > totalPaginas) paginaAtual = totalPaginas;
     const inicio = (paginaAtual-1) * LINHAS_POR_PAGINA;
     const pagina = lista.slice(inicio, inicio + LINHAS_POR_PAGINA);
-
     const corpo = document.getElementById("corpoTabela");
-    
-    // Atualizar setas do cabeçalho da tabela de forma visual
+
     document.querySelectorAll("table.dados thead th[data-col]").forEach(th => {
        const txt = th.textContent.replace(" ▾", "").replace(" ▴", "");
        if (th.dataset.col === ordenacao.coluna) {
            th.textContent = txt + (ordenacao.asc ? " ▴" : " ▾");
            th.style.color = "var(--gold)";
-       } else {
-           th.textContent = txt;
-           th.style.color = "";
-       }
+       } else { th.textContent = txt; th.style.color = ""; }
     });
 
     if(!pagina.length){
       corpo.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--ink-faint); padding:24px;">Nenhum lançamento encontrado</td></tr>`;
     } else {
       corpo.innerHTML = pagina.map(r => {
-        // Destaque visual na tabela para "A Vencer"
         const classeLinha = r.situacaoNorm === "A Vencer" ? "linha-alerta" : "";
-        return `
-        <tr class="${classeLinha}">
-          <td>${r.dataBR}</td>
-          <td class="descricao">${r.descricao || ""}</td>
-          <td>${r.pessoaNorm || ""}</td>
-          <td class="valcel">${fmtMoeda(r.valor)}</td>
-          <td>${r.parcela || "—"}</td>
-          <td>${r.cartaoNorm || "—"}</td>
-          <td>${r.competencia}</td>
-          <td>${badgeSituacao(r.situacaoNorm)}</td>
-        </tr>`;
+        return `<tr class="${classeLinha}"><td>${r.dataBR}</td><td class="descricao">${r.descricao || ""}</td><td>${r.pessoaNorm || ""}</td><td class="valcel">${fmtMoeda(r.valor)}</td><td>${r.parcela || "—"}</td><td>${r.cartaoNorm || "—"}</td><td>${r.competencia}</td><td>${badgeSituacao(r.situacaoNorm)}</td></tr>`;
       }).join("");
     }
-
     document.getElementById("infoPagina").textContent = `Página ${paginaAtual} de ${totalPaginas} · ${lista.length} lançamentos`;
     document.getElementById("btnAnterior").disabled = paginaAtual <= 1;
     document.getElementById("btnProximo").disabled = paginaAtual >= totalPaginas;
@@ -933,12 +891,10 @@
       cabecalho.innerHTML = ""; corpo.innerHTML = `<tr><td style="text-align:center; color:var(--ink-faint); padding:20px;">Não encontrei despesas fixas na planilha.</td></tr>`; rodape.innerHTML = ""; return;
     }
 
-    const elRefMes = document.getElementById("refMes");
-    const mesDestaque = (elRefMes && elRefMes.value) ? parseInt(elRefMes.value, 10) : (new Date().getMonth() + 1);
+    const mesDestaque = parseInt(document.getElementById("refMes").value, 10) || (new Date().getMonth() + 1);
     const meses = despesasFixas.meses || MESES_LONGO.slice(1);
 
     cabecalho.innerHTML = `<th>Item</th>` + meses.map((m,i) => `<th class="${(i+1)===mesDestaque ? 'mes-atual' : ''}">${String(m).slice(0,3)}</th>`).join("") + `<th>Total</th>`;
-
     corpo.innerHTML = despesasFixas.itens.map(item => `
       <tr>
         <td>${item.nome}</td>
@@ -946,9 +902,32 @@
         <td class="valcel">${fmtMoeda(item.total)}</td>
       </tr>
     `).join("");
-
     const totalPorMes = despesasFixas.totalPorMes || [];
     rodape.innerHTML = `<tr><td>Total</td>${totalPorMes.map((v,i) => `<td class="${(i+1)===mesDestaque ? 'mes-atual' : ''}">${v==null ? "—" : fmtMoeda(v)}</td>`).join("")}<td>${fmtMoeda(despesasFixas.totalGeral)}</td></tr>`;
+  }
+
+  function renderizarReceitasPlanilha(){
+    const cabecalho = document.getElementById("cabecalhoReceitas");
+    const corpo = document.getElementById("corpoReceitasPlanilha");
+    const rodape = document.getElementById("rodapeReceitas");
+
+    if(!receitasPlanilha || !receitasPlanilha.itens || !receitasPlanilha.itens.length){
+      cabecalho.innerHTML = ""; corpo.innerHTML = `<tr><td style="text-align:center; color:var(--ink-faint); padding:20px;">Não encontrei a aba de Receitas na planilha.</td></tr>`; rodape.innerHTML = ""; return;
+    }
+
+    const mesDestaque = parseInt(document.getElementById("refMes").value, 10) || (new Date().getMonth() + 1);
+    const meses = receitasPlanilha.meses || MESES_LONGO.slice(1);
+
+    cabecalho.innerHTML = `<th>Receita</th>` + meses.map((m,i) => `<th class="${(i+1)===mesDestaque ? 'mes-atual' : ''}">${String(m).slice(0,3)}</th>`).join("") + `<th>Total</th>`;
+    corpo.innerHTML = receitasPlanilha.itens.map(item => `
+      <tr>
+        <td>${item.nome}</td>
+        ${item.valores.map((v,i) => `<td class="${(i+1)===mesDestaque ? 'mes-atual' : ''}">${v==null ? "—" : fmtMoeda(v)}</td>`).join("")}
+        <td class="valcel">${fmtMoeda(item.total)}</td>
+      </tr>
+    `).join("");
+    const totalPorMes = receitasPlanilha.totalPorMes || [];
+    rodape.innerHTML = `<tr><td>Total</td>${totalPorMes.map((v,i) => `<td class="${(i+1)===mesDestaque ? 'mes-atual' : ''}">${v==null ? "—" : fmtMoeda(v)}</td>`).join("")}<td>${fmtMoeda(receitasPlanilha.totalGeral)}</td></tr>`;
   }
 
   function totalFixoDoMes(mes){
@@ -956,8 +935,10 @@
     return despesasFixas.totalPorMes[mes-1] || 0;
   }
 
-  function carregarReceitas(){ try{ const bruto = localStorage.getItem(CHAVE_RECEITAS); receitas = bruto ? JSON.parse(bruto) : []; } catch(e){ receitas = []; } }
-  function salvarReceitas(){ try{ localStorage.setItem(CHAVE_RECEITAS, JSON.stringify(receitas)); } catch(e){} }
+  function totalReceitaDoMes(mes){
+    if(!receitasPlanilha || !receitasPlanilha.totalPorMes || !mes) return 0;
+    return receitasPlanilha.totalPorMes[mes-1] || 0;
+  }
 
   function inicializarFormReceitas(){
     const hoje = new Date(); const anoAtual = hoje.getFullYear(); const mesAtual = hoje.getMonth() + 1;
@@ -966,35 +947,12 @@
     document.getElementById("refMes").value = mesAtual; document.getElementById("refAno").value = anoAtual;
   }
 
-  function renderizarReceitas(){
-    const mesRef = parseInt(document.getElementById("refMes").value, 10);
-    const anoRef = parseInt(document.getElementById("refAno").value, 10);
-    const mostrarTodas = document.getElementById("chkTodasReceitas").checked;
-
-    document.getElementById("labelMesReceitas").textContent = mostrarTodas ? "todos os meses" : `${MESES_LONGO[mesRef] || ""} de ${anoRef}`;
-    document.getElementById("labelMesCadastro").textContent = `${MESES_LONGO[mesRef] || ""} de ${anoRef}`;
-
-    const corpo = document.getElementById("corpoReceitas");
-    const base = mostrarTodas ? receitas : receitas.filter(r => r.mes === mesRef && r.ano === anoRef);
-    const listaOrdenada = [...base].sort((a,b) => (b.ano-a.ano) || (b.mes-a.mes) || a.descricao.localeCompare(b.descricao,"pt-BR"));
-
-    if(!listaOrdenada.length){
-      const msg = mostrarTodas ? "Nenhuma receita cadastrada ainda" : `Nenhuma receita cadastrada para ${MESES_LONGO[mesRef] || ""} de ${anoRef}.`;
-      corpo.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--ink-faint); padding:18px;">${msg}</td></tr>`;
-    } else {
-      corpo.innerHTML = listaOrdenada.map(r => `<tr><td>${r.descricao}</td><td>${MESES_LONGO[r.mes] || r.mes}</td><td>${r.ano}</td><td class="valcel">${fmtMoeda(r.valor)}</td><td><button data-id="${r.id}" title="Remover" class="btn-remover-receita">×</button></td></tr>`).join("");
-      corpo.querySelectorAll(".btn-remover-receita").forEach(btn => {
-        btn.addEventListener("click", () => { receitas = receitas.filter(r => r.id !== btn.dataset.id); salvarReceitas(); renderizarReceitas(); renderizarSaldo(); });
-      });
-    }
-  }
-
   function renderizarSaldo(){
     const mesRef = parseInt(document.getElementById("refMes").value, 10);
     const anoRef = parseInt(document.getElementById("refAno").value, 10);
     document.getElementById("labelReferencia").textContent = `Referência: ${MESES_LONGO[mesRef] || ""} de ${anoRef}`;
 
-    const totalReceitas = receitas.filter(r => r.mes === mesRef && r.ano === anoRef).reduce((s,r) => s + (r.valor||0), 0);
+    const totalReceitas = totalReceitaDoMes(mesRef);
     const totalFixo = totalFixoDoMes(mesRef);
     const totalVariavel = dadosBrutos.filter(r => r.mes === mesRef && r.ano === anoRef).reduce((s,r) => s + (r.valor||0), 0);
     const saldo = totalReceitas - totalFixo - totalVariavel;
@@ -1007,37 +965,6 @@
     ];
 
     document.getElementById("kpisSaldo").innerHTML = cards.map(c => `<div class="kpi"><div class="rotulo">${c.rotulo}</div><div class="valor pequeno ${c.classe}">${c.valor}</div></div>`).join("");
-    renderizarReceitas();
-  }
-
-  function parseValorBR(texto){
-    if(texto == null) return NaN; let s = String(texto).trim(); if(!s) return NaN;
-    s = s.replace(/[^\d.,-]/g, ""); if(s.includes(",")){ s = s.replace(/\./g, "").replace(",", "."); }
-    return parseFloat(s);
-  }
-
-  function adicionarReceita(){
-    const descricao = document.getElementById("novaReceitaDescricao").value.trim();
-    const valor = parseValorBR(document.getElementById("novaReceitaValor").value);
-    const mes = parseInt(document.getElementById("refMes").value, 10);
-    const ano = parseInt(document.getElementById("refAno").value, 10);
-
-    if(!descricao){ alert("Digite uma descrição para a receita."); return; }
-    if(isNaN(valor) || valor <= 0){ alert("Digite um valor válido para a receita."); return; }
-
-    receitas.push({ id: "r" + Date.now() + "_" + Math.random().toString(36).slice(2,8), descricao, valor, mes, ano });
-    salvarReceitas();
-    document.getElementById("novaReceitaDescricao").value = ""; document.getElementById("novaReceitaValor").value = ""; renderizarSaldo();
-  }
-
-  function exportarDespesas(){
-    const lista = aplicarFiltros();
-    if(!lista.length){ alert("Não há lançamentos para exportar."); return; }
-    if(typeof XLSX === "undefined"){ alert("Biblioteca Excel indisponível."); return; }
-
-    const colunas = ["Data","Descrição","Pessoa","Valor","Parcela","Cartão","Mês","Ano","Situação","Observações"];
-    const linhas = lista.map(r => ([ r.dataBR || "", r.descricao || "", r.pessoaNorm || "", r.valor != null ? r.valor : null, r.parcela || "", r.cartaoNorm || "", r.mes != null ? (MESES_LONGO[r.mes] || r.mes) : "", r.ano != null ? r.ano : "", r.situacaoNorm || "", r.observacoes || "" ]));
-    const ws = XLSX.utils.aoa_to_sheet([colunas, ...linhas]); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Despesas"); XLSX.writeFile(wb, `despesas-${new Date().toISOString().slice(0,10)}.xlsx`);
   }
 
   ["fAno","fMes","fPessoa","fCartao","fSituacao"].forEach(id => { document.getElementById(id).addEventListener("change", renderizarTudo); });
@@ -1064,16 +991,20 @@
   document.getElementById("btnAnterior").addEventListener("click", () => { if(paginaAtual > 1){ paginaAtual--; renderizarTabela(aplicarFiltros()); } });
   document.getElementById("btnProximo").addEventListener("click", () => { paginaAtual++; renderizarTabela(aplicarFiltros()); });
 
-  document.getElementById("refMes").addEventListener("change", () => { renderizarFixas(); renderizarSaldo(); });
-  document.getElementById("refAno").addEventListener("change", () => { renderizarFixas(); renderizarSaldo(); });
-  document.getElementById("chkTodasReceitas").addEventListener("change", renderizarReceitas);
-  document.getElementById("btnAdicionarReceita").addEventListener("click", adicionarReceita);
-  document.getElementById("btnExportarDespesas").addEventListener("click", exportarDespesas);
+  document.getElementById("refMes").addEventListener("change", () => { renderizarFixas(); renderizarReceitasPlanilha(); renderizarSaldo(); });
+  document.getElementById("refAno").addEventListener("change", () => { renderizarFixas(); renderizarReceitasPlanilha(); renderizarSaldo(); });
+  document.getElementById("btnExportarDespesas").addEventListener("click", () => {
+    const lista = aplicarFiltros();
+    if(!lista.length){ alert("Não há lançamentos para exportar."); return; }
+    if(typeof XLSX === "undefined"){ alert("Biblioteca Excel indisponível."); return; }
+    const colunas = ["Data","Descrição","Pessoa","Valor","Parcela","Cartão","Mês","Ano","Situação","Observações"];
+    const linhas = lista.map(r => ([ r.dataBR || "", r.descricao || "", r.pessoaNorm || "", r.valor != null ? r.valor : null, r.parcela || "", r.cartaoNorm || "", r.mes != null ? (MESES_LONGO[r.mes] || r.mes) : "", r.ano != null ? r.ano : "", r.situacaoNorm || "", r.observacoes || "" ]));
+    const ws = XLSX.utils.aoa_to_sheet([colunas, ...linhas]); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Despesas"); XLSX.writeFile(wb, `despesas-${new Date().toISOString().slice(0,10)}.xlsx`);
+  });
 
-  inicializarFormReceitas(); carregarReceitas(); renderizarSaldo();
-  ["fAno","fMes","fPessoa","fCartao","fSituacao"].forEach(id => { document.getElementById(id).value = ""; });
-
-  buscarDados(); setInterval(buscarDados, 10000);
+  inicializarFormReceitas();
+  buscarDados();
+  setInterval(buscarDados, 10000);
 
 })();
 </script>
