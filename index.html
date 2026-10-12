@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Despesas Sandoval</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--tx:#1d2330;--mut:#667085;--bd:#e3e6ec;--ok:#2e9d6a;--av:#e0a100;--at:#d64545;--pri:#2f5bd9}
+@media(prefers-color-scheme:dark){:root{--bg:#12151c;--card:#1b2030;--tx:#e8ebf2;--mut:#9aa3b5;--bd:#2a3145;--pri:#5f86ff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:10px}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+h1{font-size:20px;margin:6px 0}h2{font-size:15px;margin:0 0 8px}
+.mut{color:var(--mut);font-size:13px}
+.box,.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin:10px 0}
+button,select,input{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:6px 10px}
+button{cursor:pointer}
+.on{background:var(--pri)!important;border-color:var(--pri)!important;color:#fff!important}
+.fl{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-bottom:8px}
+.fl label{display:grid;gap:2px;font-size:13px;color:var(--mut)}
+.seg{display:flex;gap:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.cards .card{margin:0}.card small{color:var(--mut);display:block}.card b{font-size:18px}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:10px}
+.br{display:grid;grid-template-columns:84px 1fr 96px;gap:6px;align-items:center;margin:5px 0;font-size:13px}
+.bl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt{display:flex;height:14px;background:var(--bd);border-radius:7px;overflow:hidden}
+.br b{text-align:right;font-weight:600}
+.bt i.ok{background:var(--ok)}.bt i.av{background:var(--av)}.bt i.ou{background:#8b93a7}
+.v-ok{color:var(--ok)}.v-av{color:var(--av)}.v-at{color:var(--at)}
+.leg{font-size:12px;color:var(--mut);margin:0 0 4px}
+.sc{overflow:auto;max-height:520px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}
+th{position:sticky;top:0;background:var(--card);cursor:pointer}
+td.n{text-align:right}
+.r-ok td:first-child{border-left:4px solid var(--ok)}.r-av td:first-child{border-left:4px solid var(--av)}.r-at td:first-child{border-left:4px solid var(--at)}
+.r-at td:last-child{color:var(--at);font-weight:600}
+.tot td{font-weight:700}
+.bar{display:flex;gap:8px;margin-bottom:8px}.bar input{flex:1}
+summary{cursor:pointer;font-weight:600}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Despesas Sandoval</h1>
+  <div><span id="upd" class="mut"></span> <button id="btnAtu">Atualizar</button> <button id="btnPin">Trocar PIN</button></div>
+</header>
+<p id="msg" class="mut"></p>
+
+<details class="box" open id="filtros">
+  <summary>Filtros</summary>
+  <div class="fl" style="margin-top:8px">
+    <label>Ano<select id="fAno"></select></label>
+    <label>Mês<select id="fMes"></select></label>
+    <div id="fSit" class="seg"></div>
+    <button id="btnLimpar">Limpar filtros</button>
+  </div>
+  <div class="mut">Pessoa</div><div id="fPes" class="chips"></div>
+  <div class="mut">Forma de pagamento</div><div id="fForma" class="chips"></div>
+</details>
+
+<section id="cards" class="cards"></section>
+
+<div class="g2">
+  <section class="box"><h2>Por mês (todos os meses)</h2>
+    <p class="leg"><span class="v-ok">■</span> Pago &nbsp;<span class="v-av">■</span> A Vencer &nbsp;<span>■</span> Outra</p>
+    <div id="chMes"></div></section>
+  <section class="box"><h2>Resumo por pessoa</h2><div id="tbPes"></div></section>
+</div>
+<div class="g2">
+  <section class="box"><h2>Forma de pagamento</h2><div id="chForma"></div></section>
+  <section class="box"><h2>Top 10 por observação</h2><div id="chObs"></div></section>
+</div>
+
+<section class="box">
+  <h2>Lançamentos</h2>
+  <div class="bar"><input id="busca" type="search" placeholder="Buscar descrição, pessoa, observação..."><button id="btnCsv">Exportar CSV</button></div>
+  <div class="sc"><table id="tb"></table></div>
+</section>
+<details class="box" id="qual"></details>
+</main>
+
+<script src="config.js"></script>
+<script>
+(()=>{
+const API=(window.CONFIG||{}).apiUrl, $=s=>document.querySelector(s);
+const R=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s==null?'':s).trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const p2=n=>String(n).padStart(2,'0');
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const hoje=new Date(), CA=hoje.getFullYear(), CM=hoje.getMonth()+1;
+let D=[], LP=[], LF=[], inicio=false;
+const F={ano:'',mes:'',pes:new Set(),forma:new Set(),sit:''};
+const S={col:'dt',dir:-1,q:''}; // padrão: data da compra, mais recente primeiro
+const sum=a=>a.reduce((s,r)=>s+r.v,0), so=(a,k)=>a.reduce((s,g)=>s+g[k],0), tot=g=>g.ok+g.av+g.ou;
+const COLS=[['dt','Data'],['descricao','Descrição'],['pes','Pessoa'],['v','Valor'],['parcela','Parcela'],['forma','Pagamento'],['obs','Observações'],['per','Mês/Ano'],['sit','Situação']];
+
+// Data da compra: aceita data real (AAAA-MM-DD) ou texto (mm/dd/aaaa ou dd/mm/aaaa)
+function fmtData(s){
+  s=String(s||''); let m=s.match(/^(\d{4})-(\d\d)-(\d\d)$/);
+  if(m) return [m[3]+'/'+m[2]+'/'+m[1], m[1]+m[2]+m[3], false];
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m){const a=+m[1],b=+m[2],d=b>12?b:a,mo=b>12?a:b; return [p2(d)+'/'+p2(mo)+'/'+m[3], m[3]+p2(mo)+p2(d), true];}
+  return [s,'',!!s];
+}
+function prep(l){
+  const v=typeof l.valor==='number'?l.valor:(parseFloat(String(l.valor).replace(/\./g,'').replace(',','.'))||0);
+  const n=norm(l.situacao), sit=n==='ok'?'OK':n==='a vencer'?'A Vencer':'Outra';
+  const [dt,dk,txt]=fmtData(l.dataCompra), per=l.ano&&l.mes?l.ano*100+l.mes:0;
+  return {...l,v,sit,dt,dk,txt,per,pes:l.pessoa||'(sem pessoa)',forma:l.formaPagamento||'(sem forma)',
+    obs:String(l.observacoes||'').trim(), atr:sit==='A Vencer'&&per>0&&per<CA*100+CM};
+}
+// skip: 'mes' ignora o filtro de mês; 'periodo' ignora ano e mês
+function filtra(skip){
+  return D.filter(r=>(skip==='periodo'||((!F.ano||r.ano==F.ano)&&(skip==='mes'||!F.mes||r.mes==F.mes)))
+    &&(!F.pes.size||F.pes.has(r.pes))&&(!F.forma.size||F.forma.has(r.forma))&&(!F.sit||r.sit===F.sit));
+}
+function grupo(rows,key,lab){
+  const m=new Map();
+  rows.forEach(r=>{const k=key(r); let g=m.get(k); if(!g) m.set(k,g={k,l:lab?lab(r):k,ok:0,av:0,ou:0});
+    g[r.sit==='OK'?'ok':r.sit==='A Vencer'?'av':'ou']+=r.v;});
+  return [...m.values()];
+}
+function barras(sel,itens){
+  const mx=Math.max(1,...itens.map(tot)), w=x=>Math.max(0,x)/mx*100;
+  $(sel).innerHTML=itens.map(i=>`<div class="br"><span class="bl" title="${esc(i.l)}">${esc(i.l)}</span><span class="bt"><i class="ok" style="width:${w(i.ok)}%"></i><i class="av" style="width:${w(i.av)}%"></i><i class="ou" style="width:${w(i.ou)}%"></i></span><b>${R(tot(i))}</b></div>`).join('')||'<p class="mut">Sem dados</p>';
+}
+const mesAno=r=>r.per?p2(r.mes)+'/'+r.ano:'—';
+const status=r=>r.atr?'Atrasado':r.sit;
+function lista(){
+  const kk={dt:'dk'}[S.col]||S.col;
+  return filtra().filter(r=>!S.q||norm(r.descricao+' '+r.pes+' '+r.obs+' '+r.forma).includes(S.q))
+    .sort((a,b)=>{const x=a[kk],y=b[kk],c=typeof x==='number'?x-y:String(x).localeCompare(String(y),'pt-BR'); return (c||a.linha-b.linha)*S.dir;});
+}
+
+function render(){
+  const L0=filtra(), T=sum(L0), P=sum(L0.filter(r=>r.sit==='OK')), A=sum(L0.filter(r=>r.sit==='A Vencer'));
+  const base=filtra('periodo'), atr=base.filter(r=>r.atr), prox=CM===12?(CA+1)*100+1:CA*100+CM+1;
+  const px=base.filter(r=>r.sit==='A Vencer'&&r.per===prox);
+  $('#cards').innerHTML=[['Total',R(T),''],['Pago (OK)',R(P),'v-ok'],['A Vencer',R(A),'v-av'],
+    ['% pago',T?(P/T*100).toFixed(1).replace('.',',')+'%':'—',''],['Lançamentos',L0.length,''],
+    ['Atrasados (todos os meses)',R(sum(atr))+' · '+atr.length,'v-at'],['A Vencer no mês seguinte',R(sum(px)),'']]
+    .map(c=>`<div class="card"><small>${c[0]}</small><b class="${c[2]}">${c[1]}</b></div>`).join('');
+
+  // filtros
+  const anos=[...new Set(D.map(r=>r.ano).filter(Boolean))].sort();
+  $('#fAno').innerHTML='<option value="">Todos</option>'+anos.map(a=>`<option ${F.ano==a?'selected':''}>${a}</option>`).join('');
+  $('#fMes').innerHTML='<option value="">Todos</option>'+MESES.map((m,i)=>`<option value="${i+1}" ${F.mes==i+1?'selected':''}>${m}</option>`).join('');
+  $('#fSit').innerHTML=[['','Todos'],['A Vencer','A Vencer'],['OK','OK (Pago)']].map(s=>`<button data-s="${s[0]}" class="${F.sit===s[0]?'on':''}">${s[1]}</button>`).join('');
+  const chips=(sel,key,vals,set)=>{$(sel).innerHTML=vals.map(v=>`<button data-k="${key}" data-v="${esc(v)}" class="${set.has(v)?'on':''}">${esc(v)}</button>`).join('');};
+  chips('#fPes','pes',LP,F.pes); chips('#fForma','forma',LF,F.forma);
+
+  // gráficos
+  const meses=grupo(filtra('mes'),r=>r.per,r=>r.per?MESES[r.per%100-1].slice(0,3)+'/'+Math.floor(r.per/100):'Sem mês')
+    .sort((a,b)=>(a.k||9e9)-(b.k||9e9));
+  barras('#chMes',meses);
+  const gp=grupo(L0,r=>r.pes).sort((a,b)=>tot(b)-tot(a));
+  $('#tbPes').innerHTML=`<div class="sc"><table><tr><th>Pessoa</th><th>Pago</th><th>A Vencer</th><th>Total</th></tr>${gp.map(g=>`<tr><td>${esc(g.l)}</td><td class="n">${R(g.ok)}</td><td class="n">${R(g.av)}</td><td class="n">${R(tot(g))}</td></tr>`).join('')}<tr class="tot"><td>Total</td><td class="n">${R(P)}</td><td class="n">${R(A)}</td><td class="n">${R(T)}</td></tr></table></div>`;
+  barras('#chForma',grupo(L0,r=>r.forma).sort((a,b)=>tot(b)-tot(a)));
+  let go=grupo(L0,r=>norm(r.obs)||'-',r=>r.obs||'(sem observação)').sort((a,b)=>tot(b)-tot(a));
+  if(go.length>10){const rs=go.slice(10); go=go.slice(0,10); go.push({l:'Outros ('+rs.length+')',ok:so(rs,'ok'),av:so(rs,'av'),ou:so(rs,'ou')});}
+  barras('#chObs',go);
+
+  // tabela
+  const L=lista();
+  $('#tb').innerHTML=`<tr>${COLS.map(c=>`<th data-c="${c[0]}">${c[1]}${S.col===c[0]?(S.dir>0?' ▲':' ▼'):''}</th>`).join('')}</tr>`+
+    L.map(r=>`<tr class="${r.sit==='OK'?'r-ok':r.atr?'r-at':r.sit==='A Vencer'?'r-av':''}"><td>${esc(r.dt)}</td><td>${esc(r.descricao)}</td><td>${esc(r.pes)}</td><td class="n">${R(r.v)}</td><td>${esc(r.parcela)}</td><td>${esc(r.forma)}</td><td>${esc(r.obs)}</td><td>${mesAno(r)}</td><td>${status(r)}</td></tr>`).join('')+
+    `<tr class="tot"><td colspan="3">Total (${L.length} lançamentos)</td><td class="n">${R(sum(L))}</td><td colspan="5"></td></tr>`;
+
+  // qualidade dos dados (sempre sobre a planilha inteira)
+  const q=[['sem Mês/Ano',D.filter(r=>!r.per)],['sem forma de pagamento',D.filter(r=>r.forma==='(sem forma)')],
+    ['situação fora do padrão',D.filter(r=>r.sit==='Outra')],['data da compra em texto',D.filter(r=>r.txt)]].filter(x=>x[1].length);
+  $('#qual').innerHTML='<summary>Qualidade dos dados ('+q.reduce((s,x)=>s+x[1].length,0)+' avisos)</summary>'+
+    (q.length?'<ul>'+q.map(x=>`<li>${x[1].length} linha(s) ${x[0]} — ${R(sum(x[1]))}</li>`).join('')+'</ul>':'<p>Nenhum aviso.</p>')+
+    '<p class="mut">Só informa: nada é alterado na planilha. Linhas sem Mês/Ano só aparecem com Ano = Todos.</p>';
+}
+
+function msg(t){$('#msg').textContent=t;}
+function aplicar(j){
+  D=j.linhas.map(prep);
+  LP=grupo(D,r=>r.pes).sort((a,b)=>tot(b)-tot(a)).map(g=>g.l);
+  LF=grupo(D,r=>r.forma).sort((a,b)=>tot(b)-tot(a)).map(g=>g.l);
+  const m=String(j.atualizadoEm||'').match(/^(\d{4})-(\d\d)-(\d\d)T(\d\d:\d\d)/);
+  $('#upd').textContent=m?'Atualizado em '+m[3]+'/'+m[2]+'/'+m[1]+' '+m[4]:'';
+  if(!inicio){inicio=true; // padrão: ano e mês atuais, se existirem nos dados
+    if(D.some(r=>r.ano===CA)){F.ano=String(CA); if(D.some(r=>r.ano===CA&&r.mes===CM)) F.mes=String(CM);}}
+  render();
+}
+async function carregar(){
+  let pin=localStorage.getItem('sd_pin');
+  if(!pin){pin=(prompt('PIN de acesso ao dashboard:')||'').trim(); if(!pin){msg('Informe o PIN para ver os dados.');return;}}
+  msg('Carregando...');
+  try{
+    const j=await(await fetch(API+'?action=dados&pin='+encodeURIComponent(pin))).json();
+    if(!j.ok){if(/negado/i.test(j.erro)) localStorage.removeItem('sd_pin'); throw new Error(j.erro);}
+    localStorage.setItem('sd_pin',pin);
+    try{localStorage.setItem('sd_cache',JSON.stringify(j));}catch(e){}
+    msg(''); aplicar(j);
+  }catch(e){msg('Não foi possível carregar a planilha: '+e.message+'. Toque em "Atualizar" para tentar de novo.');}
+}
+
+// eventos
+$('#fAno').onchange=e=>{F.ano=e.target.value;render();};
+$('#fMes').onchange=e=>{F.mes=e.target.value;render();};
+$('#filtros').onclick=e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.id==='btnLimpar'){F.ano=F.mes=F.sit='';F.pes.clear();F.forma.clear();}
+  else if(b.dataset.s!==undefined) F.sit=b.dataset.s;
+  else if(b.dataset.k){const s=F[b.dataset.k],v=b.dataset.v; s.has(v)?s.delete(v):s.add(v);}
+  render();
+};
+$('#busca').oninput=e=>{S.q=norm(e.target.value);render();};
+$('#tb').onclick=e=>{const th=e.target.closest('th'); if(!th) return; const c=th.dataset.c; S.dir=S.col===c?-S.dir:1; S.col=c; render();};
+$('#btnAtu').onclick=carregar;
+$('#btnPin').onclick=()=>{localStorage.removeItem('sd_pin');carregar();};
+$('#btnCsv').onclick=()=>{
+  const q=x=>'"'+String(x).replace(/"/g,'""')+'"';
+  const linhas=lista().map(r=>[r.dt,r.descricao,r.pes,String(r.v).replace('.',','),r.parcela,r.forma,r.obs,r.per?mesAno(r):'',status(r)].map(q).join(';'));
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\ufeff'+[COLS.map(c=>q(c[1])).join(';'),...linhas].join('\n')],{type:'text/csv'}));
+  a.download='despesas.csv'; a.click();
+};
+
+try{const c=localStorage.getItem('sd_cache'); if(c) aplicar(JSON.parse(c));}catch(e){}
+carregar();
+})();
+</script>
+</body>
+</html>
