@@ -20,37 +20,32 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--sans); }
         body { background: var(--bg); color: var(--ink); padding: 24px; }
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--line); padding-bottom: 16px; }
-        h1 { font-size: 1.6rem; color: var(--gold); }
+        header { margin-bottom: 24px; border-bottom: 1px solid var(--line); padding-bottom: 16px; display: flex; justify-content: space-between; align-items: center;}
+        h1 { font-size: 1.6rem; color: var(--gold); margin-bottom: 5px; }
         .status { font-size: 0.85rem; padding: 6px 12px; border-radius: 6px; background: var(--panel-2); color: var(--ink-dim); font-weight: 600; }
         .status.online { background: rgba(76, 154, 106, 0.2); color: var(--green); border: 1px solid rgba(76, 154, 106, 0.4); }
         .status.offline { background: rgba(193, 88, 75, 0.2); color: var(--rust); border: 1px solid rgba(193, 88, 75, 0.4); }
-        .btn { background: var(--gold); color: #000; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; font-size: 0.95rem; }
-        .btn:hover { opacity: 0.9; }
         
-        /* Cartões de Resumo */
         .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 24px; }
         .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; }
-        .summary-card h4 { font-size: 0.8rem; color: var(--ink-dim); text-transform: uppercase; margin-bottom: 8px; }
+        .summary-card h4 { font-size: 0.8rem; color: var(--ink-dim); text-transform: uppercase; margin-bottom: 8px; font-weight: 600;}
         .summary-card .value { font-size: 1.5rem; font-weight: bold; color: var(--gold); }
 
-        /* Filtros */
         .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; background: var(--panel); padding: 18px; border-radius: 10px; margin-bottom: 24px; border: 1px solid var(--line); }
         .filter-group label { display: block; font-size: 0.75rem; color: var(--ink-dim); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; }
-        .filter-group select { width: 100%; background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); padding: 10px; border-radius: 6px; font-size: 0.9rem; }
+        .filter-group select { width: 100%; background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); padding: 10px; border-radius: 6px; font-size: 0.9rem; outline: none;}
+        .filter-group select:focus { border-color: var(--gold); }
 
-        /* Gráficos */
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-bottom: 24px; }
         .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
         .card h3 { font-size: 1.05rem; color: var(--gold); margin-bottom: 15px; }
 
-        /* Tabela */
-        .table-container { background: var(--panel); border-radius: 10px; padding: 20px; border: 1px solid var(--line); }
-        .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .table-container { background: var(--panel); border-radius: 10px; padding: 20px; border: 1px solid var(--line); overflow-x: auto;}
+        .table-container h3 { font-size: 1.05rem; color: var(--gold); margin-bottom: 15px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--line); }
         th { color: var(--ink-dim); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; }
-        tr:hover { background: rgba(255,255,255,0.02); }
+        tr:hover { background: rgba(255,255,255,0.03); }
     </style>
 </head>
 <body>
@@ -58,12 +53,9 @@
     <header>
         <div>
             <h1>Dashboard de Despesas — Sandoval</h1>
-            <p id="sub-status" style="font-size: 0.85rem; color: var(--ink-dim); margin-top: 4px;">A carregar dados da planilha...</p>
+            <p id="sub-status" style="font-size: 0.85rem; color: var(--ink-dim);">A iniciar ligação...</p>
         </div>
-        <div style="display: flex; gap: 12px; align-items: center;">
-            <a href="lancar.html" class="btn">+ Novo Lançamento</a>
-            <span id="server-status" class="status">A verificar...</span>
-        </div>
+        <span id="server-status" class="status">A verificar...</span>
     </header>
 
     <div class="summary-grid">
@@ -86,7 +78,10 @@
     </div>
 
     <div class="filters">
-        <div class="filter-group"><label>Ano</label><select id="filtro-ano" onchange="atualizarDashboard()"><option value="Todos">Todos</option></select></div>
+        <div class="filter-group">
+            <label>Ano</label>
+            <select id="filtro-ano" onchange="atualizarDashboard()"><option value="Todos">Todos</option></select>
+        </div>
         <div class="filter-group">
             <label>Mês</label>
             <select id="filtro-mes" onchange="atualizarDashboard()">
@@ -97,26 +92,49 @@
                 <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
             </select>
         </div>
-        <div class="filter-group"><label>Pessoa</label><select id="filtro-pessoa" onchange="atualizarDashboard()"><option value="Todas">Todas</option></select></div>
-        <div class="filter-group"><label>Cartão / Forma</label><select id="filtro-cartao" onchange="atualizarDashboard()"><option value="Todos">Todos</option></select></div>
-        <div class="filter-group"><label>Situação</label><select id="filtro-situacao" onchange="atualizarDashboard()"><option value="Todas">Todas</option></select></div>
+        <div class="filter-group">
+            <label>Pessoa</label>
+            <select id="filtro-pessoa" onchange="atualizarDashboard()"><option value="Todas">Todas</option></select>
+        </div>
+        <div class="filter-group">
+            <label>Cartão / Forma</label>
+            <select id="filtro-cartao" onchange="atualizarDashboard()"><option value="Todos">Todos</option></select>
+        </div>
+        <div class="filter-group">
+            <label>Situação</label>
+            <select id="filtro-situacao" onchange="atualizarDashboard()"><option value="Todas">Todas</option></select>
+        </div>
     </div>
 
     <div class="grid">
-        <div class="card"><h3>Evolução de Despesas por Mês</h3><canvas id="chartEvolucao" height="160"></canvas></div>
-        <div class="card"><h3>Gastos por Pessoa / Categoria</h3><canvas id="chartPessoa" height="160"></canvas></div>
+        <div class="card">
+            <h3>Evolução de Despesas por Mês</h3>
+            <canvas id="chartEvolucao" height="150"></canvas>
+        </div>
+        <div class="card">
+            <h3>Gastos por Pessoa / Categoria</h3>
+            <canvas id="chartPessoa" height="150"></canvas>
+        </div>
     </div>
 
     <div class="table-container">
-        <div class="table-header"><h3>Histórico de Lançamentos</h3></div>
-        <div style="overflow-x: auto;">
-            <table>
-                <thead><tr><th>Data</th><th>Descrição</th><th>Pessoa</th><th>Valor</th><th>Parcela</th><th>Cartão</th><th>Situação</th></tr></thead>
-                <tbody id="tabela-registros">
-                    <tr><td colspan="7" style="text-align: center; color: var(--ink-dim);">A carregar registos...</td></tr>
-                </tbody>
-            </table>
-        </div>
+        <h3>Lançamentos</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Descrição</th>
+                    <th>Pessoa</th>
+                    <th>Valor</th>
+                    <th>Parcela</th>
+                    <th>Cartão</th>
+                    <th>Situação</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-registros">
+                <tr><td colspan="7" style="text-align: center; color: var(--ink-dim);">A carregar registos...</td></tr>
+            </tbody>
+        </table>
     </div>
 
     <script>
@@ -129,8 +147,9 @@
             const subStatusEl = document.getElementById("sub-status");
             
             try {
-                // SUBSTITUA O TEXTO ABAIXO PELO SEU LINK DO APPS SCRIPT:
+                // =============== ATENÇÃO: COLOQUE O SEU LINK AQUI ===============
                 const URL_API = "https://script.google.com/macros/s/AKfycbxXhiYVrPAKVWbqqxm3217MC-3GNPO3qJzpjbGBLUQVg4gHBeVEE1bTydYisc6Y82er/exec"; 
+                // ================================================================
                 
                 const resp = await fetch(URL_API + "?_=" + Date.now(), {cache: "no-store"});
                 const json = await resp.json();
@@ -148,7 +167,7 @@
                 console.error(err);
                 statusEl.textContent = "Servidor Indisponível";
                 statusEl.className = "status offline";
-                subStatusEl.textContent = "Erro ao ligar à planilha. Verifique o link do Apps Script.";
+                subStatusEl.textContent = ("Verifique se colou o link do Apps Script corretamente.");
             }
         }
 
@@ -183,9 +202,9 @@
             const filtrados = dadosGlobais.filter(r => {
                 if (fAno !== "Todos" && String(r.ano) !== fAno) return false;
                 if (fMes !== "Todos" && String(r.mes) !== fMes) return false;
-                if (fPessoa !== "Todos" && r.categoria !== fPessoa) return false;
+                if (fPessoa !== "Todas" && r.categoria !== fPessoa) return false;
                 if (fCartao !== "Todos" && r.cartao !== fCartao) return false;
-                if (fSituacao !== "Todos" && r.situacao !== fSituacao) return false;
+                if (fSituacao !== "Todas" && r.situacao !== fSituacao) return false;
                 return true;
             });
 
@@ -218,7 +237,7 @@
                     <td>${r.data || ''}</td>
                     <td>${r.descricao || ''}</td>
                     <td>${r.categoria || ''}</td>
-                    <td>R$ ${(Number(r.valor) || 0).toFixed(2)}</td>
+                    <td style="font-weight:600; color:var(--ink);">R$ ${(Number(r.valor) || 0).toFixed(2)}</td>
                     <td>${r.parcela || ''}</td>
                     <td>${r.cartao || ''}</td>
                     <td><span style="color: ${String(r.situacao).toUpperCase() === 'OK' ? 'var(--green)' : 'var(--rust)'}; font-weight: 600;">${r.situacao || ''}</span></td>
@@ -264,9 +283,9 @@
                 type: 'doughnut',
                 data: {
                     labels: pessoasKeys.length ? pessoasKeys : ['Sem dados'],
-                    datasets: [{ data: pessoasData.length ? pessoasData : [1], backgroundColor: ['#d9a441', '#4c9a6a', '#c1584b', '#3b82f6', '#8b5cf6', '#ec4899'] }]
+                    datasets: [{ data: pessoasData.length ? pessoasData : [1], backgroundColor: ['#d9a441', '#4c9a6a', '#c1584b', '#3b82f6', '#8b5cf6', '#ec4899'], borderWidth: 0 }]
                 },
-                options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#e9e6de' } } } }
+                options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#e9e6de', padding: 20 } } }, cutout: '70%' }
             });
         }
 
