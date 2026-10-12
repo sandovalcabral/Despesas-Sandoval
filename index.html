@@ -25,7 +25,7 @@
         
         /* Header */
         header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 1px solid var(--line); padding-bottom: 20px; }
-        h1 { font-size: 28px; font-weight: 500; }
+        h1 { font-size: 28px; font-weight: 500; margin-bottom: 4px; }
         h1 span { color: var(--text-muted); }
         .subtitle { color: var(--text-muted); font-size: 13px; margin-top: 5px; }
         .status-container { display: flex; align-items: center; gap: 15px; }
@@ -79,8 +79,7 @@
                 <span id="status-label" style="color: var(--text-muted);">erro de ligação</span>
             </div>
             <button class="btn-update" onclick="carregarDados()">Atualizar agora</button>
-            <!-- Botão para voltar à tela de Lançamentos -->
-            <a href="lancar.html" class="btn-update" style="text-decoration: none; background: var(--gold-dim); color: #fff; border: none;">+ Lançar</a>
+            <!-- Botão + Lançar removido conforme solicitado -->
         </div>
     </header>
 
@@ -216,6 +215,11 @@
         // Gráficos instâncias
         let cEvolucao, cPessoa, cCartao, cSituacao;
 
+        // Função para formatar para Moeda R$ Brasileira
+        const formatarMoeda = (valor) => {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(valor) || 0);
+        };
+
         async function carregarDados() {
             setLoading(true);
             try {
@@ -224,7 +228,16 @@
                 
                 if (json.erro) throw new Error(json.erro);
 
-                dadosBrutos = json.registros || [];
+                // Correção do valor: garantindo que "R$ 14,76" vira 14.76 numérico para os gráficos não darem 0
+                dadosBrutos = (json.registros || []).map(r => {
+                    let v = r.valor;
+                    if (typeof v === 'string') {
+                        v = parseFloat(v.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
+                    }
+                    r.valor = v;
+                    return r;
+                });
+
                 fixasBrutas = json.dadosFixasBrutos || [];
                 receitasBrutas = json.dadosReceitasBrutos || [];
                 
@@ -280,9 +293,7 @@
             const el = document.getElementById(id);
             const valAtual = el.value;
             el.innerHTML = '<option value="Todos">Todos</option>';
-            array.forEach(item => {
-                el.innerHTML += `<option value="${item}">${item}</option>`;
-            });
+            array.forEach(item => { el.innerHTML += `<option value="${item}">${item}</option>`; });
             if(array.includes(valAtual) || array.includes(Number(valAtual))) el.value = valAtual;
         }
 
@@ -335,7 +346,7 @@
             const itensPagina = dadosFiltrados.slice(inicio, fim);
 
             if(itensPagina.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Nenhum lançamento encontrado.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Nenhum lançamento encontrado para os filtros atuais.</td></tr>`;
                 return;
             }
 
@@ -346,7 +357,7 @@
                     <td>${r.data || ''}</td>
                     <td>${r.descricao || ''}</td>
                     <td>${r.categoria || ''}</td>
-                    <td style="font-weight: 500;">R$ ${(Number(r.valor)||0).toFixed(2)}</td>
+                    <td style="font-weight: 500;">${formatarMoeda(r.valor)}</td>
                     <td>${r.parcela || ''}</td>
                     <td>${r.cartao || ''}</td>
                     <td>${r.mes || ''}/${r.ano || ''}</td>
@@ -368,19 +379,24 @@
             const tbody = document.getElementById(idBody);
             
             if(!dados || dados.length <= 1) {
-                tbody.innerHTML = `<tr><td style="text-align: center; color: var(--text-muted);">Nenhum dado encontrado na aba.</td></tr>`;
+                tbody.innerHTML = `<tr><td style="text-align: center; color: var(--text-muted);">Nenhum dado encontrado na aba (pode estar vazia ou com nome errado).</td></tr>`;
                 thead.innerHTML = "";
                 return;
             }
 
-            // Cabecalho (linha 0)
             const headers = dados[0];
             thead.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
 
-            // Linhas
             const linhas = dados.slice(1);
             tbody.innerHTML = linhas.map(row => `
-                <tr>${row.map(cel => `<td>${cel}</td>`).join('')}</tr>
+                <tr>${row.map(cel => {
+                    // Tenta aplicar formato R$ na tabela genérica também, se for um número solto
+                    let strCel = String(cel);
+                    if (!isNaN(strCel) && strCel.trim() !== "" && strCel.indexOf('.') !== -1 && strCel.split('.')[1].length === 2) {
+                        return `<td>${formatarMoeda(cel)}</td>`;
+                    }
+                    return `<td>${cel}</td>`;
+                }).join('')}</tr>
             `).join('');
         }
 
@@ -403,7 +419,10 @@
         }
 
         function renderizarGraficos() {
-            // Evolução
+            const formatadorDica = {
+                callbacks: { label: function(context) { return formatarMoeda(context.raw); } }
+            };
+
             const mapaEvolucao = agruparSoma(dadosFiltrados, r => `${String(r.mes).padStart(2,'0')}/${r.ano}`);
             const evKeys = Object.keys(mapaEvolucao).sort();
             const evVals = evKeys.map(k => mapaEvolucao[k]);
@@ -412,40 +431,35 @@
             cEvolucao = new Chart(document.getElementById('chartEvolucao'), {
                 type: 'line',
                 data: { labels: evKeys, datasets: [{ label: 'R$', data: evVals, borderColor: '#fde047', backgroundColor: 'rgba(253, 224, 71, 0.1)', fill: true, tension: 0.3 }] },
-                options: { responsive: true, plugins: { legend: { display: false } } }
+                options: { responsive: true, plugins: { legend: { display: false }, tooltip: formatadorDica } }
             });
 
-            // Pessoa
             const mapaPessoa = agruparSoma(dadosFiltrados, 'categoria');
             if(cPessoa) cPessoa.destroy();
             cPessoa = new Chart(document.getElementById('chartPessoa'), {
                 type: 'bar',
                 data: { labels: Object.keys(mapaPessoa), datasets: [{ data: Object.values(mapaPessoa), backgroundColor: '#3b82f6' }] },
-                options: { responsive: true, plugins: { legend: { display: false } } }
+                options: { responsive: true, plugins: { legend: { display: false }, tooltip: formatadorDica } }
             });
 
-            // Cartão
             const mapaCartao = agruparSoma(dadosFiltrados, 'cartao');
             if(cCartao) cCartao.destroy();
             cCartao = new Chart(document.getElementById('chartCartao'), {
                 type: 'doughnut',
                 data: { labels: Object.keys(mapaCartao), datasets: [{ data: Object.values(mapaCartao), backgroundColor: ['#fde047','#ef4444','#22c55e','#3b82f6','#a855f7'], borderWidth: 0 }] },
-                options: { responsive: true, cutout: '70%', plugins: { legend: { position: 'right' } } }
+                options: { responsive: true, cutout: '70%', plugins: { legend: { position: 'right' }, tooltip: formatadorDica } }
             });
 
-            // Situação
             const mapaSit = agruparSoma(dadosFiltrados, 'situacao');
             if(cSituacao) cSituacao.destroy();
             cSituacao = new Chart(document.getElementById('chartSituacao'), {
                 type: 'pie',
                 data: { labels: Object.keys(mapaSit), datasets: [{ data: Object.values(mapaSit), backgroundColor: ['#22c55e', '#ef4444'], borderWidth: 0 }] },
-                options: { responsive: true, plugins: { legend: { position: 'right' } } }
+                options: { responsive: true, plugins: { legend: { position: 'right' }, tooltip: formatadorDica } }
             });
         }
 
-        // Iniciar
         carregarDados();
-
     </script>
 </body>
 </html>
