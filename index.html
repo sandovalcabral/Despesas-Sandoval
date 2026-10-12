@@ -4,64 +4,68 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Despesas — Sandoval</title>
-    <script src="[https://cdn.jsdelivr.net/npm/chart.js](https://cdn.jsdelivr.net/npm/chart.js)"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Importação de fontes elegantes baseadas no layout original -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #11151c;
-            --panel: #1b222c;
-            --panel-2: #242c38;
-            --line: #2e3746;
-            --text-main: #e2e8f0;
-            --text-muted: #94a3b8;
+            --bg: #12161b;
+            --panel: #1b2129;
+            --panel-2: #212934;
+            --line: #2e3643;
+            --text-main: #d1d5db;
+            --text-muted: #9ca3af;
             --gold: #fde047;
             --danger: #ef4444;
             --success: #22c55e;
-            --font: 'Segoe UI', system-ui, sans-serif;
+            --font-serif: 'Playfair Display', Georgia, serif;
+            --font-sans: 'Inter', system-ui, sans-serif;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
-        body { background-color: var(--bg); color: var(--text-main); padding: 20px; font-size: 14px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-sans); }
+        body { background-color: var(--bg); color: var(--text-main); padding: 30px; font-size: 13px; }
         
-        /* Header */
-        header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 1px solid var(--line); padding-bottom: 20px; }
-        h1 { font-size: 28px; font-weight: 500; margin-bottom: 4px; }
-        h1 span { color: var(--text-muted); }
-        .subtitle { color: var(--text-muted); font-size: 13px; margin-top: 5px; }
-        .status-container { display: flex; align-items: center; gap: 15px; }
+        /* Cabeçalho */
+        header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 35px; border-bottom: 1px solid var(--line); padding-bottom: 20px; }
+        h1 { font-family: var(--font-serif); font-size: 32px; font-weight: 500; margin-bottom: 5px; color: #fff; }
+        h1 span { color: var(--text-muted); font-family: var(--font-serif); }
+        .subtitle { color: var(--text-muted); font-size: 13px; }
+        
+        .status-container { display: flex; align-items: center; gap: 15px; margin-top: 10px;}
         .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
         .status-dot.red { background-color: var(--danger); box-shadow: 0 0 8px var(--danger); }
         .status-dot.green { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
-        .btn-update { background: var(--panel-2); color: var(--text-main); border: 1px solid var(--line); padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: 0.2s; }
+        .btn-update { background: var(--panel-2); color: var(--text-main); border: 1px solid var(--line); padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: 0.2s; font-family: var(--font-sans); }
         .btn-update:hover { background: #2d3748; }
 
-        /* Sections */
-        section { margin-bottom: 40px; }
-        h2 { font-size: 18px; color: var(--gold); margin-bottom: 15px; font-weight: 500; }
-        .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 20px; }
+        /* Seções e Títulos */
+        section { margin-bottom: 45px; }
+        h2 { font-family: var(--font-serif); font-size: 20px; color: #fff; margin-bottom: 15px; font-weight: 500; letter-spacing: 0.5px;}
+        .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 25px; }
 
-        /* Filters */
+        /* Filtros */
         .filters-grid { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; }
         .filter-group { flex: 1; min-width: 140px; }
-        .filter-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
-        select, input { width: 100%; background: var(--panel-2); color: var(--text-main); border: 1px solid var(--line); padding: 9px 12px; border-radius: 4px; font-size: 13px; outline: none; }
-        select:focus, input:focus { border-color: var(--text-muted); }
+        .filter-group label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 8px; text-transform: capitalize; }
+        select, input { width: 100%; background: var(--panel-2); color: var(--text-main); border: 1px solid var(--line); padding: 10px 12px; border-radius: 4px; font-size: 13px; outline: none; transition: 0.2s; }
+        select:focus, input:focus { border-color: var(--gold); }
 
-        /* Dashboard Grid (Visão Geral) */
+        /* Visão Geral (Gráficos) */
         .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .dash-card { background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 15px; min-height: 200px; display: flex; flex-direction: column; }
-        .dash-card h3 { font-size: 14px; font-weight: 500; margin-bottom: 15px; color: var(--text-main); }
+        .dash-card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 20px; min-height: 220px; display: flex; flex-direction: column; }
+        .dash-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 20px; color: #fff; }
         
-        /* Tables */
-        .table-wrapper { overflow-x: auto; background: var(--panel-2); border-radius: 6px; border: 1px solid var(--line); }
+        /* Tabelas e Paginação */
+        .table-wrapper { overflow-x: auto; background: var(--panel); border-radius: 6px; border: 1px solid var(--line); }
         table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { padding: 12px 15px; font-size: 12px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--line); }
-        td { padding: 12px 15px; border-bottom: 1px solid var(--line); font-size: 13px; }
+        th { padding: 15px; font-size: 11px; font-weight: 500; color: var(--text-muted); border-bottom: 1px solid var(--line); white-space: nowrap; }
+        td { padding: 15px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--text-main); }
         tr:last-child td { border-bottom: none; }
         tr:hover { background: rgba(255,255,255,0.02); }
         
-        .pagination { display: flex; justify-content: flex-end; gap: 10px; padding: 15px; background: var(--panel-2); border-top: 1px solid var(--line); }
+        .pagination { display: flex; justify-content: flex-end; gap: 10px; padding: 15px; background: var(--panel); border-top: 1px solid var(--line); }
         .page-info { align-self: center; font-size: 12px; color: var(--text-muted); margin-right: 10px; }
-        .hint { font-size: 13px; color: var(--text-muted); margin-bottom: 15px; }
+        .hint { font-size: 12px; color: var(--text-muted); margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -69,12 +73,12 @@
     <header>
         <div>
             <h1>Dashboard de Despesas <span>— Sandoval</span></h1>
-            <p class="subtitle" id="status-text">A ligar à nuvem do Google...</p>
+            <p class="subtitle" id="status-text">Conectando à nuvem do Google...</p>
         </div>
         <div class="status-container">
             <div style="font-size: 13px; display: flex; align-items: center;">
                 <span id="status-dot" class="status-dot red"></span>
-                <span id="status-label" style="color: var(--text-muted);">erro de ligação</span>
+                <span id="status-label" style="color: var(--text-muted);">erro de conexão</span>
             </div>
             <button class="btn-update" onclick="carregarDados()">Atualizar agora</button>
         </div>
@@ -123,38 +127,34 @@
 
     <section>
         <h2>Despesas fixas (mensais)</h2>
-        <div class="panel">
-            <p class="hint">Valores lidos direto da aba "Despesas_Fixas" da sua planilha.</p>
-            <div class="table-wrapper">
-                <table>
-                    <thead id="head-fixas"></thead>
-                    <tbody id="tb-fixas">
-                        <tr><td style="text-align: center; color: var(--text-muted);">Aguardando dados...</td></tr>
-                    </tbody>
-                </table>
-            </div>
+        <p class="hint">Valores lidos direto da aba "Despesas_Fixas" da sua planilha.</p>
+        <div class="table-wrapper">
+            <table>
+                <thead id="head-fixas"></thead>
+                <tbody id="tb-fixas">
+                    <tr><td style="text-align: center; color: var(--text-muted);">Aguardando dados...</td></tr>
+                </tbody>
+            </table>
         </div>
     </section>
 
     <section>
         <h2>Receitas & saldo</h2>
-        <div class="panel">
-            <p class="hint">Valores lidos direto da aba "Receitas" da sua planilha.</p>
-            <div class="table-wrapper">
-                <table>
-                    <thead id="head-receitas"></thead>
-                    <tbody id="tb-receitas">
-                        <tr><td style="text-align: center; color: var(--text-muted);">Aguardando dados...</td></tr>
-                    </tbody>
-                </table>
-            </div>
+        <p class="hint">Valores lidos direto da aba "Receitas" da sua planilha.</p>
+        <div class="table-wrapper">
+            <table>
+                <thead id="head-receitas"></thead>
+                <tbody id="tb-receitas">
+                    <tr><td style="text-align: center; color: var(--text-muted);">Aguardando dados...</td></tr>
+                </tbody>
+            </table>
         </div>
     </section>
 
     <script>
         // =====================================================================
         // COLE O SEU LINK ABAIXO! OBRIGATÓRIO SER DE UMA *NOVA IMPLANTAÇÃO*
-        const URL_API = "https://script.google.com/macros/s/AKfycbxtZuoOnOdzlUeXiLwxcV7fG4VI7S6VbjAw6SPXEmH7AlBeqenarVHdAHQI8p3B5BSv/exec;
+        const URL_API = "https://script.google.com/macros/s/AKfycbxtZuoOnOdzlUeXiLwxcV7fG4VI7S6VbjAw6SPXEmH7AlBeqenarVHdAHQI8p3B5BSv/exec";
         // =====================================================================
 
         let dadosBrutos = [];
@@ -165,16 +165,14 @@
         const ITENS_POR_PAGINA = 15;
         let cEvolucao, cPessoa, cCartao, cSituacao;
 
-        // Função Master para formatar dinheiro R$
         const formatarMoeda = (valor) => {
             let num = Number(valor) || 0;
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(num);
         };
 
-        // Formatador inteligente para as tabelas desconfiguradas (Fixas/Receitas)
         function formatarCelulaTabela(celula, indexColuna) {
-            if (indexColuna === 0) return `<td>${celula}</td>`; // Não formata a 1ª coluna (nomes como Janeiro, Salário)
-            if (celula === "" || celula === null) return `<td>-</td>`;
+            if (indexColuna === 0) return `<td style="font-weight: 500;">${celula}</td>`;
+            if (celula === "" || celula === null || celula === undefined) return `<td style="text-align:center; color: var(--text-muted);">-</td>`;
             
             if (typeof celula === 'number') {
                 return `<td style="white-space: nowrap;">${formatarMoeda(celula)}</td>`;
@@ -198,7 +196,6 @@
                 
                 if (json.erro) throw new Error(json.erro);
 
-                // Garante que o valor principal (Lançamentos) é número puro
                 dadosBrutos = (json.registros || []).map(r => {
                     let v = r.valor;
                     if (typeof v === 'string') v = parseFloat(v.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
@@ -228,15 +225,15 @@
             const lbl = document.getElementById('status-label');
 
             if (isLoading) {
-                txt.textContent = "A ler dados da planilha...";
-                dot.className = "status-dot red"; lbl.textContent = "a carregar";
+                txt.textContent = "Lendo dados da planilha...";
+                dot.className = "status-dot red"; lbl.textContent = "conectando";
             } else if (isSuccess) {
                 const dataFormatada = dataHora ? new Date(dataHora).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR');
                 txt.textContent = "Última atualização: " + dataFormatada;
-                dot.className = "status-dot green"; lbl.textContent = "ligado";
+                dot.className = "status-dot green"; lbl.textContent = "conectado";
             } else {
                 txt.textContent = "Falha ao ler os dados. Verifique se o link gerado foi de uma Nova Implantação.";
-                dot.className = "status-dot red"; lbl.textContent = "erro de ligação";
+                dot.className = "status-dot red"; lbl.textContent = "erro de conexão";
             }
         }
 
@@ -293,22 +290,24 @@
             const tbody = document.getElementById('tb-lancamentos');
             const totalPaginas = Math.ceil(dadosFiltrados.length / ITENS_POR_PAGINA) || 1;
             
-            document.getElementById('page-info').textContent = `Pág ${paginaAtual} de ${totalPaginas} (${dadosFiltrados.length} registos)`;
+            document.getElementById('page-info').textContent = `Pág ${paginaAtual} de ${totalPaginas} (${dadosFiltrados.length} registros)`;
 
             const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
             const fim = inicio + ITENS_POR_PAGINA;
             const itensPagina = dadosFiltrados.slice(inicio, fim);
 
             if(itensPagina.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Nenhum lançamento encontrado para os filtros atuais.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">Nenhum lançamento encontrado para os filtros atuais.</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = itensPagina.map(r => {
-                const corSit = String(r.situacao).toUpperCase() === 'OK' ? 'var(--success)' : 'var(--danger)';
-                return `<tr>
-                    <td>${r.data || ''}</td><td>${r.descricao || ''}</td><td>${r.categoria || ''}</td>
-                    <td style="font-weight: 500;">${formatarMoeda(r.valor)}</td>
+                const isOK = String(r.situacao).toUpperCase() === 'OK';
+                const corSit = isOK ? 'var(--success)' : 'var(--danger)';
+                const bgRow = isOK ? '' : 'background: rgba(239, 68, 68, 0.03);';
+                return `<tr style="${bgRow}">
+                    <td>${r.data || ''}</td><td style="font-weight: 500;">${r.descricao || ''}</td><td>${r.categoria || ''}</td>
+                    <td style="font-weight: 500; color: ${isOK ? 'var(--text-main)' : 'var(--danger)'};">${formatarMoeda(r.valor)}</td>
                     <td>${r.parcela || ''}</td><td>${r.cartao || ''}</td><td>${r.mes || ''}/${r.ano || ''}</td>
                     <td style="color: ${corSit}; font-weight: 500;">${r.situacao || ''}</td>
                 </tr>`}).join('');
@@ -321,13 +320,12 @@
             renderizarTabela();
         }
 
-        // Tabela Genérica Reconstruída (Acaba com os números desconfigurados!)
         function renderTabelaGenerica(dados, idHead, idBody) {
             const thead = document.getElementById(idHead);
             const tbody = document.getElementById(idBody);
             
             if(!dados || dados.length <= 1) {
-                tbody.innerHTML = `<tr><td style="text-align: center; color: var(--text-muted);">Aba não encontrada ou vazia.</td></tr>`;
+                tbody.innerHTML = `<tr><td style="text-align: center; color: var(--text-muted); padding: 30px;">Aba não encontrada ou sem registros.</td></tr>`;
                 thead.innerHTML = ""; return;
             }
 
@@ -339,7 +337,7 @@
         }
 
         // Gráficos
-        Chart.defaults.color = '#94a3b8'; Chart.defaults.borderColor = '#2e3746';
+        Chart.defaults.color = '#9ca3af'; Chart.defaults.borderColor = '#2e3643'; Chart.defaults.font.family = "'Inter', sans-serif";
         function agruparSoma(dados, chaveObj) {
             const mapa = {};
             dados.forEach(r => {
@@ -357,14 +355,14 @@
 
             if(cEvolucao) cEvolucao.destroy();
             cEvolucao = new Chart(document.getElementById('chartEvolucao'), {
-                type: 'line', data: { labels: evKeys, datasets: [{ label: 'R$', data: evVals, borderColor: '#fde047', backgroundColor: 'rgba(253, 224, 71, 0.1)', fill: true, tension: 0.3 }] },
+                type: 'line', data: { labels: evKeys, datasets: [{ label: 'Total', data: evVals, borderColor: '#fde047', backgroundColor: 'rgba(253, 224, 71, 0.1)', fill: true, tension: 0.3 }] },
                 options: { responsive: true, plugins: { legend: { display: false }, tooltip: formatadorDica } }
             });
 
             const mapaPessoa = agruparSoma(dadosFiltrados, 'categoria');
             if(cPessoa) cPessoa.destroy();
             cPessoa = new Chart(document.getElementById('chartPessoa'), {
-                type: 'bar', data: { labels: Object.keys(mapaPessoa), datasets: [{ data: Object.values(mapaPessoa), backgroundColor: '#3b82f6' }] },
+                type: 'bar', data: { labels: Object.keys(mapaPessoa), datasets: [{ data: Object.values(mapaPessoa), backgroundColor: '#3b82f6', borderRadius: 4 }] },
                 options: { responsive: true, plugins: { legend: { display: false }, tooltip: formatadorDica } }
             });
 
@@ -372,7 +370,7 @@
             if(cCartao) cCartao.destroy();
             cCartao = new Chart(document.getElementById('chartCartao'), {
                 type: 'doughnut', data: { labels: Object.keys(mapaCartao), datasets: [{ data: Object.values(mapaCartao), backgroundColor: ['#fde047','#ef4444','#22c55e','#3b82f6','#a855f7'], borderWidth: 0 }] },
-                options: { responsive: true, cutout: '70%', plugins: { legend: { position: 'right' }, tooltip: formatadorDica } }
+                options: { responsive: true, cutout: '75%', plugins: { legend: { position: 'right' }, tooltip: formatadorDica } }
             });
 
             const mapaSit = agruparSoma(dadosFiltrados, 'situacao');
