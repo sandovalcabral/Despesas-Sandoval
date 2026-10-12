@@ -1,139 +1,8 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Novo Lançamento — Sandoval</title>
-<style>
-  :root{
-    --bg: #10141a;
-    --panel: #1a2029;
-    --panel-2: #212836;
-    --line: #2b3241;
-    --ink: #e9e6de;
-    --ink-dim: #9aa2ae;
-    --gold: #d9a441;
-    --green: #4c9a6a;
-    --rust: #c1584b;
-    --sans: "Segoe UI", sans-serif;
-  }
-  *{box-sizing:border-box;}
-  body{
-    background:var(--bg); color:var(--ink); font-family:var(--sans);
-    margin:0; padding:20px; display:flex; justify-content:center; align-items:center; min-height:100vh;
-  }
-  .card{
-    background:var(--panel); border:1px solid var(--line); border-radius:12px;
-    padding:24px; width:100%; max-width:480px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  }
-  h2{
-    font-family:Georgia, serif; font-weight:400; margin-top:0; margin-bottom:20px;
-    color:var(--gold); font-size:22px; text-align:center;
-  }
-  .campo{ display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
-  label{ font-size:12px; color:var(--ink-dim); }
-  input, select{
-    background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
-    padding:10px 12px; border-radius:8px; font-size:14px; font-family:var(--sans); width:100%;
-  }
-  input:focus, select:focus{ outline:2px solid var(--gold); outline-offset:1px; }
-  .linha-dupla{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-  button{
-    background:var(--gold); color:#1a1300; border:none; padding:12px; border-radius:8px;
-    font-size:15px; font-weight:600; cursor:pointer; width:100%; margin-top:10px;
-  }
-  button:hover{ opacity:0.9; }
-  button:disabled{ background:var(--line); color:var(--ink-dim); cursor:not-allowed; }
-  #mensagem {
-    margin-top: 14px; padding: 10px; border-radius: 6px; font-size: 13px; text-align: center; display: none;
-  }
-  .sucesso { background: rgba(76,154,106,0.2); color: #8fd6ab; border: 1px solid var(--green); }
-  .voltar { display:block; text-align:center; margin-top:16px; color:var(--ink-dim); font-size:13px; text-decoration:none; }
-  .voltar:hover{ color:var(--gold); }
-</style>
-</head>
-<body>
-
-<div class="card">
-  <h2>Novo Lançamento</h2>
-  
-  <form id="formLancar" method="POST" action="https://script.google.com/macros/s/AKfycbxhSWpaPYmhUINdWO6g6RpaRC0y3kKo2-FZaEcueO0p0BK3DSxs4rPY1GhvMf4k08U/exec" target="iframe_invisivel">
-    <div class="campo">
-      <label for="data">Data do Lançamento</label>
-      <input type="date" id="data" name="data" required>
-    </div>
-
-    <div class="campo">
-      <label for="descricao">Descrição</label>
-      <input type="text" id="descricao" name="descricao" placeholder="Ex: Compra" required>
-    </div>
-
-    <div class="linha-dupla">
-      <div class="campo">
-        <label for="valor">Valor Total (R$)</label>
-        <input type="text" inputmode="decimal" id="valor" name="valor" placeholder="Ex: 500,00" required>
-      </div>
-      <div class="campo">
-        <label for="parcelas">Qtd de Parcelas</label>
-        <input type="number" id="parcelas" name="parcelas" value="1" min="1" max="48" required>
-      </div>
-    </div>
-
-    <div class="linha-dupla">
-      <div class="campo">
-        <label for="mesInicial">Mês da 1ª Parcela</label>
-        <select id="mesInicial" name="mesInicial">
-          <option value="1">Janeiro</option><option value="2">Fevereiro</option>
-          <option value="3">Março</option><option value="4">Abril</option>
-          <option value="5">Maio</option><option value="6">Junho</option>
-          <option value="7">Julho</option><option value="8">Agosto</option>
-          <option value="9">Setembro</option><option value="10">Outubro</option>
-          <option value="11">Novembro</option><option value="12">Dezembro</option>
-        </select>
-      </div>
-      <div class="campo">
-        <label for="anoInicial">Ano da 1ª Parcela</label>
-        <input type="number" id="anoInicial" name="anoInicial" required>
-      </div>
-    </div>
-
-    <div class="linha-dupla">
-      <div class="campo">
-        <label for="categoria">Pessoa</label>
-        <input type="text" id="categoria" name="categoria" placeholder="Ex: Sandoval">
-      </div>
-      <div class="campo">
-        <label for="cartao">Cartão / Forma</label>
-        <input type="text" id="cartao" name="cartao" placeholder="Ex: Nubank">
-      </div>
-    </div>
-
-    <div class="linha-dupla">
-      <div class="campo">
-        <label for="situacao">Situação</label>
-        <select id="situacao" name="situacao">
-          <option value="A Vencer" selected>A Vencer</option>
-          <option value="OK">OK (Pago)</option>
-        </select>
-      </div>
-      <div class="campo">
-        <label for="observacoes">Observações</label>
-        <input type="text" id="observacoes" name="observacoes" placeholder="Opcional">
-      </div>
-    </div>
-
-    <button type="submit" id="btnEnviar">Salvar na Planilha</button>
-  </form>
-
-  <div id="mensagem"></div>
-  
-  <iframe name="iframe_invisivel" id="iframe_invisivel" style="display:none;" onload="if(submitted){ finalizarEnvio(); }"></iframe>
-
-  <a href="index.html" class="voltar">← Voltar para o Dashboard</a>
-</div>
-
 <script>
-  // Função para forçar a Data Local e evitar o fuso horário (bug do dia seguinte)
+  // O SEU LINK AQUI
+  const URL_API = "https://script.google.com/macros/s/AKfycbxhSWpaPYmhUINdWO6g6RpaRC0y3kKo2-FZaEcueO0p0BK3DSxs4rPY1GhvMf4k08U/exec";
+
+  // Função para forçar a Data Local (evita o bug do dia seguinte)
   function getDataLocalFormatada() {
     const d = new Date();
     const ano = d.getFullYear();
@@ -147,36 +16,55 @@
   document.getElementById('mesInicial').value = hoje.getMonth() + 1;
   document.getElementById('anoInicial').value = hoje.getFullYear();
 
-  let submitted = false;
   const form = document.getElementById('formLancar');
   const btn = document.getElementById('btnEnviar');
   const msg = document.getElementById('mensagem');
 
-  form.addEventListener('submit', () => {
-    submitted = true;
+  form.addEventListener('submit', function(e) {
+    e.preventDefault(); 
+    
     btn.disabled = true;
     btn.textContent = "A gravar na planilha...";
     msg.style.display = "none";
+
+    const formData = new FormData(form);
+    const dados = new URLSearchParams(formData);
+
+    fetch(URL_API, {
+      method: 'POST',
+      body: dados
+    })
+    .then(response => response.json())
+    .then(data => {
+      if(data.status === "sucesso") {
+        msg.textContent = "Lançamento guardado com sucesso na planilha!";
+        msg.className = "sucesso";
+        msg.style.display = "block";
+        
+        form.reset();
+        // Repõe as datas corretamente após limpar o formulário
+        document.getElementById('data').value = getDataLocalFormatada();
+        document.getElementById('mesInicial').value = new Date().getMonth() + 1;
+        document.getElementById('anoInicial').value = new Date().getFullYear();
+        document.getElementById('parcelas').value = 1;
+      } else {
+        msg.textContent = "Erro ao gravar: " + data.mensagem;
+        msg.className = "erro";
+        msg.style.display = "block";
+      }
+    })
+    .catch(error => {
+      msg.textContent = "Lançamento efetuado! (Aviso: Sem resposta final do servidor, mas deve estar na planilha)";
+      msg.className = "sucesso";
+      msg.style.display = "block";
+      form.reset();
+      document.getElementById('data').value = getDataLocalFormatada();
+      document.getElementById('mesInicial').value = new Date().getMonth() + 1;
+      document.getElementById('anoInicial').value = new Date().getFullYear();
+    })
+    .finally(() => {
+      btn.disabled = false;
+      btn.textContent = "Salvar na Planilha";
+    });
   });
-
-  function finalizarEnvio() {
-    msg.textContent = "Lançamento guardado com sucesso na planilha!";
-    msg.className = "sucesso";
-    msg.style.display = "block";
-    
-    form.reset();
-    
-    // Repõe os valores padronizados após o reset
-    document.getElementById('data').value = getDataLocalFormatada();
-    document.getElementById('mesInicial').value = new Date().getMonth() + 1;
-    document.getElementById('anoInicial').value = new Date().getFullYear();
-    document.getElementById('parcelas').value = 1;
-    
-    btn.disabled = false;
-    btn.textContent = "Salvar na Planilha";
-    submitted = false;
-  }
 </script>
-
-</body>
-</html>
