@@ -1,374 +1,234 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Despesas — Sandoval</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #12161b;
-            --panel: #1b2129;
-            --panel-2: #212934;
-            --line: #2e3643;
-            --text-main: #d1d5db;
-            --text-muted: #9ca3af;
-            --gold: #fde047;
-            --danger: #ef4444;
-            --success: #22c55e;
-            --font-serif: 'Playfair Display', Georgia, serif;
-            --font-sans: 'Inter', system-ui, sans-serif;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-sans); }
-        body { background-color: var(--bg); color: var(--text-main); padding: 30px; font-size: 13px; }
-        
-        header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 35px; border-bottom: 1px solid var(--line); padding-bottom: 20px; }
-        h1 { font-family: var(--font-serif); font-size: 32px; font-weight: 500; margin-bottom: 5px; color: #fff; }
-        h1 span { color: var(--text-muted); font-family: var(--font-serif); }
-        .subtitle { color: var(--text-muted); font-size: 13px; }
-        
-        .status-container { display: flex; align-items: center; gap: 15px; margin-top: 10px;}
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-        .status-dot.red { background-color: var(--danger); box-shadow: 0 0 8px var(--danger); }
-        .status-dot.green { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
-        .btn-update { background: var(--panel-2); color: var(--text-main); border: 1px solid var(--line); padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: 0.2s; font-family: var(--font-sans); }
-        .btn-update:hover { background: #2d3748; }
-
-        section { margin-bottom: 45px; }
-        h2 { font-family: var(--font-serif); font-size: 20px; color: #fff; margin-bottom: 15px; font-weight: 500; letter-spacing: 0.5px;}
-        .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 25px; }
-
-        .filters-grid { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; }
-        .filter-group { flex: 1; min-width: 140px; }
-        .filter-group label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 8px; text-transform: capitalize; }
-        select, input { width: 100%; background: var(--panel-2); color: var(--text-main); border: 1px solid var(--line); padding: 10px 12px; border-radius: 4px; font-size: 13px; outline: none; transition: 0.2s; }
-        select:focus, input:focus { border-color: var(--gold); }
-
-        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .dash-card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 20px; min-height: 220px; display: flex; flex-direction: column; }
-        .dash-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 20px; color: #fff; }
-        
-        .table-wrapper { overflow-x: auto; background: var(--panel); border-radius: 6px; border: 1px solid var(--line); }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { padding: 15px; font-size: 11px; font-weight: 500; color: var(--text-muted); border-bottom: 1px solid var(--line); white-space: nowrap; }
-        td { padding: 15px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--text-main); }
-        tr:last-child td { border-bottom: none; }
-        tr:hover { background: rgba(255,255,255,0.02); }
-        
-        .pagination { display: flex; justify-content: flex-end; gap: 10px; padding: 15px; background: var(--panel); border-top: 1px solid var(--line); }
-        .page-info { align-self: center; font-size: 12px; color: var(--text-muted); margin-right: 10px; }
-        .hint { font-size: 12px; color: var(--text-muted); margin-bottom: 15px; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Despesas Sandoval</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--tx:#1d2330;--mut:#667085;--bd:#e3e6ec;--ok:#2e9d6a;--av:#e0a100;--at:#d64545;--pri:#2f5bd9}
+@media(prefers-color-scheme:dark){:root{--bg:#12151c;--card:#1b2030;--tx:#e8ebf2;--mut:#9aa3b5;--bd:#2a3145;--pri:#5f86ff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:10px}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+h1{font-size:20px;margin:6px 0}h2{font-size:15px;margin:0 0 8px}
+.mut{color:var(--mut);font-size:13px}
+.box,.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin:10px 0}
+button,select,input{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:6px 10px}
+button{cursor:pointer}
+.on{background:var(--pri)!important;border-color:var(--pri)!important;color:#fff!important}
+.fl{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-bottom:8px}
+.fl label{display:grid;gap:2px;font-size:13px;color:var(--mut)}
+.seg{display:flex;gap:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.cards .card{margin:0}.card small{color:var(--mut);display:block}.card b{font-size:18px}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:10px}
+.br{display:grid;grid-template-columns:84px 1fr 96px;gap:6px;align-items:center;margin:5px 0;font-size:13px}
+.bl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt{display:flex;height:14px;background:var(--bd);border-radius:7px;overflow:hidden}
+.br b{text-align:right;font-weight:600}
+.bt i.ok{background:var(--ok)}.bt i.av{background:var(--av)}.bt i.ou{background:#8b93a7}
+.v-ok{color:var(--ok)}.v-av{color:var(--av)}.v-at{color:var(--at)}
+.leg{font-size:12px;color:var(--mut);margin:0 0 4px}
+.sc{overflow:auto;max-height:520px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}
+th{position:sticky;top:0;background:var(--card);cursor:pointer}
+td.n{text-align:right}
+.r-ok td:first-child{border-left:4px solid var(--ok)}.r-av td:first-child{border-left:4px solid var(--av)}.r-at td:first-child{border-left:4px solid var(--at)}
+.r-at td:last-child{color:var(--at);font-weight:600}
+.tot td{font-weight:700}
+.bar{display:flex;gap:8px;margin-bottom:8px}.bar input{flex:1}
+summary{cursor:pointer;font-weight:600}
+</style>
 </head>
 <body>
+<main>
+<header>
+  <h1>Despesas Sandoval</h1>
+  <div><span id="upd" class="mut"></span> <button id="btnAtu">Atualizar</button> <button id="btnPin">Trocar PIN</button></div>
+</header>
+<p id="msg" class="mut"></p>
 
-    <header>
-        <div>
-            <h1>Dashboard de Despesas <span>— Sandoval</span></h1>
-            <p class="subtitle" id="status-text">Conectando à nuvem do Google...</p>
-        </div>
-        <div class="status-container">
-            <div style="font-size: 13px; display: flex; align-items: center;">
-                <span id="status-dot" class="status-dot red"></span>
-                <span id="status-label" style="color: var(--text-muted);">erro de conexão</span>
-            </div>
-            <button class="btn-update" onclick="carregarDados()">Atualizar agora</button>
-        </div>
-    </header>
+<details class="box" open id="filtros">
+  <summary>Filtros</summary>
+  <div class="fl" style="margin-top:8px">
+    <label>Ano<select id="fAno"></select></label>
+    <label>Mês<select id="fMes"></select></label>
+    <div id="fSit" class="seg"></div>
+    <button id="btnLimpar">Limpar filtros</button>
+  </div>
+  <div class="mut">Pessoa</div><div id="fPes" class="chips"></div>
+  <div class="mut">Forma de pagamento</div><div id="fForma" class="chips"></div>
+</details>
 
-    <section class="panel">
-        <div class="filters-grid">
-            <div class="filter-group"><label>Ano</label><select id="f-ano" onchange="aplicarFiltros()"><option value="Todos">Todos</option></select></div>
-            <div class="filter-group"><label>Mês</label><select id="f-mes" onchange="aplicarFiltros()"><option value="Todos">Todos</option></select></div>
-            <div class="filter-group"><label>Pessoa</label><select id="f-pessoa" onchange="aplicarFiltros()"><option value="Todas">Todas</option></select></div>
-            <div class="filter-group"><label>Cartão / Forma</label><select id="f-cartao" onchange="aplicarFiltros()"><option value="Todos">Todos</option></select></div>
-            <div class="filter-group"><label>Situação</label><select id="f-situacao" onchange="aplicarFiltros()"><option value="Todas">Todas</option></select></div>
-            <div class="filter-group" style="flex: 2;"><label>Buscar</label><input type="text" id="f-busca" placeholder="Descrição ou observação..." oninput="aplicarFiltros()"></div>
-            <div class="filter-group" style="flex: 0;"><button class="btn-update" onclick="limparFiltros()" style="height: 38px; white-space: nowrap;">Limpar filtros</button></div>
-        </div>
-    </section>
+<section id="cards" class="cards"></section>
 
-    <section>
-        <h2>Visão geral</h2>
-        <div class="dashboard-grid">
-            <div class="dash-card"><h3>Evolução por mês (competência)</h3><canvas id="chartEvolucao"></canvas></div>
-            <div class="dash-card"><h3>Gasto por pessoa</h3><canvas id="chartPessoa"></canvas></div>
-            <div class="dash-card"><h3>Por forma de pagamento</h3><canvas id="chartCartao"></canvas></div>
-            <div class="dash-card"><h3>Situação dos lançamentos</h3><canvas id="chartSituacao"></canvas></div>
-        </div>
-    </section>
+<div class="g2">
+  <section class="box"><h2>Por mês (todos os meses)</h2>
+    <p class="leg"><span class="v-ok">■</span> Pago &nbsp;<span class="v-av">■</span> A Vencer &nbsp;<span>■</span> Outra</p>
+    <div id="chMes"></div></section>
+  <section class="box"><h2>Resumo por pessoa</h2><div id="tbPes"></div></section>
+</div>
+<div class="g2">
+  <section class="box"><h2>Forma de pagamento</h2><div id="chForma"></div></section>
+  <section class="box"><h2>Top 10 por observação</h2><div id="chObs"></div></section>
+</div>
 
-    <section>
-        <h2>Lançamentos</h2>
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr><th>Data</th><th>Descrição</th><th>Pessoa</th><th>Valor</th><th>Parcela</th><th>Cartão</th><th>Competência</th><th>Situação</th></tr>
-                </thead>
-                <tbody id="tb-lancamentos">
-                    <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aguardando dados...</td></tr>
-                </tbody>
-            </table>
-            <div class="pagination">
-                <span class="page-info" id="page-info">Pág 1 de 1</span>
-                <button class="btn-update" onclick="mudarPagina(-1)">&lt; Anterior</button>
-                <button class="btn-update" onclick="mudarPagina(1)">Próxima &gt;</button>
-            </div>
-        </div>
-    </section>
+<section class="box">
+  <h2>Lançamentos</h2>
+  <div class="bar"><input id="busca" type="search" placeholder="Buscar descrição, pessoa, observação..."><button id="btnCsv">Exportar CSV</button></div>
+  <div class="sc"><table id="tb"></table></div>
+</section>
+<details class="box" id="qual"></details>
+</main>
 
-    <section>
-        <h2>Despesas fixas (mensais)</h2>
-        <p class="hint">Valores lidos direto da aba "Despesas_Fixas" da sua planilha.</p>
-        <div class="table-wrapper">
-            <table>
-                <thead id="head-fixas"></thead>
-                <tbody id="tb-fixas">
-                    <tr><td style="text-align: center; color: var(--text-muted);">Aguardando dados...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
+<script src="config.js"></script>
+<script>
+(()=>{
+const API=(window.CONFIG||{}).apiUrl, $=s=>document.querySelector(s);
+const R=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s==null?'':s).trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const p2=n=>String(n).padStart(2,'0');
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const hoje=new Date(), CA=hoje.getFullYear(), CM=hoje.getMonth()+1;
+let D=[], LP=[], LF=[], inicio=false;
+const F={ano:'',mes:'',pes:new Set(),forma:new Set(),sit:''};
+const S={col:'dt',dir:-1,q:''}; // padrão: data da compra, mais recente primeiro
+const sum=a=>a.reduce((s,r)=>s+r.v,0), so=(a,k)=>a.reduce((s,g)=>s+g[k],0), tot=g=>g.ok+g.av+g.ou;
+const COLS=[['dt','Data'],['descricao','Descrição'],['pes','Pessoa'],['v','Valor'],['parcela','Parcela'],['forma','Pagamento'],['obs','Observações'],['per','Mês/Ano'],['sit','Situação']];
 
-    <section>
-        <h2>Receitas & saldo</h2>
-        <p class="hint">Valores lidos direto da aba "Receitas" da sua planilha.</p>
-        <div class="table-wrapper">
-            <table>
-                <thead id="head-receitas"></thead>
-                <tbody id="tb-receitas">
-                    <tr><td style="text-align: center; color: var(--text-muted);">Aguardando dados...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
+// Data da compra: aceita data real (AAAA-MM-DD) ou texto (mm/dd/aaaa ou dd/mm/aaaa)
+function fmtData(s){
+  s=String(s||''); let m=s.match(/^(\d{4})-(\d\d)-(\d\d)$/);
+  if(m) return [m[3]+'/'+m[2]+'/'+m[1], m[1]+m[2]+m[3], false];
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m){const a=+m[1],b=+m[2],d=b>12?b:a,mo=b>12?a:b; return [p2(d)+'/'+p2(mo)+'/'+m[3], m[3]+p2(mo)+p2(d), true];}
+  return [s,'',!!s];
+}
+function prep(l){
+  const v=typeof l.valor==='number'?l.valor:(parseFloat(String(l.valor).replace(/\./g,'').replace(',','.'))||0);
+  const n=norm(l.situacao), sit=n==='ok'?'OK':n==='a vencer'?'A Vencer':'Outra';
+  const [dt,dk,txt]=fmtData(l.dataCompra), per=l.ano&&l.mes?l.ano*100+l.mes:0;
+  return {...l,v,sit,dt,dk,txt,per,pes:l.pessoa||'(sem pessoa)',forma:l.formaPagamento||'(sem forma)',
+    obs:String(l.observacoes||'').trim(), atr:sit==='A Vencer'&&per>0&&per<CA*100+CM};
+}
+// skip: 'mes' ignora o filtro de mês; 'periodo' ignora ano e mês
+function filtra(skip){
+  return D.filter(r=>(skip==='periodo'||((!F.ano||r.ano==F.ano)&&(skip==='mes'||!F.mes||r.mes==F.mes)))
+    &&(!F.pes.size||F.pes.has(r.pes))&&(!F.forma.size||F.forma.has(r.forma))&&(!F.sit||r.sit===F.sit));
+}
+function grupo(rows,key,lab){
+  const m=new Map();
+  rows.forEach(r=>{const k=key(r); let g=m.get(k); if(!g) m.set(k,g={k,l:lab?lab(r):k,ok:0,av:0,ou:0});
+    g[r.sit==='OK'?'ok':r.sit==='A Vencer'?'av':'ou']+=r.v;});
+  return [...m.values()];
+}
+function barras(sel,itens){
+  const mx=Math.max(1,...itens.map(tot)), w=x=>Math.max(0,x)/mx*100;
+  $(sel).innerHTML=itens.map(i=>`<div class="br"><span class="bl" title="${esc(i.l)}">${esc(i.l)}</span><span class="bt"><i class="ok" style="width:${w(i.ok)}%"></i><i class="av" style="width:${w(i.av)}%"></i><i class="ou" style="width:${w(i.ou)}%"></i></span><b>${R(tot(i))}</b></div>`).join('')||'<p class="mut">Sem dados</p>';
+}
+const mesAno=r=>r.per?p2(r.mes)+'/'+r.ano:'—';
+const status=r=>r.atr?'Atrasado':r.sit;
+function lista(){
+  const kk={dt:'dk'}[S.col]||S.col;
+  return filtra().filter(r=>!S.q||norm(r.descricao+' '+r.pes+' '+r.obs+' '+r.forma).includes(S.q))
+    .sort((a,b)=>{const x=a[kk],y=b[kk],c=typeof x==='number'?x-y:String(x).localeCompare(String(y),'pt-BR'); return (c||a.linha-b.linha)*S.dir;});
+}
 
-    <script>
-        // =====================================================================
-        // COLE O SEU LINK ABAIXO! OBRIGATÓRIO SER DE UMA *NOVA IMPLANTAÇÃO*
-        const URL_API = "https://script.google.com/macros/s/AKfycbzz8lM8Fwq6Jh29uGZyyvvILNXm1uf5zcF0GctdO0Y911tCrlygqgMZg2_8Z5xD336A/exec";
-        // =====================================================================
+function render(){
+  const L0=filtra(), T=sum(L0), P=sum(L0.filter(r=>r.sit==='OK')), A=sum(L0.filter(r=>r.sit==='A Vencer'));
+  const base=filtra('periodo'), atr=base.filter(r=>r.atr), prox=CM===12?(CA+1)*100+1:CA*100+CM+1;
+  const px=base.filter(r=>r.sit==='A Vencer'&&r.per===prox);
+  $('#cards').innerHTML=[['Total',R(T),''],['Pago (OK)',R(P),'v-ok'],['A Vencer',R(A),'v-av'],
+    ['% pago',T?(P/T*100).toFixed(1).replace('.',',')+'%':'—',''],['Lançamentos',L0.length,''],
+    ['Atrasados (todos os meses)',R(sum(atr))+' · '+atr.length,'v-at'],['A Vencer no mês seguinte',R(sum(px)),'']]
+    .map(c=>`<div class="card"><small>${c[0]}</small><b class="${c[2]}">${c[1]}</b></div>`).join('');
 
-        let dadosBrutos = [];
-        let dadosFiltrados = [];
-        let fixasBrutas = [];
-        let receitasBrutas = [];
-        let paginaAtual = 1;
-        const ITENS_POR_PAGINA = 15;
-        let cEvolucao, cPessoa, cCartao, cSituacao;
+  // filtros
+  const anos=[...new Set(D.map(r=>r.ano).filter(Boolean))].sort();
+  $('#fAno').innerHTML='<option value="">Todos</option>'+anos.map(a=>`<option ${F.ano==a?'selected':''}>${a}</option>`).join('');
+  $('#fMes').innerHTML='<option value="">Todos</option>'+MESES.map((m,i)=>`<option value="${i+1}" ${F.mes==i+1?'selected':''}>${m}</option>`).join('');
+  $('#fSit').innerHTML=[['','Todos'],['A Vencer','A Vencer'],['OK','OK (Pago)']].map(s=>`<button data-s="${s[0]}" class="${F.sit===s[0]?'on':''}">${s[1]}</button>`).join('');
+  const chips=(sel,key,vals,set)=>{$(sel).innerHTML=vals.map(v=>`<button data-k="${key}" data-v="${esc(v)}" class="${set.has(v)?'on':''}">${esc(v)}</button>`).join('');};
+  chips('#fPes','pes',LP,F.pes); chips('#fForma','forma',LF,F.forma);
 
-        const formatarMoeda = (valor) => {
-            let num = Number(valor) || 0;
-            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(num);
-        };
+  // gráficos
+  const meses=grupo(filtra('mes'),r=>r.per,r=>r.per?MESES[r.per%100-1].slice(0,3)+'/'+Math.floor(r.per/100):'Sem mês')
+    .sort((a,b)=>(a.k||9e9)-(b.k||9e9));
+  barras('#chMes',meses);
+  const gp=grupo(L0,r=>r.pes).sort((a,b)=>tot(b)-tot(a));
+  $('#tbPes').innerHTML=`<div class="sc"><table><tr><th>Pessoa</th><th>Pago</th><th>A Vencer</th><th>Total</th></tr>${gp.map(g=>`<tr><td>${esc(g.l)}</td><td class="n">${R(g.ok)}</td><td class="n">${R(g.av)}</td><td class="n">${R(tot(g))}</td></tr>`).join('')}<tr class="tot"><td>Total</td><td class="n">${R(P)}</td><td class="n">${R(A)}</td><td class="n">${R(T)}</td></tr></table></div>`;
+  barras('#chForma',grupo(L0,r=>r.forma).sort((a,b)=>tot(b)-tot(a)));
+  let go=grupo(L0,r=>norm(r.obs)||'-',r=>r.obs||'(sem observação)').sort((a,b)=>tot(b)-tot(a));
+  if(go.length>10){const rs=go.slice(10); go=go.slice(0,10); go.push({l:'Outros ('+rs.length+')',ok:so(rs,'ok'),av:so(rs,'av'),ou:so(rs,'ou')});}
+  barras('#chObs',go);
 
-        function formatarCelulaTabela(celula, indexColuna) {
-            if (indexColuna === 0) return `<td style="font-weight: 500;">${celula}</td>`;
-            if (celula === "" || celula === null || celula === undefined) return `<td style="text-align:center; color: var(--text-muted);">-</td>`;
-            
-            if (typeof celula === 'number') {
-                return `<td style="white-space: nowrap;">${formatarMoeda(celula)}</td>`;
-            }
-            if (typeof celula === 'string') {
-                let limpo = celula.replace(/R\$\s*/g, '').trim();
-                if (limpo.includes(',')) limpo = limpo.replace(/\./g, '').replace(',', '.');
-                let num = Number(limpo);
-                if (!isNaN(num) && limpo !== "") {
-                    return `<td style="white-space: nowrap;">${formatarMoeda(num)}</td>`;
-                }
-            }
-            return `<td>${celula}</td>`;
-        }
+  // tabela
+  const L=lista();
+  $('#tb').innerHTML=`<tr>${COLS.map(c=>`<th data-c="${c[0]}">${c[1]}${S.col===c[0]?(S.dir>0?' ▲':' ▼'):''}</th>`).join('')}</tr>`+
+    L.map(r=>`<tr class="${r.sit==='OK'?'r-ok':r.atr?'r-at':r.sit==='A Vencer'?'r-av':''}"><td>${esc(r.dt)}</td><td>${esc(r.descricao)}</td><td>${esc(r.pes)}</td><td class="n">${R(r.v)}</td><td>${esc(r.parcela)}</td><td>${esc(r.forma)}</td><td>${esc(r.obs)}</td><td>${mesAno(r)}</td><td>${status(r)}</td></tr>`).join('')+
+    `<tr class="tot"><td colspan="3">Total (${L.length} lançamentos)</td><td class="n">${R(sum(L))}</td><td colspan="5"></td></tr>`;
 
-        async function carregarDados() {
-            setLoading(true);
-            try {
-                const res = await fetch(URL_API + "?_=" + Date.now(), {cache: "no-store"});
-                const json = await res.json();
-                
-                if (json.erro) throw new Error(json.erro);
+  // qualidade dos dados (sempre sobre a planilha inteira)
+  const q=[['sem Mês/Ano',D.filter(r=>!r.per)],['sem forma de pagamento',D.filter(r=>r.forma==='(sem forma)')],
+    ['situação fora do padrão',D.filter(r=>r.sit==='Outra')],['data da compra em texto',D.filter(r=>r.txt)]].filter(x=>x[1].length);
+  $('#qual').innerHTML='<summary>Qualidade dos dados ('+q.reduce((s,x)=>s+x[1].length,0)+' avisos)</summary>'+
+    (q.length?'<ul>'+q.map(x=>`<li>${x[1].length} linha(s) ${x[0]} — ${R(sum(x[1]))}</li>`).join('')+'</ul>':'<p>Nenhum aviso.</p>')+
+    '<p class="mut">Só informa: nada é alterado na planilha. Linhas sem Mês/Ano só aparecem com Ano = Todos.</p>';
+}
 
-                dadosBrutos = json.registros || [];
-                fixasBrutas = json.dadosFixasBrutos || [];
-                receitasBrutas = json.dadosReceitasBrutos || [];
-                dadosFiltrados = [...dadosBrutos];
-                
-                preencherFiltros();
-                aplicarFiltros();
-                renderTabelaGenerica(fixasBrutas, 'head-fixas', 'tb-fixas');
-                renderTabelaGenerica(receitasBrutas, 'head-receitas', 'tb-receitas');
-                
-                setLoading(false, true, json.atualizadoEm);
-            } catch(e) {
-                console.error(e);
-                setLoading(false, false);
-            }
-        }
+function msg(t){$('#msg').textContent=t;}
+function aplicar(j){
+  D=j.linhas.map(prep);
+  LP=grupo(D,r=>r.pes).sort((a,b)=>tot(b)-tot(a)).map(g=>g.l);
+  LF=grupo(D,r=>r.forma).sort((a,b)=>tot(b)-tot(a)).map(g=>g.l);
+  const m=String(j.atualizadoEm||'').match(/^(\d{4})-(\d\d)-(\d\d)T(\d\d:\d\d)/);
+  $('#upd').textContent=m?'Atualizado em '+m[3]+'/'+m[2]+'/'+m[1]+' '+m[4]:'';
+  if(!inicio){inicio=true; // padrão: ano e mês atuais, se existirem nos dados
+    if(D.some(r=>r.ano===CA)){F.ano=String(CA); if(D.some(r=>r.ano===CA&&r.mes===CM)) F.mes=String(CM);}}
+  render();
+}
+async function carregar(){
+  let pin=localStorage.getItem('sd_pin');
+  if(!pin){pin=(prompt('PIN de acesso ao dashboard:')||'').trim(); if(!pin){msg('Informe o PIN para ver os dados.');return;}}
+  msg('Carregando...');
+  try{
+    const j=await(await fetch(API+'?action=dados&pin='+encodeURIComponent(pin))).json();
+    if(!j.ok){if(/negado/i.test(j.erro)) localStorage.removeItem('sd_pin'); throw new Error(j.erro);}
+    localStorage.setItem('sd_pin',pin);
+    try{localStorage.setItem('sd_cache',JSON.stringify(j));}catch(e){}
+    msg(''); aplicar(j);
+  }catch(e){msg('Não foi possível carregar a planilha: '+e.message+'. Toque em "Atualizar" para tentar de novo.');}
+}
 
-        function setLoading(isLoading, isSuccess = false, dataHora = null) {
-            const txt = document.getElementById('status-text');
-            const dot = document.getElementById('status-dot');
-            const lbl = document.getElementById('status-label');
+// eventos
+$('#fAno').onchange=e=>{F.ano=e.target.value;render();};
+$('#fMes').onchange=e=>{F.mes=e.target.value;render();};
+$('#filtros').onclick=e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.id==='btnLimpar'){F.ano=F.mes=F.sit='';F.pes.clear();F.forma.clear();}
+  else if(b.dataset.s!==undefined) F.sit=b.dataset.s;
+  else if(b.dataset.k){const s=F[b.dataset.k],v=b.dataset.v; s.has(v)?s.delete(v):s.add(v);}
+  render();
+};
+$('#busca').oninput=e=>{S.q=norm(e.target.value);render();};
+$('#tb').onclick=e=>{const th=e.target.closest('th'); if(!th) return; const c=th.dataset.c; S.dir=S.col===c?-S.dir:1; S.col=c; render();};
+$('#btnAtu').onclick=carregar;
+$('#btnPin').onclick=()=>{localStorage.removeItem('sd_pin');carregar();};
+$('#btnCsv').onclick=()=>{
+  const q=x=>'"'+String(x).replace(/"/g,'""')+'"';
+  const linhas=lista().map(r=>[r.dt,r.descricao,r.pes,String(r.v).replace('.',','),r.parcela,r.forma,r.obs,r.per?mesAno(r):'',status(r)].map(q).join(';'));
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\ufeff'+[COLS.map(c=>q(c[1])).join(';'),...linhas].join('\n')],{type:'text/csv'}));
+  a.download='despesas.csv'; a.click();
+};
 
-            if (isLoading) {
-                txt.textContent = "Lendo dados da planilha...";
-                dot.className = "status-dot red"; lbl.textContent = "conectando";
-            } else if (isSuccess) {
-                const dataFormatada = dataHora ? new Date(dataHora).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR');
-                txt.textContent = "Última atualização: " + dataFormatada;
-                dot.className = "status-dot green"; lbl.textContent = "conectado";
-            } else {
-                txt.textContent = "Falha ao ler os dados. Verifique se o link gerado foi de uma Nova Implantação.";
-                dot.className = "status-dot red"; lbl.textContent = "erro de conexão";
-            }
-        }
-
-        function preencherFiltros() {
-            const anos = [...new Set(dadosBrutos.map(r => r.ano).filter(Boolean))].sort((a,b)=>b-a);
-            const meses = [...new Set(dadosBrutos.map(r => r.mes).filter(Boolean))].sort((a,b)=>a-b);
-            const pessoas = [...new Set(dadosBrutos.map(r => r.categoria).filter(Boolean))].sort();
-            const cartoes = [...new Set(dadosBrutos.map(r => r.cartao).filter(Boolean))].sort();
-            const situacoes = [...new Set(dadosBrutos.map(r => r.situacao).filter(Boolean))].sort();
-
-            populateSelect('f-ano', anos); populateSelect('f-mes', meses); populateSelect('f-pessoa', pessoas);
-            populateSelect('f-cartao', cartoes); populateSelect('f-situacao', situacoes);
-        }
-
-        function populateSelect(id, array) {
-            const el = document.getElementById(id);
-            const valAtual = el.value;
-            el.innerHTML = '<option value="Todos">Todos</option>';
-            array.forEach(item => { el.innerHTML += `<option value="${item}">${item}</option>`; });
-            if(array.includes(valAtual) || array.includes(Number(valAtual))) el.value = valAtual;
-        }
-
-        function limparFiltros() {
-            document.getElementById('f-ano').value = "Todos"; document.getElementById('f-mes').value = "Todos";
-            document.getElementById('f-pessoa').value = "Todas"; document.getElementById('f-cartao').value = "Todos";
-            document.getElementById('f-situacao').value = "Todas"; document.getElementById('f-busca').value = "";
-            aplicarFiltros();
-        }
-
-        function aplicarFiltros() {
-            const fAno = document.getElementById('f-ano').value; const fMes = document.getElementById('f-mes').value;
-            const fPessoa = document.getElementById('f-pessoa').value; const fCartao = document.getElementById('f-cartao').value;
-            const fSituacao = document.getElementById('f-situacao').value; const fBusca = document.getElementById('f-busca').value.toLowerCase();
-
-            dadosFiltrados = dadosBrutos.filter(r => {
-                if (fAno !== "Todos" && String(r.ano) !== fAno) return false;
-                if (fMes !== "Todos" && String(r.mes) !== fMes) return false;
-                if (fPessoa !== "Todas" && r.categoria !== fPessoa) return false;
-                if (fCartao !== "Todos" && r.cartao !== fCartao) return false;
-                if (fSituacao !== "Todas" && r.situacao !== fSituacao) return false;
-                if (fBusca) {
-                    const desc = (r.descricao || "").toLowerCase(); const obs = (r.observacoes || "").toLowerCase();
-                    if (!desc.includes(fBusca) && !obs.includes(fBusca)) return false;
-                }
-                return true;
-            });
-
-            paginaAtual = 1;
-            renderizarTabela();
-            renderizarGraficos();
-        }
-
-        function renderizarTabela() {
-            const tbody = document.getElementById('tb-lancamentos');
-            const totalPaginas = Math.ceil(dadosFiltrados.length / ITENS_POR_PAGINA) || 1;
-            
-            document.getElementById('page-info').textContent = `Pág ${paginaAtual} de ${totalPaginas} (${dadosFiltrados.length} registros)`;
-
-            const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
-            const fim = inicio + ITENS_POR_PAGINA;
-            const itensPagina = dadosFiltrados.slice(inicio, fim);
-
-            if(itensPagina.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">Nenhum lançamento encontrado para os filtros atuais.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = itensPagina.map(r => {
-                const isOK = String(r.situacao).toUpperCase() === 'OK';
-                const corSit = isOK ? 'var(--success)' : 'var(--danger)';
-                const bgRow = isOK ? '' : 'background: rgba(239, 68, 68, 0.03);';
-                return `<tr style="${bgRow}">
-                    <td>${r.data || ''}</td><td style="font-weight: 500;">${r.descricao || ''}</td><td>${r.categoria || ''}</td>
-                    <td style="font-weight: 500; color: ${isOK ? 'var(--text-main)' : 'var(--danger)'};">${formatarMoeda(r.valor)}</td>
-                    <td>${r.parcela || ''}</td><td>${r.cartao || ''}</td><td>${r.mes || ''}/${r.ano || ''}</td>
-                    <td style="color: ${corSit}; font-weight: 500;">${r.situacao || ''}</td>
-                </tr>`}).join('');
-        }
-
-        function mudarPagina(direcao) {
-            const totalPaginas = Math.ceil(dadosFiltrados.length / ITENS_POR_PAGINA) || 1;
-            paginaAtual += direcao;
-            if(paginaAtual < 1) paginaAtual = 1; if(paginaAtual > totalPaginas) paginaAtual = totalPaginas;
-            renderizarTabela();
-        }
-
-        function renderTabelaGenerica(dados, idHead, idBody) {
-            const thead = document.getElementById(idHead);
-            const tbody = document.getElementById(idBody);
-            
-            if(!dados || dados.length <= 1) {
-                tbody.innerHTML = `<tr><td style="text-align: center; color: var(--text-muted); padding: 30px;">Aba não encontrada ou sem registros.</td></tr>`;
-                thead.innerHTML = ""; return;
-            }
-
-            const headers = dados[0];
-            thead.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
-
-            const linhas = dados.slice(1);
-            tbody.innerHTML = linhas.map(row => `<tr>${row.map((cel, index) => formatarCelulaTabela(cel, index)).join('')}</tr>`).join('');
-        }
-
-        Chart.defaults.color = '#9ca3af'; Chart.defaults.borderColor = '#2e3643'; Chart.defaults.font.family = "'Inter', sans-serif";
-        function agruparSoma(dados, chaveObj) {
-            const mapa = {};
-            dados.forEach(r => {
-                const k = typeof chaveObj === 'function' ? chaveObj(r) : r[chaveObj];
-                if(k) { mapa[k] = (mapa[k] || 0) + (Number(r.valor) || 0); }
-            });
-            return mapa;
-        }
-
-        function renderizarGraficos() {
-            const formatadorDica = { callbacks: { label: function(context) { return formatarMoeda(context.raw); } } };
-
-            const mapaEvolucao = agruparSoma(dadosFiltrados, r => `${String(r.mes).padStart(2,'0')}/${r.ano}`);
-            const evKeys = Object.keys(mapaEvolucao).sort(); const evVals = evKeys.map(k => mapaEvolucao[k]);
-
-            if(cEvolucao) cEvolucao.destroy();
-            cEvolucao = new Chart(document.getElementById('chartEvolucao'), {
-                type: 'line', data: { labels: evKeys, datasets: [{ label: 'Total', data: evVals, borderColor: '#fde047', backgroundColor: 'rgba(253, 224, 71, 0.1)', fill: true, tension: 0.3 }] },
-                options: { responsive: true, plugins: { legend: { display: false }, tooltip: formatadorDica } }
-            });
-
-            const mapaPessoa = agruparSoma(dadosFiltrados, 'categoria');
-            if(cPessoa) cPessoa.destroy();
-            cPessoa = new Chart(document.getElementById('chartPessoa'), {
-                type: 'bar', data: { labels: Object.keys(mapaPessoa), datasets: [{ data: Object.values(mapaPessoa), backgroundColor: '#3b82f6', borderRadius: 4 }] },
-                options: { responsive: true, plugins: { legend: { display: false }, tooltip: formatadorDica } }
-            });
-
-            const mapaCartao = agruparSoma(dadosFiltrados, 'cartao');
-            if(cCartao) cCartao.destroy();
-            cCartao = new Chart(document.getElementById('chartCartao'), {
-                type: 'doughnut', data: { labels: Object.keys(mapaCartao), datasets: [{ data: Object.values(mapaCartao), backgroundColor: ['#fde047','#ef4444','#22c55e','#3b82f6','#a855f7'], borderWidth: 0 }] },
-                options: { responsive: true, cutout: '75%', plugins: { legend: { position: 'right' }, tooltip: formatadorDica } }
-            });
-
-            const mapaSit = agruparSoma(dadosFiltrados, 'situacao');
-            if(cSituacao) cSituacao.destroy();
-            cSituacao = new Chart(document.getElementById('chartSituacao'), {
-                type: 'pie', data: { labels: Object.keys(mapaSit), datasets: [{ data: Object.values(mapaSit), backgroundColor: ['#22c55e', '#ef4444'], borderWidth: 0 }] },
-                options: { responsive: true, plugins: { legend: { position: 'right' }, tooltip: formatadorDica } }
-            });
-        }
-
-        carregarDados();
-    </script>
+try{const c=localStorage.getItem('sd_cache'); if(c) aplicar(JSON.parse(c));}catch(e){}
+carregar();
+})();
+</script>
 </body>
 </html>
