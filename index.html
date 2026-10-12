@@ -185,8 +185,8 @@ function aplicar(j){
   D=j.linhas.map(prep);
   LP=grupo(D,r=>r.pes).sort((a,b)=>tot(b)-tot(a)).map(g=>g.l);
   LF=grupo(D,r=>r.forma).sort((a,b)=>tot(b)-tot(a)).map(g=>g.l);
-  const m=String(j.atualizadoEm||'').match(/^(\d{4})-(\d\d)-(\d\d)T(\d\d:\d\d)/);
-  $('#upd').textContent=m?'Atualizado em '+m[3]+'/'+m[2]+'/'+m[1]+' '+m[4]:'';
+  const t=j.buscaEm?new Date(j.buscaEm):null; // horário do SEU aparelho no momento da busca
+  $('#upd').textContent=t?'Atualizado em '+p2(t.getDate())+'/'+p2(t.getMonth()+1)+'/'+t.getFullYear()+' '+p2(t.getHours())+':'+p2(t.getMinutes())+':'+p2(t.getSeconds()):'';
   if(!inicio){inicio=true; // padrão: ano e mês atuais, se existirem nos dados
     if(D.some(r=>r.ano===CA)){F.ano=String(CA); if(D.some(r=>r.ano===CA&&r.mes===CM)) F.mes=String(CM);}}
   render();
@@ -196,8 +196,9 @@ async function carregar(){
   if(!pin){pin=(prompt('PIN de acesso ao dashboard:')||'').trim(); if(!pin){msg('Informe o PIN para ver os dados.');return;}}
   msg('Carregando...');
   try{
-    const j=await(await fetch(API+'?action=dados&pin='+encodeURIComponent(pin))).json();
+    const j=await(await fetch(API+'?action=dados&pin='+encodeURIComponent(pin)+'&_='+Date.now(),{cache:'no-store'})).json();
     if(!j.ok){if(/negado/i.test(j.erro)) localStorage.removeItem('sd_pin'); throw new Error(j.erro);}
+    j.buscaEm=Date.now();
     localStorage.setItem('sd_pin',pin);
     try{localStorage.setItem('sd_cache',JSON.stringify(j));}catch(e){}
     msg(''); aplicar(j);
