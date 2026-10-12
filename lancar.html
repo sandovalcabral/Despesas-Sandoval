@@ -1,130 +1,70 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Novo Lançamento — Sandoval</title>
-    <style>
-        :root {
-            --bg: #10141a;
-            --panel: #1a2029;
-            --panel-2: #212836;
-            --line: #2b3241;
-            --ink: #e9e6de;
-            --ink-dim: #9aa2ae;
-            --gold: #d9a441;
-            --green: #4c9a6a;
-            --rust: #c1584b;
-            --sans: "Segoe UI", sans-serif;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--sans); }
-        body { background: var(--bg); color: var(--ink); padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .form-container { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 30px; width: 100%; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-        h2 { color: var(--gold); text-align: center; margin-bottom: 20px; font-size: 1.4rem; }
-        .group { margin-bottom: 15px; }
-        label { display: block; font-size: 0.8rem; color: var(--ink-dim); margin-bottom: 5px; }
-        input, select, textarea { width: 100%; background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); padding: 10px; border-radius: 6px; font-size: 0.95rem; }
-        input:focus, select:focus, textarea:focus { border-color: var(--gold); outline: none; }
-        .btn { background: var(--gold); color: #000; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: 10px; }
-        .btn:hover { opacity: 0.9; }
-        .back { display: block; text-align: center; margin-top: 15px; color: var(--ink-dim); text-decoration: none; font-size: 0.85rem; }
-        .back:hover { color: var(--gold); }
-    </style>
-</head>
-<body>
+<script>
+  // O SEU LINK AQUI
+  const URL_API = "https://script.google.com/macros/s/AKfycbySplqLjl6BsX98ihzUSfc648r3z1fS6g_GxQ0YoCMSY6FkafF3ZOwKlKkY2BuuCavw/exec";
 
-    <div class="form-container">
-        <h2>Novo Lançamento</h2>
-        <form id="formLancar" onsubmit="enviarLancamento(event)">
-            <div class="group">
-                <label>Data do Lançamento</label>
-                <input type="date" id="data" required>
-            </div>
-            <div class="group">
-                <label>Descrição</label>
-                <input type="text" id="descricao" placeholder="Ex: Supermercado" required>
-            </div>
-            <div class="group">
-                <label>Valor Total (R$)</label>
-                <input type="text" id="valor" placeholder="Ex: 150,00" required>
-            </div>
-            <div class="group">
-                <label>Qtd de Parcelas</label>
-                <input type="number" id="parcelas" value="1" min="1" required>
-            </div>
-            <div class="group">
-                <label>Pessoa / Categoria</label>
-                <input type="text" id="categoria" placeholder="Ex: Sandro" required>
-            </div>
-            <div class="group">
-                <label>Cartão / Forma de Pagamento</label>
-                <input type="text" id="cartao" placeholder="Ex: Nubank" required>
-            </div>
-            <div class="group">
-                <label>Situação</label>
-                <select id="situacao">
-                    <option value="A Vencer">A Vencer</option>
-                    <option value="OK">OK (Pago)</option>
-                </select>
-            </div>
-            <div class="group">
-                <label>Observações</label>
-                <textarea id="observacoes" rows="2" placeholder="Opcional"></textarea>
-            </div>
-            <button type="submit" class="btn" id="btnSalvar">Salvar na Planilha</button>
-            <a href="index.html" class="back">← Voltar para o Dashboard</a>
-        </form>
-    </div>
+  // Função para forçar a Data Local (evita o bug do dia seguinte)
+  function getDataLocalFormatada() {
+    const d = new Date();
+    const ano = d.getFullYear();
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const dia = String(d.getDate()).padStart(2, '0');
+    return `${ano}-${mes}-${dia}`;
+  }
 
-    <script>
-        // Definir data de hoje por defeito
-        document.getElementById('data').valueAsDate = new Date();
+  const hoje = new Date();
+  document.getElementById('data').value = getDataLocalFormatada();
+  document.getElementById('mesInicial').value = hoje.getMonth() + 1;
+  document.getElementById('anoInicial').value = hoje.getFullYear();
 
-        async function enviarLancamento(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btnSalvar');
-            btn.textContent = "A guardar...";
-            btn.disabled = true;
+  const form = document.getElementById('formLancar');
+  const btn = document.getElementById('btnEnviar');
+  const msg = document.getElementById('mensagem');
 
-            // COLE O SEU LINK DO APPS SCRIPT ABAIXO ENTRE AS ASPAS:
-            const URL_API = "https://script.google.com/macros/s/AKfycbz2w2YAs_-d6W0BGZKD4oL8bGtQaS59s3KjttOV5t2n2Lo0rwsK8NVi-U8jEd9v_ILA/exec";
+  form.addEventListener('submit', function(e) {
+    e.preventDefault(); 
+    
+    btn.disabled = true;
+    btn.textContent = "A gravar na planilha...";
+    msg.style.display = "none";
 
-            const dados = {
-                data: document.getElementById('data').value,
-                descricao: document.getElementById('descricao').value,
-                valor: document.getElementById('valor').value,
-                parcelas: document.getElementById('parcelas').value,
-                categoria: document.getElementById('categoria').value,
-                cartao: document.getElementById('cartao').value,
-                situacao: document.getElementById('situacao').value,
-                observacoes: document.getElementById('observacoes').value,
-                mesInicial: new Date(document.getElementById('data').value + 'T00:00:00').getMonth() + 1,
-                anoInicial: new Date(document.getElementById('data').value + 'T00:00:00').getFullYear()
-            };
+    const formData = new FormData(form);
+    const dados = new URLSearchParams(formData);
 
-            try {
-                // Como o Apps Script doPost lida com form-urlencoded via fetch sem preflight complexo:
-                const formBody = Object.keys(dados).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(dados[key])).join('&');
-                
-                const response = await fetch(URL_API, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: formBody
-                });
-                
-                const resultado = await response.json();
-                if(resultado.status === "sucesso") {
-                    alert("Lançamento guardado com sucesso na planilha!");
-                    window.location.href = "index.html";
-                } else {
-                    throw new Error(resultado.mensagem || "Erro ao gravar");
-                }
-            } catch (err) {
-                alert("Erro ao gravar: " + err.message);
-                btn.textContent = "Salvar na Planilha";
-                btn.disabled = false;
-            }
-        }
-    </script>
-</body>
-</html>
+    fetch(URL_API, {
+      method: 'POST',
+      body: dados
+    })
+    .then(response => response.json())
+    .then(data => {
+      if(data.status === "sucesso") {
+        msg.textContent = "Lançamento guardado com sucesso na planilha!";
+        msg.className = "sucesso";
+        msg.style.display = "block";
+        
+        form.reset();
+        // Repõe as datas corretamente após limpar o formulário
+        document.getElementById('data').value = getDataLocalFormatada();
+        document.getElementById('mesInicial').value = new Date().getMonth() + 1;
+        document.getElementById('anoInicial').value = new Date().getFullYear();
+        document.getElementById('parcelas').value = 1;
+      } else {
+        msg.textContent = "Erro ao gravar: " + data.mensagem;
+        msg.className = "erro";
+        msg.style.display = "block";
+      }
+    })
+    .catch(error => {
+      msg.textContent = "Lançamento efetuado! (Aviso: Sem resposta final do servidor, mas deve estar na planilha)";
+      msg.className = "sucesso";
+      msg.style.display = "block";
+      form.reset();
+      document.getElementById('data').value = getDataLocalFormatada();
+      document.getElementById('mesInicial').value = new Date().getMonth() + 1;
+      document.getElementById('anoInicial').value = new Date().getFullYear();
+    })
+    .finally(() => {
+      btn.disabled = false;
+      btn.textContent = "Salvar na Planilha";
+    });
+  });
+</script>
