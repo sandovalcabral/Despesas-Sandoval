@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Despesas — Sandoval</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Importação de fontes elegantes baseadas no layout original -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -25,7 +24,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-sans); }
         body { background-color: var(--bg); color: var(--text-main); padding: 30px; font-size: 13px; }
         
-        /* Cabeçalho */
         header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 35px; border-bottom: 1px solid var(--line); padding-bottom: 20px; }
         h1 { font-family: var(--font-serif); font-size: 32px; font-weight: 500; margin-bottom: 5px; color: #fff; }
         h1 span { color: var(--text-muted); font-family: var(--font-serif); }
@@ -38,24 +36,20 @@
         .btn-update { background: var(--panel-2); color: var(--text-main); border: 1px solid var(--line); padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: 0.2s; font-family: var(--font-sans); }
         .btn-update:hover { background: #2d3748; }
 
-        /* Seções e Títulos */
         section { margin-bottom: 45px; }
         h2 { font-family: var(--font-serif); font-size: 20px; color: #fff; margin-bottom: 15px; font-weight: 500; letter-spacing: 0.5px;}
         .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 25px; }
 
-        /* Filtros */
         .filters-grid { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; }
         .filter-group { flex: 1; min-width: 140px; }
         .filter-group label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 8px; text-transform: capitalize; }
         select, input { width: 100%; background: var(--panel-2); color: var(--text-main); border: 1px solid var(--line); padding: 10px 12px; border-radius: 4px; font-size: 13px; outline: none; transition: 0.2s; }
         select:focus, input:focus { border-color: var(--gold); }
 
-        /* Visão Geral (Gráficos) */
         .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .dash-card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 20px; min-height: 220px; display: flex; flex-direction: column; }
         .dash-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 20px; color: #fff; }
         
-        /* Tabelas e Paginação */
         .table-wrapper { overflow-x: auto; background: var(--panel); border-radius: 6px; border: 1px solid var(--line); }
         table { width: 100%; border-collapse: collapse; text-align: left; }
         th { padding: 15px; font-size: 11px; font-weight: 500; color: var(--text-muted); border-bottom: 1px solid var(--line); white-space: nowrap; }
@@ -154,7 +148,7 @@
     <script>
         // =====================================================================
         // COLE O SEU LINK ABAIXO! OBRIGATÓRIO SER DE UMA *NOVA IMPLANTAÇÃO*
-        const URL_API = "https://script.google.com/macros/s/AKfycbxtZuoOnOdzlUeXiLwxcV7fG4VI7S6VbjAw6SPXEmH7AlBeqenarVHdAHQI8p3B5BSv/exec";
+        const URL_API = "COLE_O_SEU_LINK_DO_APPS_SCRIPT_AQUI";
         // =====================================================================
 
         let dadosBrutos = [];
@@ -196,13 +190,7 @@
                 
                 if (json.erro) throw new Error(json.erro);
 
-                dadosBrutos = (json.registros || []).map(r => {
-                    let v = r.valor;
-                    if (typeof v === 'string') v = parseFloat(v.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
-                    r.valor = Number(v) || 0;
-                    return r;
-                });
-
+                dadosBrutos = json.registros || [];
                 fixasBrutas = json.dadosFixasBrutos || [];
                 receitasBrutas = json.dadosReceitasBrutos || [];
                 dadosFiltrados = [...dadosBrutos];
@@ -336,7 +324,6 @@
             tbody.innerHTML = linhas.map(row => `<tr>${row.map((cel, index) => formatarCelulaTabela(cel, index)).join('')}</tr>`).join('');
         }
 
-        // Gráficos
         Chart.defaults.color = '#9ca3af'; Chart.defaults.borderColor = '#2e3643'; Chart.defaults.font.family = "'Inter', sans-serif";
         function agruparSoma(dados, chaveObj) {
             const mapa = {};
