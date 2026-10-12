@@ -7,289 +7,445 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg: #10141a;
-            --panel: #1a2029;
-            --panel-2: #212836;
-            --line: #2b3241;
-            --ink: #e9e6de;
-            --ink-dim: #9aa2ae;
-            --gold: #d9a441;
-            --green: #4c9a6a;
-            --rust: #c1584b;
-            --sans: "Segoe UI", sans-serif;
+            --bg: #11151c;
+            --panel: #1b222c;
+            --panel-2: #242c38;
+            --line: #2e3746;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --gold: #fde047;
+            --gold-dim: #ca8a04;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --font: 'Segoe UI', system-ui, sans-serif;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--sans); }
-        body { background: var(--bg); color: var(--ink); padding: 24px; }
-        header { margin-bottom: 24px; border-bottom: 1px solid var(--line); padding-bottom: 16px; display: flex; justify-content: space-between; align-items: center;}
-        h1 { font-size: 1.6rem; color: var(--gold); margin-bottom: 5px; }
-        .status { font-size: 0.85rem; padding: 6px 12px; border-radius: 6px; background: var(--panel-2); color: var(--ink-dim); font-weight: 600; }
-        .status.online { background: rgba(76, 154, 106, 0.2); color: var(--green); border: 1px solid rgba(76, 154, 106, 0.4); }
-        .status.offline { background: rgba(193, 88, 75, 0.2); color: var(--rust); border: 1px solid rgba(193, 88, 75, 0.4); }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
+        body { background-color: var(--bg); color: var(--text-main); padding: 20px; font-size: 14px; }
         
-        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 24px; }
-        .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; }
-        .summary-card h4 { font-size: 0.8rem; color: var(--ink-dim); text-transform: uppercase; margin-bottom: 8px; font-weight: 600;}
-        .summary-card .value { font-size: 1.5rem; font-weight: bold; color: var(--gold); }
+        /* Header */
+        header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 1px solid var(--line); padding-bottom: 20px; }
+        h1 { font-size: 28px; font-weight: 500; }
+        h1 span { color: var(--text-muted); }
+        .subtitle { color: var(--text-muted); font-size: 13px; margin-top: 5px; }
+        .status-container { display: flex; align-items: center; gap: 15px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-dot.red { background-color: var(--danger); box-shadow: 0 0 8px var(--danger); }
+        .status-dot.green { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
+        .btn-update { background: var(--panel-2); color: var(--text-main); border: 1px solid var(--line); padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: 0.2s; }
+        .btn-update:hover { background: #2d3748; }
 
-        .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; background: var(--panel); padding: 18px; border-radius: 10px; margin-bottom: 24px; border: 1px solid var(--line); }
-        .filter-group label { display: block; font-size: 0.75rem; color: var(--ink-dim); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; }
-        .filter-group select { width: 100%; background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); padding: 10px; border-radius: 6px; font-size: 0.9rem; outline: none;}
-        .filter-group select:focus { border-color: var(--gold); }
+        /* Sections */
+        section { margin-bottom: 40px; }
+        h2 { font-size: 18px; color: var(--gold); margin-bottom: 15px; font-weight: 500; }
+        .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 20px; }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-bottom: 24px; }
-        .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
-        .card h3 { font-size: 1.05rem; color: var(--gold); margin-bottom: 15px; }
+        /* Filters */
+        .filters-grid { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; }
+        .filter-group { flex: 1; min-width: 140px; }
+        .filter-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+        select, input { width: 100%; background: var(--panel-2); color: var(--text-main); border: 1px solid var(--line); padding: 9px 12px; border-radius: 4px; font-size: 13px; outline: none; }
+        select:focus, input:focus { border-color: var(--text-muted); }
 
-        .table-container { background: var(--panel); border-radius: 10px; padding: 20px; border: 1px solid var(--line); overflow-x: auto;}
-        .table-container h3 { font-size: 1.05rem; color: var(--gold); margin-bottom: 15px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--line); }
-        th { color: var(--ink-dim); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; }
-        tr:hover { background: rgba(255,255,255,0.03); }
+        /* Dashboard Grid (Visão Geral) */
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .dash-card { background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 15px; min-height: 200px; display: flex; flex-direction: column; }
+        .dash-card h3 { font-size: 14px; font-weight: 500; margin-bottom: 15px; color: var(--text-main); }
+        
+        /* Tables */
+        .table-wrapper { overflow-x: auto; background: var(--panel-2); border-radius: 6px; border: 1px solid var(--line); }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 12px 15px; font-size: 12px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--line); }
+        td { padding: 12px 15px; border-bottom: 1px solid var(--line); font-size: 13px; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: rgba(255,255,255,0.02); }
+        
+        .pagination { display: flex; justify-content: flex-end; gap: 10px; padding: 15px; background: var(--panel-2); border-top: 1px solid var(--line); }
+        .page-info { align-self: center; font-size: 12px; color: var(--text-muted); margin-right: 10px; }
+
+        .hint { font-size: 13px; color: var(--text-muted); margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
     <header>
         <div>
-            <h1>Dashboard de Despesas — Sandoval</h1>
-            <p id="sub-status" style="font-size: 0.85rem; color: var(--ink-dim);">A iniciar ligação...</p>
+            <h1>Dashboard de Despesas <span>— Sandoval</span></h1>
+            <p class="subtitle" id="status-text">A ligar à nuvem do Google...</p>
         </div>
-        <span id="server-status" class="status">A verificar...</span>
+        <div class="status-container">
+            <div style="font-size: 13px; display: flex; align-items: center;">
+                <span id="status-dot" class="status-dot red"></span>
+                <span id="status-label" style="color: var(--text-muted);">erro de ligação</span>
+            </div>
+            <button class="btn-update" onclick="carregarDados()">Atualizar agora</button>
+            <!-- Botão para voltar à tela de Lançamentos -->
+            <a href="lancar.html" class="btn-update" style="text-decoration: none; background: var(--gold-dim); color: #fff; border: none;">+ Lançar</a>
+        </div>
     </header>
 
-    <div class="summary-grid">
-        <div class="summary-card">
-            <h4>Total Filtrado</h4>
-            <div class="value" id="total-filtrado">R$ 0,00</div>
+    <!-- Filtros -->
+    <section class="panel">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label>Ano</label>
+                <select id="f-ano" onchange="aplicarFiltros()"><option value="Todos">Todos</option></select>
+            </div>
+            <div class="filter-group">
+                <label>Mês</label>
+                <select id="f-mes" onchange="aplicarFiltros()"><option value="Todos">Todos</option></select>
+            </div>
+            <div class="filter-group">
+                <label>Pessoa</label>
+                <select id="f-pessoa" onchange="aplicarFiltros()"><option value="Todas">Todas</option></select>
+            </div>
+            <div class="filter-group">
+                <label>Cartão / Forma</label>
+                <select id="f-cartao" onchange="aplicarFiltros()"><option value="Todos">Todos</option></select>
+            </div>
+            <div class="filter-group">
+                <label>Situação</label>
+                <select id="f-situacao" onchange="aplicarFiltros()"><option value="Todas">Todas</option></select>
+            </div>
+            <div class="filter-group" style="flex: 2;">
+                <label>Buscar</label>
+                <input type="text" id="f-busca" placeholder="Descrição ou observação..." oninput="aplicarFiltros()">
+            </div>
+            <div class="filter-group" style="flex: 0;">
+                <button class="btn-update" onclick="limparFiltros()" style="height: 38px; white-space: nowrap;">Limpar filtros</button>
+            </div>
         </div>
-        <div class="summary-card">
-            <h4>Total Pago (OK)</h4>
-            <div class="value" id="total-pago" style="color: var(--green);">R$ 0,00</div>
-        </div>
-        <div class="summary-card">
-            <h4>Total A Vencer</h4>
-            <div class="value" id="total-avencer" style="color: var(--rust);">R$ 0,00</div>
-        </div>
-        <div class="summary-card">
-            <h4>Qtd. Registos</h4>
-            <div class="value" id="total-qtd" style="color: var(--ink);">0</div>
-        </div>
-    </div>
+    </section>
 
-    <div class="filters">
-        <div class="filter-group">
-            <label>Ano</label>
-            <select id="filtro-ano" onchange="atualizarDashboard()"><option value="Todos">Todos</option></select>
+    <!-- Visão Geral -->
+    <section>
+        <h2>Visão geral</h2>
+        <div class="dashboard-grid">
+            <div class="dash-card">
+                <h3>Evolução por mês (competência)</h3>
+                <canvas id="chartEvolucao"></canvas>
+            </div>
+            <div class="dash-card">
+                <h3>Gasto por pessoa</h3>
+                <canvas id="chartPessoa"></canvas>
+            </div>
+            <div class="dash-card">
+                <h3>Por forma de pagamento</h3>
+                <canvas id="chartCartao"></canvas>
+            </div>
+            <div class="dash-card">
+                <h3>Situação dos lançamentos</h3>
+                <canvas id="chartSituacao"></canvas>
+            </div>
         </div>
-        <div class="filter-group">
-            <label>Mês</label>
-            <select id="filtro-mes" onchange="atualizarDashboard()">
-                <option value="Todos">Todos</option>
-                <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
-                <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
-                <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
-                <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label>Pessoa</label>
-            <select id="filtro-pessoa" onchange="atualizarDashboard()"><option value="Todas">Todas</option></select>
-        </div>
-        <div class="filter-group">
-            <label>Cartão / Forma</label>
-            <select id="filtro-cartao" onchange="atualizarDashboard()"><option value="Todos">Todos</option></select>
-        </div>
-        <div class="filter-group">
-            <label>Situação</label>
-            <select id="filtro-situacao" onchange="atualizarDashboard()"><option value="Todas">Todas</option></select>
-        </div>
-    </div>
+    </section>
 
-    <div class="grid">
-        <div class="card">
-            <h3>Evolução de Despesas por Mês</h3>
-            <canvas id="chartEvolucao" height="150"></canvas>
+    <!-- Lançamentos -->
+    <section>
+        <h2>Lançamentos</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Descrição</th>
+                        <th>Pessoa</th>
+                        <th>Valor</th>
+                        <th>Parcela</th>
+                        <th>Cartão</th>
+                        <th>Competência</th>
+                        <th>Situação</th>
+                    </tr>
+                </thead>
+                <tbody id="tb-lancamentos">
+                    <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Aguardando dados...</td></tr>
+                </tbody>
+            </table>
+            <div class="pagination">
+                <span class="page-info" id="page-info">Pág 1 de 1</span>
+                <button class="btn-update" onclick="mudarPagina(-1)">&lt; Anterior</button>
+                <button class="btn-update" onclick="mudarPagina(1)">Próxima &gt;</button>
+            </div>
         </div>
-        <div class="card">
-            <h3>Gastos por Pessoa / Categoria</h3>
-            <canvas id="chartPessoa" height="150"></canvas>
-        </div>
-    </div>
+    </section>
 
-    <div class="table-container">
-        <h3>Lançamentos</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Descrição</th>
-                    <th>Pessoa</th>
-                    <th>Valor</th>
-                    <th>Parcela</th>
-                    <th>Cartão</th>
-                    <th>Situação</th>
-                </tr>
-            </thead>
-            <tbody id="tabela-registros">
-                <tr><td colspan="7" style="text-align: center; color: var(--ink-dim);">A carregar registos...</td></tr>
-            </tbody>
-        </table>
-    </div>
+    <!-- Despesas Fixas -->
+    <section>
+        <h2>Despesas fixas (mensais)</h2>
+        <div class="panel">
+            <p class="hint">Valores lidos direto da aba "Despesas_Fixas" da sua planilha.</p>
+            <div class="table-wrapper">
+                <table>
+                    <thead id="head-fixas"></thead>
+                    <tbody id="tb-fixas">
+                        <tr><td style="text-align: center; color: var(--text-muted);">Aguardando dados...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Receitas & Saldo -->
+    <section>
+        <h2>Receitas & saldo</h2>
+        <div class="panel">
+            <p class="hint">Valores lidos direto da aba "Receitas" da sua planilha.</p>
+            <div class="table-wrapper">
+                <table>
+                    <thead id="head-receitas"></thead>
+                    <tbody id="tb-receitas">
+                        <tr><td style="text-align: center; color: var(--text-muted);">Aguardando dados...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 
     <script>
-        let dadosGlobais = [];
-        let chartEvolucaoObj = null;
-        let chartPessoaObj = null;
+        // ESTA É A VARIÁVEL MAIS IMPORTANTE! COLOQUE O SEU LINK AQUI
+        const URL_API = "https://script.google.com/macros/s/AKfycbzZW2jr8htPtWonE23znOCIOD984FDoB_H8FZ2pKGvCTDBfaEelLPXCrT6sYnLehPof/exec";
+
+        let dadosBrutos = [];
+        let dadosFiltrados = [];
+        let fixasBrutas = [];
+        let receitasBrutas = [];
+        
+        let paginaAtual = 1;
+        const ITENS_POR_PAGINA = 15;
+
+        // Gráficos instâncias
+        let cEvolucao, cPessoa, cCartao, cSituacao;
 
         async function carregarDados() {
-            const statusEl = document.getElementById("server-status");
-            const subStatusEl = document.getElementById("sub-status");
-            
+            setLoading(true);
             try {
-                // =============== ATENÇÃO: COLOQUE O SEU LINK AQUI ===============
-                const URL_API = "https://script.google.com/macros/s/AKfycbzZW2jr8htPtWonE23znOCIOD984FDoB_H8FZ2pKGvCTDBfaEelLPXCrT6sYnLehPof/exec"; 
-                // ================================================================
-                
-                const resp = await fetch(URL_API + "?_=" + Date.now(), {cache: "no-store"});
-                const json = await resp.json();
+                const res = await fetch(URL_API + "?_=" + Date.now(), {cache: "no-store"});
+                const json = await res.json();
                 
                 if (json.erro) throw new Error(json.erro);
 
-                dadosGlobais = json.registros || [];
-                statusEl.textContent = "Servidor Online";
-                statusEl.className = "status online";
-                subStatusEl.textContent = "Atualizado em: " + new Date(json.atualizadoEm).toLocaleString();
-
-                popularFiltros();
-                atualizarDashboard();
-            } catch (err) {
-                console.error(err);
-                statusEl.textContent = "Servidor Indisponível";
-                statusEl.className = "status offline";
-                subStatusEl.textContent = ("Verifique se colou o link do Apps Script corretamente.");
+                dadosBrutos = json.registros || [];
+                fixasBrutas = json.dadosFixasBrutos || [];
+                receitasBrutas = json.dadosReceitasBrutos || [];
+                
+                dadosFiltrados = [...dadosBrutos];
+                
+                preencherFiltros();
+                aplicarFiltros();
+                renderizarFixasEReceitas();
+                setLoading(false, true, json.atualizadoEm);
+                
+            } catch(e) {
+                console.error(e);
+                setLoading(false, false);
             }
         }
 
-        function popularFiltros() {
-            const anos = [...new Set(dadosGlobais.map(r => r.ano).filter(Boolean))].sort();
-            const pessoas = [...new Set(dadosGlobais.map(r => r.categoria).filter(Boolean))].sort();
-            const cartoes = [...new Set(dadosGlobais.map(r => r.cartao).filter(Boolean))].sort();
-            const situacoes = [...new Set(dadosGlobais.map(r => r.situacao).filter(Boolean))].sort();
+        function setLoading(isLoading, isSuccess = false, dataHora = null) {
+            const txt = document.getElementById('status-text');
+            const dot = document.getElementById('status-dot');
+            const lbl = document.getElementById('status-label');
 
-            preencherSelect("filtro-ano", anos);
-            preencherSelect("filtro-pessoa", pessoas);
-            preencherSelect("filtro-cartao", cartoes);
-            preencherSelect("filtro-situacao", situacoes);
+            if (isLoading) {
+                txt.textContent = "A ler dados da planilha...";
+                dot.className = "status-dot red";
+                lbl.textContent = "a carregar";
+            } else if (isSuccess) {
+                const dataFormatada = dataHora ? new Date(dataHora).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR');
+                txt.textContent = "Última atualização: " + dataFormatada;
+                dot.className = "status-dot green";
+                lbl.textContent = "ligado";
+            } else {
+                txt.textContent = "Falha ao ler os dados. Verifique o link do Apps Script.";
+                dot.className = "status-dot red";
+                lbl.textContent = "erro de ligação";
+            }
         }
 
-        function preencherSelect(id, valores) {
+        function preencherFiltros() {
+            const anos = [...new Set(dadosBrutos.map(r => r.ano).filter(Boolean))].sort((a,b)=>b-a);
+            const meses = [...new Set(dadosBrutos.map(r => r.mes).filter(Boolean))].sort((a,b)=>a-b);
+            const pessoas = [...new Set(dadosBrutos.map(r => r.categoria).filter(Boolean))].sort();
+            const cartoes = [...new Set(dadosBrutos.map(r => r.cartao).filter(Boolean))].sort();
+            const situacoes = [...new Set(dadosBrutos.map(r => r.situacao).filter(Boolean))].sort();
+
+            populateSelect('f-ano', anos);
+            populateSelect('f-mes', meses);
+            populateSelect('f-pessoa', pessoas);
+            populateSelect('f-cartao', cartoes);
+            populateSelect('f-situacao', situacoes);
+        }
+
+        function populateSelect(id, array) {
             const el = document.getElementById(id);
-            const atual = el.value;
-            const primeiroOpt = el.options[0].text;
-            el.innerHTML = `<option value="Todos">${primeiroOpt}</option>`;
-            valores.forEach(v => { el.innerHTML += `<option value="${v}">${v}</option>`; });
-            el.value = atual;
+            const valAtual = el.value;
+            el.innerHTML = '<option value="Todos">Todos</option>';
+            array.forEach(item => {
+                el.innerHTML += `<option value="${item}">${item}</option>`;
+            });
+            if(array.includes(valAtual) || array.includes(Number(valAtual))) el.value = valAtual;
         }
 
-        function atualizarDashboard() {
-            const fAno = document.getElementById("filtro-ano").value;
-            const fMes = document.getElementById("filtro-mes").value;
-            const fPessoa = document.getElementById("filtro-pessoa").value;
-            const fCartao = document.getElementById("filtro-cartao").value;
-            const fSituacao = document.getElementById("filtro-situacao").value;
+        function limparFiltros() {
+            document.getElementById('f-ano').value = "Todos";
+            document.getElementById('f-mes').value = "Todos";
+            document.getElementById('f-pessoa').value = "Todas";
+            document.getElementById('f-cartao').value = "Todos";
+            document.getElementById('f-situacao').value = "Todas";
+            document.getElementById('f-busca').value = "";
+            aplicarFiltros();
+        }
 
-            const filtrados = dadosGlobais.filter(r => {
+        function aplicarFiltros() {
+            const fAno = document.getElementById('f-ano').value;
+            const fMes = document.getElementById('f-mes').value;
+            const fPessoa = document.getElementById('f-pessoa').value;
+            const fCartao = document.getElementById('f-cartao').value;
+            const fSituacao = document.getElementById('f-situacao').value;
+            const fBusca = document.getElementById('f-busca').value.toLowerCase();
+
+            dadosFiltrados = dadosBrutos.filter(r => {
                 if (fAno !== "Todos" && String(r.ano) !== fAno) return false;
                 if (fMes !== "Todos" && String(r.mes) !== fMes) return false;
                 if (fPessoa !== "Todas" && r.categoria !== fPessoa) return false;
                 if (fCartao !== "Todos" && r.cartao !== fCartao) return false;
                 if (fSituacao !== "Todas" && r.situacao !== fSituacao) return false;
+                
+                if (fBusca) {
+                    const desc = (r.descricao || "").toLowerCase();
+                    const obs = (r.observacoes || "").toLowerCase();
+                    if (!desc.includes(fBusca) && !obs.includes(fBusca)) return false;
+                }
                 return true;
             });
 
-            let somaTotal = 0, somaPago = 0, somaVencer = 0;
-            filtrados.forEach(r => {
-                const val = Number(r.valor) || 0;
-                somaTotal += val;
-                if (String(r.situacao).toUpperCase() === "OK") somaPago += val;
-                else somaVencer += val;
-            });
-
-            document.getElementById("total-filtrado").textContent = "R$ " + somaTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-            document.getElementById("total-pago").textContent = "R$ " + somaPago.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-            document.getElementById("total-avencer").textContent = "R$ " + somaVencer.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-            document.getElementById("total-qtd").textContent = filtrados.length;
-
-            atualizarTabela(filtrados);
-            atualizarGraficos(filtrados);
+            paginaAtual = 1;
+            renderizarTabela();
+            renderizarGraficos();
         }
 
-        function atualizarTabela(registros) {
-            const tbody = document.getElementById("tabela-registros");
-            if (registros.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--ink-dim);">Nenhum registo encontrado.</td></tr>`;
+        function renderizarTabela() {
+            const tbody = document.getElementById('tb-lancamentos');
+            const totalPaginas = Math.ceil(dadosFiltrados.length / ITENS_POR_PAGINA) || 1;
+            
+            document.getElementById('page-info').textContent = `Pág ${paginaAtual} de ${totalPaginas} (${dadosFiltrados.length} registos)`;
+
+            const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
+            const fim = inicio + ITENS_POR_PAGINA;
+            const itensPagina = dadosFiltrados.slice(inicio, fim);
+
+            if(itensPagina.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Nenhum lançamento encontrado.</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = registros.slice(0, 150).map(r => `
+            tbody.innerHTML = itensPagina.map(r => {
+                const corSit = String(r.situacao).toUpperCase() === 'OK' ? 'var(--success)' : 'var(--danger)';
+                return `
                 <tr>
                     <td>${r.data || ''}</td>
                     <td>${r.descricao || ''}</td>
                     <td>${r.categoria || ''}</td>
-                    <td style="font-weight:600; color:var(--ink);">R$ ${(Number(r.valor) || 0).toFixed(2)}</td>
+                    <td style="font-weight: 500;">R$ ${(Number(r.valor)||0).toFixed(2)}</td>
                     <td>${r.parcela || ''}</td>
                     <td>${r.cartao || ''}</td>
-                    <td><span style="color: ${String(r.situacao).toUpperCase() === 'OK' ? 'var(--green)' : 'var(--rust)'}; font-weight: 600;">${r.situacao || ''}</span></td>
+                    <td>${r.mes || ''}/${r.ano || ''}</td>
+                    <td style="color: ${corSit}; font-weight: 500;">${r.situacao || ''}</td>
                 </tr>
+            `}).join('');
+        }
+
+        function mudarPagina(direcao) {
+            const totalPaginas = Math.ceil(dadosFiltrados.length / ITENS_POR_PAGINA) || 1;
+            paginaAtual += direcao;
+            if(paginaAtual < 1) paginaAtual = 1;
+            if(paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+            renderizarTabela();
+        }
+
+        function renderTabelaGenerica(dados, idHead, idBody) {
+            const thead = document.getElementById(idHead);
+            const tbody = document.getElementById(idBody);
+            
+            if(!dados || dados.length <= 1) {
+                tbody.innerHTML = `<tr><td style="text-align: center; color: var(--text-muted);">Nenhum dado encontrado na aba.</td></tr>`;
+                thead.innerHTML = "";
+                return;
+            }
+
+            // Cabecalho (linha 0)
+            const headers = dados[0];
+            thead.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
+
+            // Linhas
+            const linhas = dados.slice(1);
+            tbody.innerHTML = linhas.map(row => `
+                <tr>${row.map(cel => `<td>${cel}</td>`).join('')}</tr>
             `).join('');
         }
 
-        function atualizarGraficos(registros) {
-            const ctxEvolucao = document.getElementById("chartEvolucao").getContext("2d");
-            const ctxPessoa = document.getElementById("chartPessoa").getContext("2d");
+        function renderizarFixasEReceitas() {
+            renderTabelaGenerica(fixasBrutas, 'head-fixas', 'tb-fixas');
+            renderTabelaGenerica(receitasBrutas, 'head-receitas', 'tb-receitas');
+        }
 
-            if (chartEvolucaoObj) chartEvolucaoObj.destroy();
-            if (chartPessoaObj) chartPessoaObj.destroy();
+        // --- Gráficos ---
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.borderColor = '#2e3746';
 
-            const mesesNomes = ["", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-            let porMes = {};
-            registros.forEach(r => {
-                let m = r.mes || 1;
-                porMes[m] = (porMes[m] || 0) + (Number(r.valor) || 0);
+        function agruparSoma(dados, chaveObj) {
+            const mapa = {};
+            dados.forEach(r => {
+                const k = typeof chaveObj === 'function' ? chaveObj(r) : r[chaveObj];
+                if(k) { mapa[k] = (mapa[k] || 0) + (Number(r.valor) || 0); }
             });
-            const mesesKeys = Object.keys(porMes).sort((a,b) => a - b);
-            const dataEvolucao = mesesKeys.map(m => porMes[m]);
-            const labelsEvolucao = mesesKeys.map(m => mesesNomes[m] || m);
+            return mapa;
+        }
 
-            chartEvolucaoObj = new Chart(ctxEvolucao, {
+        function renderizarGraficos() {
+            // Evolução
+            const mapaEvolucao = agruparSoma(dadosFiltrados, r => `${String(r.mes).padStart(2,'0')}/${r.ano}`);
+            const evKeys = Object.keys(mapaEvolucao).sort();
+            const evVals = evKeys.map(k => mapaEvolucao[k]);
+
+            if(cEvolucao) cEvolucao.destroy();
+            cEvolucao = new Chart(document.getElementById('chartEvolucao'), {
+                type: 'line',
+                data: { labels: evKeys, datasets: [{ label: 'R$', data: evVals, borderColor: '#fde047', backgroundColor: 'rgba(253, 224, 71, 0.1)', fill: true, tension: 0.3 }] },
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+
+            // Pessoa
+            const mapaPessoa = agruparSoma(dadosFiltrados, 'categoria');
+            if(cPessoa) cPessoa.destroy();
+            cPessoa = new Chart(document.getElementById('chartPessoa'), {
                 type: 'bar',
-                data: {
-                    labels: labelsEvolucao.length ? labelsEvolucao : ['Sem dados'],
-                    datasets: [{ label: 'Valor (R$)', data: dataEvolucao.length ? dataEvolucao : [0], backgroundColor: '#d9a441', borderRadius: 4 }]
-                },
-                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#9aa2ae' }, grid: { color: '#2b3241' } }, x: { ticks: { color: '#9aa2ae' }, grid: { display: false } } } }
+                data: { labels: Object.keys(mapaPessoa), datasets: [{ data: Object.values(mapaPessoa), backgroundColor: '#3b82f6' }] },
+                options: { responsive: true, plugins: { legend: { display: false } } }
             });
 
-            let porPessoa = {};
-            registros.forEach(r => {
-                let p = r.categoria || 'Outros';
-                porPessoa[p] = (porPessoa[p] || 0) + (Number(r.valor) || 0);
-            });
-            const pessoasKeys = Object.keys(porPessoa);
-            const pessoasData = pessoasKeys.map(p => porPessoa[p]);
-
-            chartPessoaObj = new Chart(ctxPessoa, {
+            // Cartão
+            const mapaCartao = agruparSoma(dadosFiltrados, 'cartao');
+            if(cCartao) cCartao.destroy();
+            cCartao = new Chart(document.getElementById('chartCartao'), {
                 type: 'doughnut',
-                data: {
-                    labels: pessoasKeys.length ? pessoasKeys : ['Sem dados'],
-                    datasets: [{ data: pessoasData.length ? pessoasData : [1], backgroundColor: ['#d9a441', '#4c9a6a', '#c1584b', '#3b82f6', '#8b5cf6', '#ec4899'], borderWidth: 0 }]
-                },
-                options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#e9e6de', padding: 20 } } }, cutout: '70%' }
+                data: { labels: Object.keys(mapaCartao), datasets: [{ data: Object.values(mapaCartao), backgroundColor: ['#fde047','#ef4444','#22c55e','#3b82f6','#a855f7'], borderWidth: 0 }] },
+                options: { responsive: true, cutout: '70%', plugins: { legend: { position: 'right' } } }
+            });
+
+            // Situação
+            const mapaSit = agruparSoma(dadosFiltrados, 'situacao');
+            if(cSituacao) cSituacao.destroy();
+            cSituacao = new Chart(document.getElementById('chartSituacao'), {
+                type: 'pie',
+                data: { labels: Object.keys(mapaSit), datasets: [{ data: Object.values(mapaSit), backgroundColor: ['#22c55e', '#ef4444'], borderWidth: 0 }] },
+                options: { responsive: true, plugins: { legend: { position: 'right' } } }
             });
         }
 
+        // Iniciar
         carregarDados();
+
     </script>
 </body>
 </html>
