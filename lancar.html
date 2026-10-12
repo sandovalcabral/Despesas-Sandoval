@@ -57,8 +57,7 @@
 <div class="card">
   <h2>Novo Lançamento</h2>
   
-  <!-- O segredo: o form nativo aponta para o iframe escondido, burlando o CORS -->
-  <form id="formLancar" method="POST" action="https://script.google.com/macros/s/AKfycbyLf5aVSvCvKkw-fxL7dMtzQqxFVAAX98ltmanLAAyw9RcV0MM_UneqotZZn_OKjLkE/exec">
+  <form id="formLancar" method="POST" action="COLE_AQUI_O_SEU_NOVO_LINK_DO_APPS_SCRIPT" target="iframe_invisivel">
     <div class="campo">
       <label for="data">Data do Lançamento</label>
       <input type="date" id="data" name="data" required>
@@ -113,9 +112,8 @@
       <div class="campo">
         <label for="situacao">Situação</label>
         <select id="situacao" name="situacao">
+          <option value="A Vencer" selected>A Vencer</option>
           <option value="OK">OK (Pago)</option>
-          <option value="A Vencer">A Vencer</option>
-          <option value="A Vencer">A vencer</option>
         </select>
       </div>
       <div class="campo">
@@ -129,14 +127,12 @@
 
   <div id="mensagem"></div>
   
-  <!-- O Iframe invisível que recebe a resposta do Google -->
-  <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" onload="if(submitted){ finalizarEnvio(); }"></iframe>
+  <iframe name="iframe_invisivel" id="iframe_invisivel" style="display:none;" onload="if(submitted){ finalizarEnvio(); }"></iframe>
 
   <a href="index.html" class="voltar">← Voltar para o Dashboard</a>
 </div>
 
 <script>
-  // Inicialização de datas
   const hoje = new Date();
   document.getElementById('data').valueAsDate = hoje;
   document.getElementById('mesInicial').value = hoje.getMonth() + 1;
@@ -159,7 +155,6 @@
     msg.className = "sucesso";
     msg.style.display = "block";
     
-    // Limpar e repor o formulário
     form.reset();
     document.getElementById('data').valueAsDate = new Date();
     document.getElementById('mesInicial').value = new Date().getMonth() + 1;
