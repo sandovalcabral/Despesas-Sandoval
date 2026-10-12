@@ -64,6 +64,10 @@
             <label>Mês</label>
             <select id="filtro-mes" onchange="atualizarDashboard()">
                 <option value="Todos">Todos</option>
+                <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+                <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+                <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+                <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
             </select>
         </div>
         <div class="filter-group">
@@ -100,7 +104,6 @@
     <div class="table-container">
         <div class="actions">
             <h3>Lançamentos</h3>
-            <button class="btn" onclick="exportarExcel()" style="background: var(--green); color: #fff;">Exportar Despesas (.xlsx)</button>
         </div>
         <table>
             <thead>
@@ -131,7 +134,7 @@
             
             try {
                 // COLE O SEU LINK DO APPS SCRIPT ABAIXO ENTRE AS ASPAS:
-                const URL_API = "https://script.google.com/macros/s/AKfycbzMq698Iwc4CrxD4YFut6CHvIeB1SB7bVRvA1GlHEMhlz5o6uH8ioP-97KJf-MqdcWe/exec"; 
+                const URL_API = "COLE_O_SEU_LINK_DO_APPS_SCRIPT_AQUI"; 
                 
                 const resp = await fetch(URL_API + "?_=" + Date.now(), {cache: "no-store"});
                 const json = await resp.json();
@@ -186,9 +189,9 @@
             const filtrados = dadosGlobais.filter(r => {
                 if (fAno !== "Todos" && String(r.ano) !== fAno) return false;
                 if (fMes !== "Todos" && String(r.mes) !== fMes) return false;
-                if (fPessoa !== "Todos" && r.categoria !== fPessoa) return false;
+                if (fPessoa !== "Todas" && r.categoria !== fPessoa) return false;
                 if (fCartao !== "Todos" && r.cartao !== fCartao) return false;
-                if (fSituacao !== "Todos" && r.situacao !== fSituacao) return false;
+                if (fSituacao !== "Todas" && r.situacao !== fSituacao) return false;
                 return true;
             });
 
@@ -217,7 +220,6 @@
         }
 
         function atualizarGraficos(registros) {
-            // Simplificação para manter o painel leve e responsivo
             const ctxEvolucao = document.getElementById("chartEvolucao").getContext("2d");
             const ctxPessoa = document.getElementById("chartPessoa").getContext("2d");
 
@@ -241,10 +243,6 @@
                 },
                 options: { responsive: true }
             });
-        }
-
-        function exportarExcel() {
-            alert("Funcionalidade de exportação pronta.");
         }
 
         carregarDados();
