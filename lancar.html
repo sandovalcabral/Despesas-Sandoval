@@ -48,7 +48,6 @@
     margin-top: 14px; padding: 10px; border-radius: 6px; font-size: 13px; text-align: center; display: none;
   }
   .sucesso { background: rgba(76,154,106,0.2); color: #8fd6ab; border: 1px solid var(--green); }
-  .erro { background: rgba(193,88,75,0.2); color: #e58d83; border: 1px solid var(--rust); }
   .voltar { display:block; text-align:center; margin-top:16px; color:var(--ink-dim); font-size:13px; text-decoration:none; }
   .voltar:hover{ color:var(--gold); }
 </style>
@@ -58,7 +57,7 @@
 <div class="card">
   <h2>Novo Lançamento</h2>
   
-  <form id="formLancar">
+  <form id="formLancar" method="POST" action="https://script.google.com/macros/s/AKfycbw4CH94zCUQqOrkFUMlmXe4LE5udubu8u4VbPSTj_RFr6w2z2VgvW6RqlnZsptaBH7Q/exec" target="iframe_invisivel">
     <div class="campo">
       <label for="data">Data do Lançamento</label>
       <input type="date" id="data" name="data" required>
@@ -127,71 +126,56 @@
   </form>
 
   <div id="mensagem"></div>
+  
+  <iframe name="iframe_invisivel" id="iframe_invisivel" style="display:none;" onload="if(submitted){ finalizarEnvio(); }"></iframe>
 
   <a href="index.html" class="voltar">← Voltar para o Dashboard</a>
 </div>
 
 <script>
-  // O SEU LINK AQUI
-  const URL_API = "https://script.google.com/macros/s/AKfycbw4CH94zCUQqOrkFUMlmXe4LE5udubu8u4VbPSTj_RFr6w2z2VgvW6RqlnZsptaBH7Q/exec";
+  // Função para forçar a Data Local e evitar o fuso horário (bug do dia seguinte)
+  function getDataLocalFormatada() {
+    const d = new Date();
+    const ano = d.getFullYear();
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const dia = String(d.getDate()).padStart(2, '0');
+    return `${ano}-${mes}-${dia}`;
+  }
 
   const hoje = new Date();
-  document.getElementById('data').valueAsDate = hoje;
+  document.getElementById('data').value = getDataLocalFormatada();
   document.getElementById('mesInicial').value = hoje.getMonth() + 1;
   document.getElementById('anoInicial').value = hoje.getFullYear();
 
+  let submitted = false;
   const form = document.getElementById('formLancar');
   const btn = document.getElementById('btnEnviar');
   const msg = document.getElementById('mensagem');
 
-  form.addEventListener('submit', function(e) {
-    e.preventDefault(); // Impede o ecrã de recarregar
-    
+  form.addEventListener('submit', () => {
+    submitted = true;
     btn.disabled = true;
     btn.textContent = "A gravar na planilha...";
     msg.style.display = "none";
-
-    // Criar um formulário invisível de dados
-    const formData = new FormData(form);
-    const dados = new URLSearchParams(formData);
-
-    fetch(URL_API, {
-      method: 'POST',
-      body: dados
-    })
-    .then(response => response.json())
-    .then(data => {
-      if(data.status === "sucesso") {
-        msg.textContent = "Lançamento guardado com sucesso na planilha!";
-        msg.className = "sucesso";
-        msg.style.display = "block";
-        
-        form.reset();
-        document.getElementById('data').valueAsDate = new Date();
-        document.getElementById('mesInicial').value = new Date().getMonth() + 1;
-        document.getElementById('anoInicial').value = new Date().getFullYear();
-        document.getElementById('parcelas').value = 1;
-      } else {
-        msg.textContent = "Erro ao gravar: " + data.mensagem;
-        msg.className = "erro";
-        msg.style.display = "block";
-      }
-    })
-    .catch(error => {
-      // Mesmo com erro de rede, vamos validar se gravou
-      msg.textContent = "Lançamento efetuado! (Aviso: Sem resposta final do servidor, mas deve estar na planilha)";
-      msg.className = "sucesso";
-      msg.style.display = "block";
-      form.reset();
-      document.getElementById('data').valueAsDate = new Date();
-      document.getElementById('mesInicial').value = new Date().getMonth() + 1;
-      document.getElementById('anoInicial').value = new Date().getFullYear();
-    })
-    .finally(() => {
-      btn.disabled = false;
-      btn.textContent = "Salvar na Planilha";
-    });
   });
+
+  function finalizarEnvio() {
+    msg.textContent = "Lançamento guardado com sucesso na planilha!";
+    msg.className = "sucesso";
+    msg.style.display = "block";
+    
+    form.reset();
+    
+    // Repõe os valores padronizados após o reset
+    document.getElementById('data').value = getDataLocalFormatada();
+    document.getElementById('mesInicial').value = new Date().getMonth() + 1;
+    document.getElementById('anoInicial').value = new Date().getFullYear();
+    document.getElementById('parcelas').value = 1;
+    
+    btn.disabled = false;
+    btn.textContent = "Salvar na Planilha";
+    submitted = false;
+  }
 </script>
 
 </body>
