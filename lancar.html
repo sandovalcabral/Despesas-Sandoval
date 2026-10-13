@@ -66,7 +66,7 @@ const J=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){retur
 const hj=new Date(),CA=hj.getFullYear(),CM=hj.getMonth()+1;
 let pin=localStorage.getItem('sd_pin_l')||'',fila=J('sd_fila',[]),L=J('sd_listas',null),dados=J('sd_pagar',[]),syncing=false;
 
-function toast(m,e){const t=$('#toast');t.textContent=m;t.className=e?'e':'';t.style.display='block';clearTimeout(t.h);t.h=setTimeout(()=>t.style.display='none',3500);}
+function toast(m,e,fixo){const t=$('#toast');t.textContent=m;t.className=e?'e':'';t.style.display='block';clearTimeout(t.h);if(!fixo)t.h=setTimeout(()=>t.style.display='none',3500);}
 function pedePin(){const p=(prompt('PIN de lançamento:')||'').trim();if(p){pin=p;localStorage.setItem('sd_pin_l',p);return true;}return false;}
 function negado(j){if(j&&/negado/i.test(j.erro||'')){pin='';localStorage.removeItem('sd_pin_l');toast('PIN incorreto. Tente de novo.',1);return true;}return false;}
 async function post(b){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({...b,pin})});return r.json();}
@@ -75,7 +75,7 @@ const opt=(a,t)=>(t?'<option value="">'+t+'</option>':'')+(a||[]).map(x=>`<optio
 
 function preencher(){
   if(!L)return; const ps=$('#ps').value,fp=$('#fp').value,fpp=$('#fpp').value;
-  $('#ps').innerHTML=opt(L.pessoas);$('#fp').innerHTML=opt(L.formasPagamento);$('#fpp').innerHTML=opt(L.pessoas,'Todas');
+  $('#ps').innerHTML=opt(L.pessoas,'Selecione...');$('#fp').innerHTML=opt(L.formasPagamento,'Selecione...');$('#fpp').innerHTML=opt(L.pessoas,'Todas');
   $('#sg').innerHTML=(L.sugestoesObservacoes||[]).map(x=>`<option value="${esc(x)}">`).join('');
   if(ps)$('#ps').value=ps;if(fp)$('#fp').value=fp;if(fpp)$('#fpp').value=fpp;
 }
@@ -98,25 +98,34 @@ function salvar(){
     valorTotal:v,parcelas:n,mes:m,ano:a,situacao:$('#st').value,observacoes:$('#ob').value.trim()};
   if(!d.descricao||!(v>0)||!d.dataCompra||!a||!d.pessoa||!d.formaPagamento||n<1||n>24)return toast('Preencha data, descrição, pessoa, forma, valor e mês.',1);
   fila.push(d);W('sd_fila',fila);
-  $('#ds').value='';$('#vl').value='';$('#ob').value='';$('#np').value=1;prev();desenhaFila();sync(true);
+  $('#ds').value='';$('#vl').value='';$('#ob').value='';$('#np').value=1;$('#ps').value='';$('#fp').value='';prev();desenhaFila();sync(true);
 }
 async function sync(aviso){
-  if(syncing||!fila.some(x=>!x.erro))return; if(!pin&&!pedePin())return;
-  syncing=true;let ok=0,neg=false,lin='';
-  for(const d of [...fila]){
-    if(d.erro)continue;
+  if(syncing)return; const itens=fila.filter(x=>!x.erro); if(!itens.length)return;
+  if(!navigator.onLine){if(aviso)toast('Sem internet: salvo no aparelho. O envio é automático quando voltar.',1);return;}
+  if(!pin&&!pedePin())return;
+  syncing=true;let ok=0,neg=false,fail=false,lin='',av='';
+  for(const d of itens){
+    d.env=true;desenhaFila();toast('Enviando para a planilha...',0,1);
     try{const j=await post({action:'adicionar',...d});
-      if(j.ok){fila=fila.filter(x=>x.clientId!==d.clientId);ok++;if(j.primeiraLinha)lin=j.primeiraLinha+(j.ultimaLinha>j.primeiraLinha?'–'+j.ultimaLinha:'');}
-      else if(negado(j)){neg=true;break;} else d.erro=j.erro||'Erro ao gravar';
-    }catch(e){break;}
+      if(j.ok){fila=fila.filter(x=>x.clientId!==d.clientId);ok++;if(j.aviso)av=j.aviso;
+        if(j.primeiraLinha)lin=j.primeiraLinha+(j.ultimaLinha>j.primeiraLinha?'–'+j.ultimaLinha:'');}
+      else if(negado(j)){neg=true;break;}
+      else d.erro=j.erro||'Erro ao gravar';
+    }catch(e){fail=true;break;}
   }
-  W('sd_fila',fila);syncing=false;desenhaFila();
-  if(ok)toast(ok+' lançamento(s) gravado(s) na planilha ✓'+(lin?' (linha '+lin+')':''));
-  else if(aviso&&!neg&&fila.some(x=>!x.erro))toast('Sem conexão: salvo no aparelho. O envio é automático depois.',1);
+  fila.forEach(x=>delete x.env);W('sd_fila',fila);syncing=false;desenhaFila();
+  if(neg)return;
+  if(av)toast(av,1);
+  else if(fail)toast((ok?ok+' gravado(s); ':'')+'sem conexão com a planilha: o restante ficou em Pendentes.',1);
+  else if(ok)toast(ok+' lançamento(s) gravado(s) na planilha ✓'+(lin?' (linha '+lin+')':''));
+  else if(fila.some(x=>x.erro))toast('Erro ao gravar: veja em Pendentes.',1);
+  else $('#toast').style.display='none';
 }
 function desenhaFila(){
-  $('#nf').textContent=fila.length;
-  $('#lf').innerHTML=fila.map(d=>`<div class="it"><div><b>${esc(d.descricao)}</b><br><span class="mut">${esc(d.pessoa)} · ${d.parcelas}x · ${p2(d.mes)}/${d.ano}</span>${d.erro?`<br><span class="err">${esc(d.erro)}</span>`:''}</div><div class="r">${R(d.valorTotal!=null?d.valorTotal:d.valor*d.parcelas)}<br><button data-x="${d.clientId}">Excluir</button></div></div>`).join('')||'<p class="mut">Nada pendente.</p>';
+  const pend=fila.filter(x=>!x.env),env=fila.length-pend.length;
+  $('#nf').textContent=pend.length;
+  $('#lf').innerHTML=(env?`<p class="mut">Enviando ${env} lançamento(s)...</p>`:'')+pend.map(d=>`<div class="it"><div><b>${esc(d.descricao)}</b><br><span class="mut">${esc(d.pessoa)} · ${d.parcelas}x · ${p2(d.mes)}/${d.ano}</span>${d.erro?`<br><span class="err">${esc(d.erro)}</span>`:'<br><span class="mut">Aguardando conexão</span>'}</div><div class="r">${R(d.valorTotal!=null?d.valorTotal:d.valor*d.parcelas)}<br><button data-x="${d.clientId}">Excluir</button></div></div>`).join('')||'<p class="mut">Nada pendente.</p>';
 }
 async function carregaPagar(){
   $('#tp').textContent='Carregando...';
@@ -146,7 +155,7 @@ document.querySelector('.tabs').onclick=e=>{const b=e.target.closest('button');i
   ['novo','pagar','fila'].forEach(t=>$('#'+t).hidden=t!==b.dataset.t);
   if(b.dataset.t==='pagar'){desenhaPagar();carregaPagar();}};
 ['#vl','#np','#mm'].forEach(s=>$(s).oninput=prev);
-$('#salvar').onclick=salvar;$('#envia').onclick=()=>{fila.forEach(d=>delete d.erro);sync(true);};
+$('#salvar').onclick=salvar;$('#envia').onclick=()=>{if(!fila.length)return toast('Nada pendente.');fila.forEach(d=>delete d.erro);sync(true);};
 $('#lf').onclick=e=>{const b=e.target.closest('button[data-x]');if(!b)return;fila=fila.filter(x=>x.clientId!==b.dataset.x);W('sd_fila',fila);desenhaFila();};
 $('#lp').onclick=e=>{const b=e.target.closest('button[data-l]');if(b)pagar(b);};
 $('#fpp').onchange=desenhaPagar;$('#fut').onchange=desenhaPagar;$('#rec').onclick=carregaPagar;
