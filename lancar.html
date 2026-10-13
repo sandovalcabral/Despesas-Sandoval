@@ -104,7 +104,7 @@ async function sync(aviso){
     try{const j=await post({action:'adicionar',...d});
       if(j.ok){fila=fila.filter(x=>x.clientId!==d.clientId);ok++;if(j.aviso)av=j.aviso;
         if(j.primeiraLinha)lin=j.primeiraLinha+(j.ultimaLinha>j.primeiraLinha?'–'+j.ultimaLinha:'');}
-      else if(/nao foi confirmada/i.test(j.erro||'')){fila=fila.filter(x=>x.clientId!==d.clientId);ok++;av='Gravado, mas a conferência do servidor falhou: veja a última linha da planilha.';}
+      else if(/nao foi confirmada|formato de n.mero.*coluna com tipo/i.test(j.erro||'')){fila=fila.filter(x=>x.clientId!==d.clientId);ok++;av='Provavelmente gravado: confira a última linha da planilha antes de lançar de novo.';}
       else if(negado(j)){neg=true;break;}
       else d.erro=j.erro||'Erro ao gravar';
     }catch(e){fail=true;break;}
