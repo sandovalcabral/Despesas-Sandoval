@@ -21,7 +21,7 @@ button{cursor:pointer}
 .fl label{display:grid;gap:2px;font-size:13px;color:var(--mut)}
 .seg{display:flex;gap:4px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:8px}
 .cards .card{margin:0}.card small{color:var(--mut);display:block}.card b{font-size:18px}
 .g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:10px}
 .br{display:grid;grid-template-columns:84px 1fr 96px;gap:6px;align-items:center;margin:5px 0;font-size:13px}
@@ -44,7 +44,9 @@ summary{cursor:pointer;font-weight:600}
 h1,h2,.card b{font-family:Georgia,'Times New Roman',serif;font-weight:400}
 h1{font-size:30px;margin:0}.sub{color:var(--mut);font-size:13px}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:6px}
-.card b{font-size:26px}.card.main b{color:#e0a64a;font-size:34px}
+.card{min-width:0}.card b{display:block;font-size:clamp(17px,4.8vw,22px)}
+.card.main{grid-column:1/-1}.card.main b{color:#e0a64a;font-size:clamp(26px,9vw,34px)}
+@media(min-width:600px){.card.main{grid-column:span 2}.card b{font-size:22px}.card.main b{font-size:34px}}
 .fl label{min-width:130px}.fl select,.fl input{width:100%}
 .hl{background:rgba(224,166,74,.16)}.nota{font-size:13px;color:var(--mut);margin:8px 0}
 </style>
@@ -117,7 +119,9 @@ function prep(l){
   const v=typeof l.valor==='number'?l.valor:(parseFloat(String(l.valor).replace(/\./g,'').replace(',','.'))||0);
   const n=norm(l.situacao), sit=n==='ok'?'OK':n==='a vencer'?'A Vencer':'Outra';
   const [dt,dk,txt]=fmtData(l.dataCompra), per=l.ano&&l.mes?l.ano*100+l.mes:0;
-  return {...l,v,sit,dt,dk,txt,per,pes:l.pessoa||'(sem pessoa)',forma:l.formaPagamento||'(sem forma)',
+  let pc=String(l.parcela==null?'':l.parcela); const pm=pc.match(/^\w{3} (\w{3}) (\d\d) \d{4}/);
+  if(pm){const mi=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].indexOf(pm[1]); if(mi>=0) pc=(+pm[2])+'/'+(mi+1);}
+  return {...l,parcela:pc,v,sit,dt,dk,txt,per,pes:l.pessoa||'(sem pessoa)',forma:l.formaPagamento||'(sem forma)',
     obs:String(l.observacoes||'').trim(), atr:sit==='A Vencer'&&per>0&&per<CA*100+CM};
 }
 // skip: 'mes' ignora o filtro de mês; 'periodo' ignora ano e mês
@@ -187,13 +191,13 @@ function render(){
     '<p class="mut">Só informa: nada é alterado na planilha. Linhas sem Mês/Ano só aparecem com Ano = Todos.</p>';
 }
 
-let FX=null,RM=CM,RA=CA;
+let FX=null,FXERR='',RM=CM,RA=CA;
 const MC=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], cel=v=>v?R(v):'—';
 function renderFx(){
   const f=FX&&FX.fixas, i=RM-1;
   $('#rMes').innerHTML=MESES.map((m,k)=>`<option value="${k+1}" ${RM===k+1?'selected':''}>${m}</option>`).join('');
   $('#rAno').innerHTML=[...new Set([...D.map(r=>r.ano),CA,f&&f.ano].filter(Boolean))].sort().map(a=>`<option ${RA===a?'selected':''}>${a}</option>`).join('');
-  if(!f){$('#secFx').innerHTML='<p class="mut">Sem dados. Publique a nova versão do Apps Script para exibir as despesas fixas e receitas.</p>';$('#secRec').innerHTML='';return;}
+  if(!f){$('#secFx').innerHTML='<p class="mut">Não foi possível ler as despesas fixas'+(FXERR?' ('+esc(FXERR)+')':'')+'. Se aparecer "Ação desconhecida", a nova versão do Apps Script ainda não foi publicada (Implantar > Gerenciar implantações > Nova versão).</p>';$('#secRec').innerHTML='';return;}
   const h=k=>f.ano===RA&&k===i?'hl':'', tm=MC.map((_,k)=>f.itens.reduce((s,x)=>s+(x.meses[k]||0),0)), ta=tm.reduce((s,x)=>s+x,0);
   $('#secFx').innerHTML=`<p class="mut">Valores lidos da aba Despesas_Fixas (${f.ano}). A coluna destacada é o mês de referência escolhido em "Receitas & saldo". O total é a soma das linhas.</p><div class="sc"><table><tr><th>Item</th>${MC.map((m,k)=>`<th class="${h(k)}">${m}</th>`).join('')}<th>Total</th></tr>${f.itens.map(x=>`<tr><td>${esc(x.nome)}</td>${x.meses.map((v,k)=>`<td class="n ${h(k)}">${cel(v)}</td>`).join('')}<td class="n">${R(x.meses.reduce((s,v)=>s+(v||0),0))}</td></tr>`).join('')}<tr class="tot"><td>Total</td>${tm.map((v,k)=>`<td class="n ${h(k)}">${R(v)}</td>`).join('')}<td class="n">${R(ta)}</td></tr></table></div>`;
   const rc=FX.receitas, ok=rc&&f.ano===RA, per=RA*100+RM, vr=sum(D.filter(r=>r.per===per));
@@ -206,7 +210,7 @@ function renderFx(){
 }
 async function carregarFx(pin){
   try{const j=await(await fetch(API+'?action=fixas&pin='+encodeURIComponent(pin)+'&_='+Date.now(),{cache:'no-store'})).json();
-    if(j.ok&&j.fixas){FX=j;try{localStorage.setItem('sd_fx',JSON.stringify(j));}catch(e){}}}catch(e){}
+    if(j.ok&&j.fixas){FX=j;FXERR='';try{localStorage.setItem('sd_fx',JSON.stringify(j));}catch(e){}}else{FX=null;FXERR=j.erro||'sem dados';}}catch(e){FX=null;FXERR=e.message;}
   renderFx();
 }
 function msg(t){$('#msg').textContent=t;}
