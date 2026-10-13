@@ -14,7 +14,7 @@
 main{max-width:520px;margin:0 auto;padding:10px}
 header{display:flex;justify-content:space-between;align-items:center}h1{font:400 24px Georgia,serif;margin:6px 0}
 .mut{color:var(--mut);font-size:13px}
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}
+.tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:8px 0}
 button,select,input{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:0 12px;min-height:48px;width:100%}
 button{cursor:pointer}.tabs .on,.pri{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:600}
 label{display:block;font-size:13px;color:var(--mut);margin:10px 0 0}label input,label select{margin-top:3px;color:var(--tx)}
@@ -30,7 +30,7 @@ label{display:block;font-size:13px;color:var(--mut);margin:10px 0 0}label input,
 <body>
 <main>
 <header><h1>Lançar despesa</h1><span id="net" class="mut"></span></header>
-<nav class="tabs"><button data-t="novo" class="on">Novo</button><button data-t="pagar">A pagar</button><button data-t="fila">Pendentes (<span id="nf">0</span>)</button></nav>
+<nav class="tabs"><button data-t="novo" class="on">Novo</button><button data-t="fila">Pendentes (<span id="nf">0</span>)</button></nav>
 
 <section id="novo">
  <label>Data da compra<input type="date" id="dt"></label>
@@ -46,12 +46,6 @@ label{display:block;font-size:13px;color:var(--mut);margin:10px 0 0}label input,
  <button id="salvar" class="pri">Salvar</button>
 </section>
 
-<section id="pagar" hidden>
- <div class="row"><label>Pessoa<select id="fpp"></select></label><label>&nbsp;<button id="rec">Atualizar</button></label></div>
- <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="fut" style="width:22px;min-height:22px"> Mostrar meses futuros</label>
- <p id="tp" class="mut"></p><div id="lp"></div>
-</section>
-
 <section id="fila" hidden><p class="mut">Lançamentos salvos no aparelho que ainda não chegaram à planilha. Eles são enviados sozinhos quando houver conexão.</p>
  <div id="lf"></div><button id="envia" class="pri">Enviar agora</button><p><button id="trocaPin">Trocar PIN</button></p></section>
 <div id="toast"></div>
@@ -64,7 +58,7 @@ const R=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const J=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}},W=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 const hj=new Date(),CA=hj.getFullYear(),CM=hj.getMonth()+1;
-let pin=localStorage.getItem('sd_pin_l')||'',fila=J('sd_fila',[]),L=J('sd_listas',null),dados=J('sd_pagar',[]),syncing=false;
+let pin=localStorage.getItem('sd_pin_l')||'',fila=J('sd_fila',[]),L=J('sd_listas',null),syncing=false;
 
 function toast(m,e,fixo){const t=$('#toast');t.textContent=m;t.className=e?'e':'';t.style.display='block';clearTimeout(t.h);if(!fixo)t.h=setTimeout(()=>t.style.display='none',3500);}
 function pedePin(){const p=(prompt('PIN de lançamento:')||'').trim();if(p){pin=p;localStorage.setItem('sd_pin_l',p);return true;}return false;}
@@ -74,10 +68,10 @@ async function get(a){const r=await fetch(API+'?action='+a+'&pin='+encodeURIComp
 const opt=(a,t)=>(t?'<option value="">'+t+'</option>':'')+(a||[]).map(x=>`<option>${esc(x)}</option>`).join('');
 
 function preencher(){
-  if(!L)return; const ps=$('#ps').value,fp=$('#fp').value,fpp=$('#fpp').value;
-  $('#ps').innerHTML=opt(L.pessoas,'Selecione...');$('#fp').innerHTML=opt(L.formasPagamento,'Selecione...');$('#fpp').innerHTML=opt(L.pessoas,'Todas');
+  if(!L)return; const ps=$('#ps').value,fp=$('#fp').value;
+  $('#ps').innerHTML=opt(L.pessoas,'Selecione...');$('#fp').innerHTML=opt(L.formasPagamento,'Selecione...');
   $('#sg').innerHTML=(L.sugestoesObservacoes||[]).map(x=>`<option value="${esc(x)}">`).join('');
-  if(ps)$('#ps').value=ps;if(fp)$('#fp').value=fp;if(fpp)$('#fpp').value=fpp;
+  if(ps)$('#ps').value=ps;if(fp)$('#fp').value=fp;
 }
 async function listas(){
   if(!pin&&!pedePin())return;
@@ -110,6 +104,7 @@ async function sync(aviso){
     try{const j=await post({action:'adicionar',...d});
       if(j.ok){fila=fila.filter(x=>x.clientId!==d.clientId);ok++;if(j.aviso)av=j.aviso;
         if(j.primeiraLinha)lin=j.primeiraLinha+(j.ultimaLinha>j.primeiraLinha?'–'+j.ultimaLinha:'');}
+      else if(/nao foi confirmada/i.test(j.erro||'')){fila=fila.filter(x=>x.clientId!==d.clientId);ok++;av='Gravado, mas a conferência do servidor falhou: veja a última linha da planilha.';}
       else if(negado(j)){neg=true;break;}
       else d.erro=j.erro||'Erro ao gravar';
     }catch(e){fail=true;break;}
@@ -119,7 +114,7 @@ async function sync(aviso){
   if(av)toast(av,1);
   else if(fail)toast((ok?ok+' gravado(s); ':'')+'sem conexão com a planilha: o restante ficou em Pendentes.',1);
   else if(ok)toast(ok+' lançamento(s) gravado(s) na planilha ✓'+(lin?' (linha '+lin+')':''));
-  else if(fila.some(x=>x.erro))toast('Erro ao gravar: veja em Pendentes.',1);
+  else if(fila.some(x=>x.erro))toast('Erro ao gravar: '+fila.find(x=>x.erro).erro,1);
   else $('#toast').style.display='none';
 }
 function desenhaFila(){
@@ -127,38 +122,12 @@ function desenhaFila(){
   $('#nf').textContent=pend.length;
   $('#lf').innerHTML=(env?`<p class="mut">Enviando ${env} lançamento(s)...</p>`:'')+pend.map(d=>`<div class="it"><div><b>${esc(d.descricao)}</b><br><span class="mut">${esc(d.pessoa)} · ${d.parcelas}x · ${p2(d.mes)}/${d.ano}</span>${d.erro?`<br><span class="err">${esc(d.erro)}</span>`:'<br><span class="mut">Aguardando conexão</span>'}</div><div class="r">${R(d.valorTotal!=null?d.valorTotal:d.valor*d.parcelas)}<br><button data-x="${d.clientId}">Excluir</button></div></div>`).join('')||'<p class="mut">Nada pendente.</p>';
 }
-async function carregaPagar(){
-  $('#tp').textContent='Carregando...';
-  try{const j=await get('dados');if(!j.ok){negado(j);throw new Error(j.erro);}
-    dados=j.linhas.filter(l=>/^a vencer$/i.test(String(l.situacao).trim())&&l.ano&&l.mes);W('sd_pagar',dados);
-  }catch(e){toast('Sem conexão: mostrando a última lista.',1);}
-  desenhaPagar();
-}
-function desenhaPagar(){
-  const p=$('#fpp').value,fut=$('#fut').checked,lim=CA*100+CM;
-  const X=dados.filter(l=>(!p||l.pessoa===p)&&(fut||l.ano*100+l.mes<=lim)).sort((a,b)=>(a.ano*100+a.mes)-(b.ano*100+b.mes)||a.linha-b.linha);
-  $('#tp').textContent=X.length+' itens a pagar · '+R(X.reduce((s,l)=>s+(Number(l.valor)||0),0));
-  $('#lp').innerHTML=X.map(l=>`<div class="it"><div><b>${esc(l.descricao)}</b><br><span class="mut">${esc(l.pessoa)} · ${esc(l.parcela)} · ${p2(l.mes)}/${l.ano}</span></div><div class="r">${R(Number(l.valor)||0)}<br><button class="ok" data-l="${l.linha}">Pago</button></div></div>`).join('')||'<p class="mut">Nada a pagar neste filtro.</p>';
-}
-async function pagar(b){
-  const l=dados.find(x=>String(x.linha)===b.dataset.l);
-  if(!l||!confirm('Marcar como pago?\n'+l.descricao+' — '+R(Number(l.valor)||0)))return;
-  if(!pin&&!pedePin())return; b.disabled=true;
-  try{const j=await post({action:'marcarPago',linha:l.linha,descricao:l.descricao,valor:l.valor,mes:l.mes,ano:l.ano});
-    if(j.ok){dados=dados.filter(x=>x!==l);W('sd_pagar',dados);desenhaPagar();toast('Marcado como pago ✓');}
-    else{negado(j)||toast(j.erro||'Erro ao marcar.',1);b.disabled=false;}
-  }catch(e){toast('Sem conexão. Tente de novo.',1);b.disabled=false;}
-}
-
 document.querySelector('.tabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;
   document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
-  ['novo','pagar','fila'].forEach(t=>$('#'+t).hidden=t!==b.dataset.t);
-  if(b.dataset.t==='pagar'){desenhaPagar();carregaPagar();}};
+  ['novo','fila'].forEach(t=>$('#'+t).hidden=t!==b.dataset.t);};
 ['#vl','#np','#mm'].forEach(s=>$(s).oninput=prev);
 $('#salvar').onclick=salvar;$('#envia').onclick=()=>{if(!fila.length)return toast('Nada pendente.');fila.forEach(d=>delete d.erro);sync(true);};
 $('#lf').onclick=e=>{const b=e.target.closest('button[data-x]');if(!b)return;fila=fila.filter(x=>x.clientId!==b.dataset.x);W('sd_fila',fila);desenhaFila();};
-$('#lp').onclick=e=>{const b=e.target.closest('button[data-l]');if(b)pagar(b);};
-$('#fpp').onchange=desenhaPagar;$('#fut').onchange=desenhaPagar;$('#rec').onclick=carregaPagar;
 $('#trocaPin').onclick=()=>{pin='';localStorage.removeItem('sd_pin_l');pedePin()&&listas();};
 const net=()=>$('#net').textContent=navigator.onLine?'online':'offline';
 window.addEventListener('online',()=>{net();sync();});window.addEventListener('offline',net);
