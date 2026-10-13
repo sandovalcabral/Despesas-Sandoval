@@ -37,7 +37,7 @@ label{display:block;font-size:13px;color:var(--mut);margin:10px 0 0}label input,
  <label>Descrição<input id="ds" autocomplete="off"></label>
  <label>Pessoa<select id="ps"></select></label>
  <label>Forma de pagamento<select id="fp"></select></label>
- <div class="row"><label>Valor da parcela (R$)<input id="vl" inputmode="decimal" placeholder="0,00"></label>
+ <div class="row"><label>Valor total da compra (R$)<input id="vl" inputmode="decimal" placeholder="0,00"></label>
  <label>Nº de parcelas<input id="np" type="number" min="1" max="24" value="1" inputmode="numeric"></label></div>
  <div class="row"><label>1ª parcela em<input type="month" id="mm"></label>
  <label>Situação<select id="st"><option>A Vencer</option><option>OK</option></select></label></div>
@@ -88,34 +88,35 @@ function prev(){
   const n=parseInt($('#np').value,10)||1,v=parseFloat(String($('#vl').value).replace(',','.')),[a,m]=($('#mm').value||'').split('-').map(Number);
   if(!v||!a){$('#pv').textContent='';return;}
   const f=m-1+n-1,ma=a+Math.floor(f/12),mm=f%12+1;
-  $('#pv').textContent=n>1?`${n} parcelas de ${R(v)}, de ${p2(m)}/${a} a ${p2(mm)}/${ma} (total ${R(v*n)})`:`1 parcela de ${R(v)} em ${p2(m)}/${a}`;
+  const t=Math.round(v*100),b=Math.floor(t/n),r=t-b*n,c=x=>R(x/100);
+  $('#pv').textContent=n===1?`1 parcela de ${c(t)} em ${p2(m)}/${a}`:`${n} parcelas, de ${p2(m)}/${a} a ${p2(mm)}/${ma}: `+(r?`${r}× ${c(b+1)} e ${n-r}× ${c(b)}`:`${n}× ${c(b)}`)+` (total ${c(t)})`;
 }
 function salvar(){
   const v=parseFloat(String($('#vl').value).replace(',','.')),[a,m]=($('#mm').value||'').split('-').map(Number),n=parseInt($('#np').value,10)||1;
   const d={clientId:(window.crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2),
     dataCompra:$('#dt').value,descricao:$('#ds').value.trim(),pessoa:$('#ps').value,formaPagamento:$('#fp').value,
-    valor:v,parcelas:n,mes:m,ano:a,situacao:$('#st').value,observacoes:$('#ob').value.trim()};
+    valorTotal:v,parcelas:n,mes:m,ano:a,situacao:$('#st').value,observacoes:$('#ob').value.trim()};
   if(!d.descricao||!(v>0)||!d.dataCompra||!a||!d.pessoa||!d.formaPagamento||n<1||n>24)return toast('Preencha data, descrição, pessoa, forma, valor e mês.',1);
   fila.push(d);W('sd_fila',fila);
   $('#ds').value='';$('#vl').value='';$('#ob').value='';$('#np').value=1;prev();desenhaFila();sync(true);
 }
 async function sync(aviso){
   if(syncing||!fila.some(x=>!x.erro))return; if(!pin&&!pedePin())return;
-  syncing=true;let ok=0,neg=false;
+  syncing=true;let ok=0,neg=false,lin='';
   for(const d of [...fila]){
     if(d.erro)continue;
     try{const j=await post({action:'adicionar',...d});
-      if(j.ok){fila=fila.filter(x=>x.clientId!==d.clientId);ok++;}
+      if(j.ok){fila=fila.filter(x=>x.clientId!==d.clientId);ok++;if(j.primeiraLinha)lin=j.primeiraLinha+(j.ultimaLinha>j.primeiraLinha?'–'+j.ultimaLinha:'');}
       else if(negado(j)){neg=true;break;} else d.erro=j.erro||'Erro ao gravar';
     }catch(e){break;}
   }
   W('sd_fila',fila);syncing=false;desenhaFila();
-  if(ok)toast(ok+' lançamento(s) gravado(s) na planilha ✓');
+  if(ok)toast(ok+' lançamento(s) gravado(s) na planilha ✓'+(lin?' (linha '+lin+')':''));
   else if(aviso&&!neg&&fila.some(x=>!x.erro))toast('Sem conexão: salvo no aparelho. O envio é automático depois.',1);
 }
 function desenhaFila(){
   $('#nf').textContent=fila.length;
-  $('#lf').innerHTML=fila.map(d=>`<div class="it"><div><b>${esc(d.descricao)}</b><br><span class="mut">${esc(d.pessoa)} · ${d.parcelas}x · ${p2(d.mes)}/${d.ano}</span>${d.erro?`<br><span class="err">${esc(d.erro)}</span>`:''}</div><div class="r">${R(d.valor)}<br><button data-x="${d.clientId}">Excluir</button></div></div>`).join('')||'<p class="mut">Nada pendente.</p>';
+  $('#lf').innerHTML=fila.map(d=>`<div class="it"><div><b>${esc(d.descricao)}</b><br><span class="mut">${esc(d.pessoa)} · ${d.parcelas}x · ${p2(d.mes)}/${d.ano}</span>${d.erro?`<br><span class="err">${esc(d.erro)}</span>`:''}</div><div class="r">${R(d.valorTotal!=null?d.valorTotal:d.valor*d.parcelas)}<br><button data-x="${d.clientId}">Excluir</button></div></div>`).join('')||'<p class="mut">Nada pendente.</p>';
 }
 async function carregaPagar(){
   $('#tp').textContent='Carregando...';
