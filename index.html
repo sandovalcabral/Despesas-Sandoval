@@ -41,27 +41,28 @@ td.n{text-align:right}
 .tot td{font-weight:700}
 .bar{display:flex;gap:8px;margin-bottom:8px}.bar input{flex:1}
 summary{cursor:pointer;font-weight:600}
+h1,h2,.card b{font-family:Georgia,'Times New Roman',serif;font-weight:400}
+h1{font-size:30px;margin:0}.sub{color:var(--mut);font-size:13px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:6px}
+.card b{font-size:26px}.card.main b{color:#e0a64a;font-size:34px}
+.fl label{min-width:130px}.fl select,.fl input{width:100%}
+.hl{background:rgba(224,166,74,.16)}.nota{font-size:13px;color:var(--mut);margin:8px 0}
 </style>
 </head>
 <body>
 <main>
 <header>
-  <h1>Despesas Sandoval</h1>
-  <div><span id="upd" class="mut"></span> <button id="btnAtu">Atualizar</button> <button id="btnPin">Trocar PIN</button></div>
+  <div><h1>Dashboard de Despesas — Sandoval</h1><div class="sub">Planilha: Despesas · Despesas_Sandoval</div></div>
+  <div><span class="dot"></span><span id="upd" class="mut"></span> <button id="btnAtu">Atualizar agora</button> <button id="btnPin">Trocar PIN</button></div>
 </header>
 <p id="msg" class="mut"></p>
 
-<details class="box" open id="filtros">
-  <summary>Filtros</summary>
-  <div class="fl" style="margin-top:8px">
-    <label>Ano<select id="fAno"></select></label>
-    <label>Mês<select id="fMes"></select></label>
-    <div id="fSit" class="seg"></div>
-    <button id="btnLimpar">Limpar filtros</button>
-  </div>
-  <div class="mut">Pessoa</div><div id="fPes" class="chips"></div>
-  <div class="mut">Forma de pagamento</div><div id="fForma" class="chips"></div>
-</details>
+<section class="box" id="filtros"><div class="fl">
+  <label>Ano<select id="fAno"></select></label><label>Mês<select id="fMes"></select></label>
+  <label>Pessoa<select id="fPes"></select></label><label>Cartão / Forma<select id="fForma"></select></label>
+  <label>Situação<select id="fSit"></select></label>
+  <label>Buscar<input id="busca" type="search" placeholder="Descrição ou observação..."></label>
+  <button id="btnLimpar">Limpar filtros</button><span class="mut" id="cont"></span></div></section>
 
 <section id="cards" class="cards"></section>
 
@@ -76,9 +77,13 @@ summary{cursor:pointer;font-weight:600}
   <section class="box"><h2>Top 10 por observação</h2><div id="chObs"></div></section>
 </div>
 
+<section class="box"><h2>Despesas fixas (mensais)</h2><div id="secFx"></div></section>
+<section class="box"><h2>Receitas &amp; saldo</h2>
+  <div class="fl"><label>Mês<select id="rMes"></select></label><label>Ano<select id="rAno"></select></label></div>
+  <div id="secRec"></div></section>
 <section class="box">
   <h2>Lançamentos</h2>
-  <div class="bar"><input id="busca" type="search" placeholder="Buscar descrição, pessoa, observação..."><button id="btnCsv">Exportar CSV</button></div>
+  <div class="bar"><button id="btnCsv">Exportar CSV</button></div>
   <div class="sc"><table id="tb"></table></div>
 </section>
 <details class="box" id="qual"></details>
@@ -118,7 +123,7 @@ function prep(l){
 // skip: 'mes' ignora o filtro de mês; 'periodo' ignora ano e mês
 function filtra(skip){
   return D.filter(r=>(skip==='periodo'||((!F.ano||r.ano==F.ano)&&(skip==='mes'||!F.mes||r.mes==F.mes)))
-    &&(!F.pes.size||F.pes.has(r.pes))&&(!F.forma.size||F.forma.has(r.forma))&&(!F.sit||r.sit===F.sit));
+    &&(!F.pes.size||F.pes.has(r.pes))&&(!F.forma.size||F.forma.has(r.forma))&&(!F.sit||r.sit===F.sit)&&(!S.q||norm(r.descricao+' '+r.pes+' '+r.obs+' '+r.forma).includes(S.q)));
 }
 function grupo(rows,key,lab){
   const m=new Map();
@@ -139,21 +144,23 @@ function lista(){
 }
 
 function render(){
+  renderFx();
   const L0=filtra(), T=sum(L0), P=sum(L0.filter(r=>r.sit==='OK')), A=sum(L0.filter(r=>r.sit==='A Vencer'));
   const base=filtra('periodo'), atr=base.filter(r=>r.atr), prox=CM===12?(CA+1)*100+1:CA*100+CM+1;
   const px=base.filter(r=>r.sit==='A Vencer'&&r.per===prox);
-  $('#cards').innerHTML=[['Total',R(T),''],['Pago (OK)',R(P),'v-ok'],['A Vencer',R(A),'v-av'],
-    ['% pago',T?(P/T*100).toFixed(1).replace('.',',')+'%':'—',''],['Lançamentos',L0.length,''],
-    ['Atrasados (todos os meses)',R(sum(atr))+' · '+atr.length,'v-at'],['A Vencer no mês seguinte',R(sum(px)),'']]
-    .map(c=>`<div class="card"><small>${c[0]}</small><b class="${c[2]}">${c[1]}</b></div>`).join('');
+  const mxv=L0.reduce((m,r)=>Math.max(m,r.v),0);
+  $('#cards').innerHTML=[['Total no filtro atual',R(T),'main',L0.length+' lançamentos'],['Pago / OK',R(P),'v-ok'],['A vencer',R(A),'v-at'],
+    ['Atrasados (todos os meses)',R(sum(atr))+' · '+atr.length,'v-at'],['Qtde. lançamentos',L0.length,''],
+    ['Ticket médio',R(L0.length?T/L0.length:0),''],['Maior lançamento',R(mxv),'']]
+    .map(c=>`<div class="card${c[2]==='main'?' main':''}"><small>${c[0]}</small><b class="${c[2]==='main'?'':c[2]}">${c[1]}</b>${c[3]?'<small>'+c[3]+'</small>':''}</div>`).join('');
 
   // filtros
   const anos=[...new Set(D.map(r=>r.ano).filter(Boolean))].sort();
-  $('#fAno').innerHTML='<option value="">Todos</option>'+anos.map(a=>`<option ${F.ano==a?'selected':''}>${a}</option>`).join('');
-  $('#fMes').innerHTML='<option value="">Todos</option>'+MESES.map((m,i)=>`<option value="${i+1}" ${F.mes==i+1?'selected':''}>${m}</option>`).join('');
-  $('#fSit').innerHTML=[['','Todos'],['A Vencer','A Vencer'],['OK','OK (Pago)']].map(s=>`<button data-s="${s[0]}" class="${F.sit===s[0]?'on':''}">${s[1]}</button>`).join('');
-  const chips=(sel,key,vals,set)=>{$(sel).innerHTML=vals.map(v=>`<button data-k="${key}" data-v="${esc(v)}" class="${set.has(v)?'on':''}">${esc(v)}</button>`).join('');};
-  chips('#fPes','pes',LP,F.pes); chips('#fForma','forma',LF,F.forma);
+  const sel=(id,vals,cur,todos)=>{$(id).innerHTML=`<option value="">${todos}</option>`+vals.map(v=>`<option value="${esc(v[0])}" ${String(cur)===String(v[0])?'selected':''}>${esc(v[1])}</option>`).join('');};
+  sel('#fAno',anos.map(a=>[a,a]),F.ano,'Todos'); sel('#fMes',MESES.map((m,i)=>[i+1,m]),F.mes,'Todos');
+  sel('#fPes',LP.map(x=>[x,x]),[...F.pes][0]||'','Todas'); sel('#fForma',LF.map(x=>[x,x]),[...F.forma][0]||'','Todos');
+  sel('#fSit',[['A Vencer','A Vencer'],['OK','OK (Pago)']],F.sit,'Todas');
+  $('#cont').textContent=L0.length+' de '+D.length+' lançamentos';
 
   // gráficos
   const meses=grupo(filtra('mes'),r=>r.per,r=>r.per?MESES[r.per%100-1].slice(0,3)+'/'+Math.floor(r.per/100):'Sem mês')
@@ -180,13 +187,35 @@ function render(){
     '<p class="mut">Só informa: nada é alterado na planilha. Linhas sem Mês/Ano só aparecem com Ano = Todos.</p>';
 }
 
+let FX=null,RM=CM,RA=CA;
+const MC=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], cel=v=>v?R(v):'—';
+function renderFx(){
+  const f=FX&&FX.fixas, i=RM-1;
+  $('#rMes').innerHTML=MESES.map((m,k)=>`<option value="${k+1}" ${RM===k+1?'selected':''}>${m}</option>`).join('');
+  $('#rAno').innerHTML=[...new Set([...D.map(r=>r.ano),CA,f&&f.ano].filter(Boolean))].sort().map(a=>`<option ${RA===a?'selected':''}>${a}</option>`).join('');
+  if(!f){$('#secFx').innerHTML='<p class="mut">Sem dados. Publique a nova versão do Apps Script para exibir as despesas fixas e receitas.</p>';$('#secRec').innerHTML='';return;}
+  const h=k=>f.ano===RA&&k===i?'hl':'', tm=MC.map((_,k)=>f.itens.reduce((s,x)=>s+(x.meses[k]||0),0)), ta=tm.reduce((s,x)=>s+x,0);
+  $('#secFx').innerHTML=`<p class="mut">Valores lidos da aba Despesas_Fixas (${f.ano}). A coluna destacada é o mês de referência escolhido em "Receitas & saldo". O total é a soma das linhas.</p><div class="sc"><table><tr><th>Item</th>${MC.map((m,k)=>`<th class="${h(k)}">${m}</th>`).join('')}<th>Total</th></tr>${f.itens.map(x=>`<tr><td>${esc(x.nome)}</td>${x.meses.map((v,k)=>`<td class="n ${h(k)}">${cel(v)}</td>`).join('')}<td class="n">${R(x.meses.reduce((s,v)=>s+(v||0),0))}</td></tr>`).join('')}<tr class="tot"><td>Total</td>${tm.map((v,k)=>`<td class="n ${h(k)}">${R(v)}</td>`).join('')}<td class="n">${R(ta)}</td></tr></table></div>`;
+  const rc=FX.receitas, ok=rc&&f.ano===RA, per=RA*100+RM, vr=sum(D.filter(r=>r.per===per));
+  if(!ok){$('#secRec').innerHTML=`<p class="mut">Despesas fixas e receitas só existem na planilha para ${f.ano}.</p>`;return;}
+  const rec=rc.itens.reduce((s,x)=>s+(x.meses[i]||0),0), fix=tm[i], sd=rec-fix-vr;
+  const dup=['pix','debito em conta'].reduce((s,n)=>s+Math.min(f.itens.filter(x=>norm(x.nome)===n).reduce((q,x)=>q+(x.meses[i]||0),0),sum(D.filter(r=>r.per===per&&norm(r.forma)===n))),0);
+  $('#secRec').innerHTML=`<div class="cards">${[['Receitas no mês',R(rec),'v-ok'],['Despesas fixas no mês',R(fix),''],['Despesas variáveis no mês',R(vr),''],['Saldo estimado',R(sd),sd>=0?'v-ok':'v-at']].map(c=>`<div class="card"><small>${c[0]}</small><b class="${c[2]}">${c[1]}</b></div>`).join('')}</div>`+
+    `<p class="nota">Saldo = receitas − despesas fixas − despesas variáveis (todas as linhas da aba Despesas no mês, sem os filtros acima).`+(dup?` <b>Atenção:</b> Pix e Débito em Conta aparecem nas fixas e nas variáveis (${R(dup)} nos dois lugares). Saldo sem essa duplicidade: <b>${R(sd+dup)}</b>.`:'')+`</p>`+
+    `<div class="sc"><table><tr><th>Receita</th><th>Valor no mês</th></tr>${rc.itens.map(x=>`<tr><td>${esc(x.nome)}</td><td class="n">${cel(x.meses[i])}</td></tr>`).join('')}</table></div>`;
+}
+async function carregarFx(pin){
+  try{const j=await(await fetch(API+'?action=fixas&pin='+encodeURIComponent(pin)+'&_='+Date.now(),{cache:'no-store'})).json();
+    if(j.ok&&j.fixas){FX=j;try{localStorage.setItem('sd_fx',JSON.stringify(j));}catch(e){}}}catch(e){}
+  renderFx();
+}
 function msg(t){$('#msg').textContent=t;}
 function aplicar(j){
   D=j.linhas.map(prep);
   LP=grupo(D,r=>r.pes).sort((a,b)=>tot(b)-tot(a)).map(g=>g.l);
   LF=grupo(D,r=>r.forma).sort((a,b)=>tot(b)-tot(a)).map(g=>g.l);
   const t=j.buscaEm?new Date(j.buscaEm):null; // horário do SEU aparelho no momento da busca
-  $('#upd').textContent=t?'Atualizado em '+p2(t.getDate())+'/'+p2(t.getMonth()+1)+'/'+t.getFullYear()+' '+p2(t.getHours())+':'+p2(t.getMinutes())+':'+p2(t.getSeconds()):'';
+  $('#upd').textContent=t?'atualizado em '+p2(t.getDate())+'/'+p2(t.getMonth()+1)+' às '+p2(t.getHours())+':'+p2(t.getMinutes())+':'+p2(t.getSeconds()):'';
   if(!inicio){inicio=true; // padrão: ano e mês atuais, se existirem nos dados
     if(D.some(r=>r.ano===CA)){F.ano=String(CA); if(D.some(r=>r.ano===CA&&r.mes===CM)) F.mes=String(CM);}}
   render();
@@ -201,20 +230,16 @@ async function carregar(){
     j.buscaEm=Date.now();
     localStorage.setItem('sd_pin',pin);
     try{localStorage.setItem('sd_cache',JSON.stringify(j));}catch(e){}
-    msg(''); aplicar(j);
+    msg(''); aplicar(j); carregarFx(pin);
   }catch(e){msg('Não foi possível carregar a planilha: '+e.message+'. Toque em "Atualizar" para tentar de novo.');}
 }
 
 // eventos
-$('#fAno').onchange=e=>{F.ano=e.target.value;render();};
-$('#fMes').onchange=e=>{F.mes=e.target.value;render();};
-$('#filtros').onclick=e=>{
-  const b=e.target.closest('button'); if(!b) return;
-  if(b.id==='btnLimpar'){F.ano=F.mes=F.sit='';F.pes.clear();F.forma.clear();}
-  else if(b.dataset.s!==undefined) F.sit=b.dataset.s;
-  else if(b.dataset.k){const s=F[b.dataset.k],v=b.dataset.v; s.has(v)?s.delete(v):s.add(v);}
-  render();
-};
+const ch=(id,f)=>{$(id).onchange=e=>{f(e.target.value);render();};};
+ch('#fAno',v=>F.ano=v); ch('#fMes',v=>F.mes=v); ch('#fSit',v=>F.sit=v);
+ch('#fPes',v=>F.pes=new Set(v?[v]:[])); ch('#fForma',v=>F.forma=new Set(v?[v]:[]));
+$('#btnLimpar').onclick=()=>{F.ano=F.mes=F.sit='';F.pes.clear();F.forma.clear();S.q='';$('#busca').value='';render();};
+$('#rMes').onchange=e=>{RM=+e.target.value;renderFx();}; $('#rAno').onchange=e=>{RA=+e.target.value;renderFx();};
 $('#busca').oninput=e=>{S.q=norm(e.target.value);render();};
 $('#tb').onclick=e=>{const th=e.target.closest('th'); if(!th) return; const c=th.dataset.c; S.dir=S.col===c?-S.dir:1; S.col=c; render();};
 $('#btnAtu').onclick=carregar;
@@ -227,6 +252,7 @@ $('#btnCsv').onclick=()=>{
   a.download='despesas.csv'; a.click();
 };
 
+try{const x=localStorage.getItem('sd_fx'); if(x) FX=JSON.parse(x);}catch(e){}
 try{const c=localStorage.getItem('sd_cache'); if(c) aplicar(JSON.parse(c));}catch(e){}
 carregar();
 })();
