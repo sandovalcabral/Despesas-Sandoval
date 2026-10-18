@@ -81,7 +81,7 @@ h1{font-size:30px;margin:0}.sub{color:var(--mut);font-size:13px}
 
 <section class="box"><h2>Despesas fixas (mensais)</h2><div id="secFx"></div></section>
 <section class="box"><h2>Receitas &amp; saldo</h2>
-  <div class="fl"><label>Mês<select id="rMes"></select></label><label>Ano<select id="rAno"></select></label></div>
+  <p id="refRec" class="mut"></p>
   <div id="secRec"></div></section>
 <section class="box">
   <h2>Lançamentos</h2>
@@ -194,19 +194,20 @@ function render(){
 let FX=null,FXERR='',RM=CM,RA=CA;
 const MC=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], cel=v=>v?R(v):'—';
 function renderFx(){
-  const f=FX&&FX.fixas, i=RM-1;
-  $('#rMes').innerHTML=MESES.map((m,k)=>`<option value="${k+1}" ${RM===k+1?'selected':''}>${m}</option>`).join('');
-  $('#rAno').innerHTML=[...new Set([...D.map(r=>r.ano),CA,f&&f.ano].filter(Boolean))].sort().map(a=>`<option ${RA===a?'selected':''}>${a}</option>`).join('');
+  const f=FX&&FX.fixas; RA=+F.ano||CA; RM=+F.mes||0; // segue os filtros do topo; 0 = ano inteiro
+  $('#refRec').textContent='Referência: '+(RM?MESES[RM-1]+' de '+RA:'ano de '+RA+' (todos os meses)')+' — acompanha os filtros Ano e Mês do topo (Todos = ano atual / ano inteiro).';
   if(!f){$('#secFx').innerHTML='<p class="mut">Não foi possível ler as despesas fixas'+(FXERR?' ('+esc(FXERR)+')':'')+'. Se aparecer "Ação desconhecida", a nova versão do Apps Script ainda não foi publicada (Implantar > Gerenciar implantações > Nova versão).</p>';$('#secRec').innerHTML='';return;}
-  const h=k=>f.ano===RA&&k===i?'hl':'', tm=MC.map((_,k)=>f.itens.reduce((s,x)=>s+(x.meses[k]||0),0)), ta=tm.reduce((s,x)=>s+x,0);
-  $('#secFx').innerHTML=`<p class="mut">Valores lidos da aba Despesas_Fixas (${f.ano}). A coluna destacada é o mês de referência escolhido em "Receitas & saldo". O total é a soma das linhas.</p><div class="sc"><table><tr><th>Item</th>${MC.map((m,k)=>`<th class="${h(k)}">${m}</th>`).join('')}<th>Total</th></tr>${f.itens.map(x=>`<tr><td>${esc(x.nome)}</td>${x.meses.map((v,k)=>`<td class="n ${h(k)}">${cel(v)}</td>`).join('')}<td class="n">${R(x.meses.reduce((s,v)=>s+(v||0),0))}</td></tr>`).join('')}<tr class="tot"><td>Total</td>${tm.map((v,k)=>`<td class="n ${h(k)}">${R(v)}</td>`).join('')}<td class="n">${R(ta)}</td></tr></table></div>`;
-  const rc=FX.receitas, ok=rc&&f.ano===RA, per=RA*100+RM, vr=sum(D.filter(r=>r.per===per));
+  const M=RM?[RM-1]:MC.map((_,k)=>k), suf=RM?'no mês':'no ano';
+  const h=k=>RM&&f.ano===RA&&k===RM-1?'hl':'', tm=MC.map((_,k)=>f.itens.reduce((s,x)=>s+(x.meses[k]||0),0)), ta=tm.reduce((s,x)=>s+x,0);
+  $('#secFx').innerHTML=`<p class="mut">Valores lidos da aba Despesas_Fixas (${f.ano}). A coluna destacada é o mês escolhido no filtro Mês, no topo. O total é a soma das linhas.</p><div class="sc"><table><tr><th>Item</th>${MC.map((m,k)=>`<th class="${h(k)}">${m}</th>`).join('')}<th>Total</th></tr>${f.itens.map(x=>`<tr><td>${esc(x.nome)}</td>${x.meses.map((v,k)=>`<td class="n ${h(k)}">${cel(v)}</td>`).join('')}<td class="n">${R(x.meses.reduce((s,v)=>s+(v||0),0))}</td></tr>`).join('')}<tr class="tot"><td>Total</td>${tm.map((v,k)=>`<td class="n ${h(k)}">${R(v)}</td>`).join('')}<td class="n">${R(ta)}</td></tr></table></div>`;
+  const rc=FX.receitas, ok=rc&&f.ano===RA, vr=sum(D.filter(r=>r.ano===RA&&(!RM||r.mes===RM)));
   if(!ok){$('#secRec').innerHTML=`<p class="mut">Despesas fixas e receitas só existem na planilha para ${f.ano}.</p>`;return;}
-  const rec=rc.itens.reduce((s,x)=>s+(x.meses[i]||0),0), fix=tm[i], sd=rec-fix-vr;
-  const dup=['pix','debito em conta'].reduce((s,n)=>s+Math.min(f.itens.filter(x=>norm(x.nome)===n).reduce((q,x)=>q+(x.meses[i]||0),0),sum(D.filter(r=>r.per===per&&norm(r.forma)===n))),0);
-  $('#secRec').innerHTML=`<div class="cards">${[['Receitas no mês',R(rec),'v-ok'],['Despesas fixas no mês',R(fix),''],['Despesas variáveis no mês',R(vr),''],['Saldo estimado',R(sd),sd>=0?'v-ok':'v-at']].map(c=>`<div class="card"><small>${c[0]}</small><b class="${c[2]}">${c[1]}</b></div>`).join('')}</div>`+
-    `<p class="nota">Saldo = receitas − despesas fixas − despesas variáveis (todas as linhas da aba Despesas no mês, sem os filtros acima).`+(dup?` <b>Atenção:</b> Pix e Débito em Conta aparecem nas fixas e nas variáveis (${R(dup)} nos dois lugares). Saldo sem essa duplicidade: <b>${R(sd+dup)}</b>.`:'')+`</p>`+
-    `<div class="sc"><table><tr><th>Receita</th><th>Valor no mês</th></tr>${rc.itens.map(x=>`<tr><td>${esc(x.nome)}</td><td class="n">${cel(x.meses[i])}</td></tr>`).join('')}</table></div>`;
+  const somaM=(it)=>it.reduce((s,x)=>s+M.reduce((q,k)=>q+(x.meses[k]||0),0),0);
+  const rec=somaM(rc.itens), fix=M.reduce((s,k)=>s+tm[k],0), sd=rec-fix-vr;
+  const dup=M.reduce((t,k)=>t+['pix','debito em conta'].reduce((s,n)=>s+Math.min(f.itens.filter(x=>norm(x.nome)===n).reduce((q,x)=>q+(x.meses[k]||0),0),sum(D.filter(r=>r.per===RA*100+k+1&&norm(r.forma)===n))),0),0);
+  $('#secRec').innerHTML=`<div class="cards">${[['Receitas '+suf,R(rec),'v-ok'],['Despesas fixas '+suf,R(fix),''],['Despesas variáveis '+suf,R(vr),''],['Saldo estimado',R(sd),sd>=0?'v-ok':'v-at']].map(c=>`<div class="card"><small>${c[0]}</small><b class="${c[2]}">${c[1]}</b></div>`).join('')}</div>`+
+    `<p class="nota">Saldo = receitas − despesas fixas − despesas variáveis (todas as linhas da aba Despesas do período, sem os filtros de Pessoa, Forma e Situação).`+(dup?` <b>Atenção:</b> Pix e Débito em Conta aparecem nas fixas e nas variáveis (${R(dup)} nos dois lugares). Saldo sem essa duplicidade: <b>${R(sd+dup)}</b>.`:'')+`</p>`+
+    `<div class="sc"><table><tr><th>Receita</th><th>Valor ${suf}</th></tr>${rc.itens.map(x=>`<tr><td>${esc(x.nome)}</td><td class="n">${cel(somaM([x]))}</td></tr>`).join('')}</table></div>`;
 }
 async function carregarFx(pin){
   try{const j=await(await fetch(API+'?action=fixas&pin='+encodeURIComponent(pin)+'&_='+Date.now(),{cache:'no-store'})).json();
@@ -243,7 +244,6 @@ const ch=(id,f)=>{$(id).onchange=e=>{f(e.target.value);render();};};
 ch('#fAno',v=>F.ano=v); ch('#fMes',v=>F.mes=v); ch('#fSit',v=>F.sit=v);
 ch('#fPes',v=>F.pes=new Set(v?[v]:[])); ch('#fForma',v=>F.forma=new Set(v?[v]:[]));
 $('#btnLimpar').onclick=()=>{F.ano=F.mes=F.sit='';F.pes.clear();F.forma.clear();S.q='';$('#busca').value='';render();};
-$('#rMes').onchange=e=>{RM=+e.target.value;renderFx();}; $('#rAno').onchange=e=>{RA=+e.target.value;renderFx();};
 $('#busca').oninput=e=>{S.q=norm(e.target.value);render();};
 $('#tb').onclick=e=>{const th=e.target.closest('th'); if(!th) return; const c=th.dataset.c; S.dir=S.col===c?-S.dir:1; S.col=c; render();};
 $('#btnAtu').onclick=carregar;
