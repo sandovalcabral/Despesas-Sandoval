@@ -194,20 +194,22 @@ function render(){
 let FX=null,FXERR='',RM=CM,RA=CA;
 const MC=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], cel=v=>v?R(v):'—';
 function renderFx(){
-  const f=FX&&FX.fixas; RA=+F.ano||CA; RM=+F.mes||0; // segue os filtros do topo; 0 = ano inteiro
+  RA=+F.ano||CA; RM=+F.mes||0; // segue os filtros do topo; 0 = ano inteiro
+  const P=b=>b?(b.porAno?b.porAno[RA]||null:(b.ano===RA?b.itens:null)):null; // aceita o formato novo (por ano) e o antigo
   $('#refRec').textContent='Referência: '+(RM?MESES[RM-1]+' de '+RA:'ano de '+RA+' (todos os meses)')+' — acompanha os filtros Ano e Mês do topo (Todos = ano atual / ano inteiro).';
-  if(!f){$('#secFx').innerHTML='<p class="mut">Não foi possível ler as despesas fixas'+(FXERR?' ('+esc(FXERR)+')':'')+'. Se aparecer "Ação desconhecida", a nova versão do Apps Script ainda não foi publicada (Implantar > Gerenciar implantações > Nova versão).</p>';$('#secRec').innerHTML='';return;}
+  if(!FX||!FX.fixas){$('#secFx').innerHTML='<p class="mut">Não foi possível ler as despesas fixas'+(FXERR?' ('+esc(FXERR)+')':'')+'. Se aparecer "Ação desconhecida", a nova versão do Apps Script ainda não foi publicada (Implantar > Gerenciar implantações > Nova versão).</p>';$('#secRec').innerHTML='';return;}
+  const fx=P(FX.fixas), rcI=P(FX.receitas)||[];
+  if(!fx){$('#secFx').innerHTML=`<p class="mut">Não há despesas fixas de ${RA} na planilha. Acrescente as linhas de ${RA} (Despesas, Valor, Mês, Ano) para elas aparecerem.</p>`;$('#secRec').innerHTML='';return;}
   const M=RM?[RM-1]:MC.map((_,k)=>k), suf=RM?'no mês':'no ano';
-  const h=k=>RM&&f.ano===RA&&k===RM-1?'hl':'', tm=MC.map((_,k)=>f.itens.reduce((s,x)=>s+(x.meses[k]||0),0)), ta=tm.reduce((s,x)=>s+x,0);
-  $('#secFx').innerHTML=`<p class="mut">Valores lidos da aba Despesas_Fixas (${f.ano}). A coluna destacada é o mês escolhido no filtro Mês, no topo. O total é a soma das linhas.</p><div class="sc"><table><tr><th>Item</th>${MC.map((m,k)=>`<th class="${h(k)}">${m}</th>`).join('')}<th>Total</th></tr>${f.itens.map(x=>`<tr><td>${esc(x.nome)}</td>${x.meses.map((v,k)=>`<td class="n ${h(k)}">${cel(v)}</td>`).join('')}<td class="n">${R(x.meses.reduce((s,v)=>s+(v||0),0))}</td></tr>`).join('')}<tr class="tot"><td>Total</td>${tm.map((v,k)=>`<td class="n ${h(k)}">${R(v)}</td>`).join('')}<td class="n">${R(ta)}</td></tr></table></div>`;
-  const rc=FX.receitas, ok=rc&&f.ano===RA, vr=sum(D.filter(r=>r.ano===RA&&(!RM||r.mes===RM)));
-  if(!ok){$('#secRec').innerHTML=`<p class="mut">Despesas fixas e receitas só existem na planilha para ${f.ano}.</p>`;return;}
-  const somaM=(it)=>it.reduce((s,x)=>s+M.reduce((q,k)=>q+(x.meses[k]||0),0),0);
-  const rec=somaM(rc.itens), fix=M.reduce((s,k)=>s+tm[k],0), sd=rec-fix-vr;
-  const dup=M.reduce((t,k)=>t+['pix','debito em conta'].reduce((s,n)=>s+Math.min(f.itens.filter(x=>norm(x.nome)===n).reduce((q,x)=>q+(x.meses[k]||0),0),sum(D.filter(r=>r.per===RA*100+k+1&&norm(r.forma)===n))),0),0);
+  const h=k=>RM&&k===RM-1?'hl':'', tm=MC.map((_,k)=>fx.reduce((s,x)=>s+(x.meses[k]||0),0)), ta=tm.reduce((s,x)=>s+x,0);
+  $('#secFx').innerHTML=`<p class="mut">Valores lidos da planilha de despesas fixas (${RA}). A coluna destacada é o mês escolhido no filtro Mês, no topo. O total é a soma das linhas.</p><div class="sc"><table><tr><th>Item</th>${MC.map((m,k)=>`<th class="${h(k)}">${m}</th>`).join('')}<th>Total</th></tr>${fx.map(x=>`<tr><td>${esc(x.nome)}</td>${x.meses.map((v,k)=>`<td class="n ${h(k)}">${cel(v)}</td>`).join('')}<td class="n">${R(x.meses.reduce((s,v)=>s+(v||0),0))}</td></tr>`).join('')}<tr class="tot"><td>Total</td>${tm.map((v,k)=>`<td class="n ${h(k)}">${R(v)}</td>`).join('')}<td class="n">${R(ta)}</td></tr></table></div>`;
+  const vr=sum(D.filter(r=>r.ano===RA&&(!RM||r.mes===RM)));
+  const somaM=it=>it.reduce((s,x)=>s+M.reduce((q,k)=>q+(x.meses[k]||0),0),0);
+  const rec=somaM(rcI), fix=M.reduce((s,k)=>s+tm[k],0), sd=rec-fix-vr;
+  const dup=M.reduce((t,k)=>t+['pix','debito em conta'].reduce((s,n)=>s+Math.min(fx.filter(x=>norm(x.nome)===n).reduce((q,x)=>q+(x.meses[k]||0),0),sum(D.filter(r=>r.per===RA*100+k+1&&norm(r.forma)===n))),0),0);
   $('#secRec').innerHTML=`<div class="cards">${[['Receitas '+suf,R(rec),'v-ok'],['Despesas fixas '+suf,R(fix),''],['Despesas variáveis '+suf,R(vr),''],['Saldo estimado',R(sd),sd>=0?'v-ok':'v-at']].map(c=>`<div class="card"><small>${c[0]}</small><b class="${c[2]}">${c[1]}</b></div>`).join('')}</div>`+
-    `<p class="nota">Saldo = receitas − despesas fixas − despesas variáveis (todas as linhas da aba Despesas do período, sem os filtros de Pessoa, Forma e Situação).`+(dup?` <b>Atenção:</b> Pix e Débito em Conta aparecem nas fixas e nas variáveis (${R(dup)} nos dois lugares). Saldo sem essa duplicidade: <b>${R(sd+dup)}</b>.`:'')+`</p>`+
-    `<div class="sc"><table><tr><th>Receita</th><th>Valor ${suf}</th></tr>${rc.itens.map(x=>`<tr><td>${esc(x.nome)}</td><td class="n">${cel(somaM([x]))}</td></tr>`).join('')}</table></div>`;
+    `<p class="nota">Saldo = receitas − despesas fixas − despesas variáveis (todas as linhas da aba Despesas do período, sem os filtros de Pessoa, Forma e Situação).`+(rcI.length?'':` Não há receitas de ${RA} na planilha.`)+(dup?` <b>Atenção:</b> Pix e Débito em Conta aparecem nas fixas e nas variáveis (${R(dup)} nos dois lugares). Saldo sem essa duplicidade: <b>${R(sd+dup)}</b>.`:'')+`</p>`+
+    `<div class="sc"><table><tr><th>Receita</th><th>Valor ${suf}</th></tr>${rcI.map(x=>`<tr><td>${esc(x.nome)}</td><td class="n">${cel(somaM([x]))}</td></tr>`).join('')}</table></div>`;
 }
 async function carregarFx(pin){
   try{const j=await(await fetch(API+'?action=fixas&pin='+encodeURIComponent(pin)+'&_='+Date.now(),{cache:'no-store'})).json();
