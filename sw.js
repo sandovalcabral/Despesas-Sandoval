@@ -1,6 +1,6 @@
 // Service worker do app de lancamento: permite abrir o app sem internet
 // (rede primeiro; se nao houver internet, usa a copia guardada).
-const C = 'lancar-v7';
+const C = 'lancar-v8';
 const A = ['lancar.html', 'config.js', 'manifest.json', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => e.waitUntil(

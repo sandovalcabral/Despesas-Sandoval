@@ -27,9 +27,9 @@ label{display:block;font-size:13px;color:var(--mut);margin:10px 0 0}label input,
 #toast.e{background:var(--at)}[hidden]{display:none!important}
 /* iPhone/Safari: campos de data e mês não podem passar da largura da coluna */
 html,body{overflow-x:hidden}main,label,.row>*{min-width:0;max-width:100%}
-input[type=date],input[type=month]{-webkit-appearance:none;appearance:none;display:block;width:100%;min-width:0;max-width:100%;text-align:left;line-height:normal}
-input[type=date]::-webkit-date-and-time-value,input[type=month]::-webkit-date-and-time-value{text-align:left;min-width:0}
-input[type=date]::-webkit-datetime-edit,input[type=month]::-webkit-datetime-edit{padding:0}
+input[type=date],input[type=month]{-webkit-appearance:none;appearance:none;display:flex;align-items:center;justify-content:center;width:100%;min-width:0;max-width:100%;height:48px;text-align:center;line-height:1.2}
+input[type=date]::-webkit-date-and-time-value,input[type=month]::-webkit-date-and-time-value{text-align:center;min-width:0;margin:0}
+input[type=date]::-webkit-datetime-edit,input[type=month]::-webkit-datetime-edit{padding:0;text-align:center}
 </style>
 </head>
 <body>
